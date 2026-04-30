@@ -86,7 +86,7 @@ const Register = ({ onBack }) => {
         body.append('avatar', avatarFile);
       }
 
-      const res = await fetch('http://127.0.0.1:8000/api/register/', {
+      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/register/', {
         method: 'POST',
         body,
       });

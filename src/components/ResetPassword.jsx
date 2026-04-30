@@ -76,7 +76,7 @@ const ResetPassword = ({ token, onBack }) => {
 
     setIsLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/reset-password/', {
+      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/reset-password/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, new_password: newPassword }),
