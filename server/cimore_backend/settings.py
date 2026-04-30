@@ -135,7 +135,9 @@ STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'core.User'
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "https://cimore.vercel.app",
+
 ]
 
 # ---------------------------------------------------------------------------
@@ -150,7 +152,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = '23100351@slc-sflu.edu.ph'
 EMAIL_HOST_PASSWORD = 'nxlc iedk jxkq jiar'
 DEFAULT_FROM_EMAIL = 'CiMORe <23100351@slc-sflu.edu.ph>'
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000','https://cimore.vercel.app')
 SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL', 'cimo@slc-sflu.edu.ph')
 
 MEDIA_URL = '/media/'
