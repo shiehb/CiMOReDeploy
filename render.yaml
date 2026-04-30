@@ -3,21 +3,16 @@ services:
     name: cimore-backend
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: gunicorn cimore_backend.wsgi
+    # Added 'server/' prefix to match your repository structure
+    buildCommand: pip install -r server/requirements.txt && python server/manage.py collectstatic --noinput
+    # Told gunicorn to look inside the 'server' directory
+    startCommand: gunicorn --pythonpath server cimore_backend.wsgi
     envVars:
       - key: DATABASE_URL
-        scope: build,runtime
-        sync: false
-      - key: DIRECT_URL
-        scope: runtime
         sync: false
       - key: SECRET_KEY
-        scope: build,runtime
-        sync: false
+        generateValue: true
       - key: DEBUG
         value: "False"
-      - key: RENDER_EXTERNAL_HOSTNAME
-        fromService:
-          name: cimore-backend
-          property: host
+      - key: ALLOWED_HOSTS
+        value: "*"
