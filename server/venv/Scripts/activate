@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\jeric\Documents\Github\cimore_backend\venv"
+VIRTUAL_ENV="C:\Users\jeric\Documents\GitHub\CiMORe\CiMOReDeploy\server\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
