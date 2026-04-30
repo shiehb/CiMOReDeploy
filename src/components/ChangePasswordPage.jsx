@@ -51,7 +51,7 @@ const ChangePasswordPage = ({ onBack }) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/profile/', {
+      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/profile/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

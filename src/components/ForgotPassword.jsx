@@ -21,7 +21,7 @@ const ForgotPassword = ({ onBack }) => {
 
     setIsLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/forgot-password/', {
+      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/forgot-password/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

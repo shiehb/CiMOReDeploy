@@ -50,7 +50,7 @@ const MyRequests = ({ onViewDetail }) => {
 
   const fetchRequests = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/marketing/', { headers: authHeaders() });
+      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/marketing/', { headers: authHeaders() });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setRequests(await res.json());
     } catch (err) {

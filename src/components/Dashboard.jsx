@@ -23,7 +23,7 @@ import {
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 
-const API = 'http://127.0.0.1:8000';
+const API = 'https://ci-mo-re-deploy-isra.vercel.app';
 
 function timeAgo(isoString) {
   if (!isoString) return '';

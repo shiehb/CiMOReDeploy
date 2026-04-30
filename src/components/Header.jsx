@@ -16,7 +16,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import logo from '../assets/logo.png';
 
-const API = 'http://127.0.0.1:8000';
+const API = 'https://ci-mo-re-deploy-isra.vercel.app';
 
 const NOTIF_ICONS = {
   request:      FileText,

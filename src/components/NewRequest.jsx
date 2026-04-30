@@ -170,7 +170,7 @@ const NewRequest = () => {
               keywords:       form.keywords,
             };
 
-      const res = await fetch('http://127.0.0.1:8000/api/marketing/', {
+      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/marketing/', {
         method: 'POST',
         headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
