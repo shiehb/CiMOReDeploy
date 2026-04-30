@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-+v04ult86^o((566blw6h)sk!ibe6esax4!2lrs_=(*9-u3ww9
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['ci-mo-re-deploy-isra.vercel.app', 'localhost', '127.0.0.1']
 
 
 # Application definition
