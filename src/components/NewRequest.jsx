@@ -33,10 +33,6 @@ const EMPTY_DISSEMINATION = {
   keywords:    '',
 };
 
-const authHeaders = () => ({
-  Authorization: `Token ${localStorage.getItem('authToken')}`,
-});
-
 const FieldError = ({ error }) =>
   error ? (
     <p className="text-xs text-red-500 ml-1 flex items-center gap-1">
