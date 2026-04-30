@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: cimore-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn cimore_backend.wsgi
+    envVars:
+      - key: DATABASE_URL
+        scope: build,runtime
+        sync: false
+      - key: DIRECT_URL
+        scope: runtime
+        sync: false
+      - key: SECRET_KEY
+        scope: build,runtime
+        sync: false
+      - key: DEBUG
+        value: "False"
+      - key: RENDER_EXTERNAL_HOSTNAME
+        fromService:
+          name: cimore-backend
+          property: host

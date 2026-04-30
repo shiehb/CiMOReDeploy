@@ -22,8 +22,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
-
-const API = 'https://ci-mo-re-deploy-isra.vercel.app';
+import { API, authHeaders } from '../config/api';
 
 function timeAgo(isoString) {
   if (!isoString) return '';

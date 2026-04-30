@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, X, AlertCircle, Info } from 'lucide-react';
 import { motion, AnimatePresence, useAnimationControls } from 'motion/react';
+import { API } from '../config/api';
 
 const DOMAIN = '@slc-sflu.edu.ph';
 const DOMAIN_ERROR = `Only ${DOMAIN} school accounts are allowed.`;
@@ -39,7 +40,7 @@ const Login = ({ onLogin, onRegister, onForgotPassword }) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/login/', {
+      const response = await fetch(`${API}/api/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: email, password }),

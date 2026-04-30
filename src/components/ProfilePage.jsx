@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Calendar, ShieldCheck, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
+import { API, authHeaders } from '../config/api';
 
 const ProfilePage = ({ onBack }) => {
   const [profile, setProfile] = useState(null);
@@ -15,7 +16,7 @@ const ProfilePage = ({ onBack }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/profile/', {
+        const res = await fetch(`${API}/api/profile/`, {
           headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -75,8 +76,7 @@ const ProfilePage = ({ onBack }) => {
       const formData = new FormData();
       formData.append('avatar', avatarFile);
 
-      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/profile/', {
-        method: 'PUT',
+      const res = await fetch(`${API}/api/profile/`, {
         headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
         body: formData,
       });

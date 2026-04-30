@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Eye, EyeOff, ShieldCheck, CheckCircle2, Info, ArrowLeft, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { API } from '../config/api';
 
 // ---------------------------------------------------------------------------
 // Strength helpers
@@ -76,7 +77,7 @@ const ResetPassword = ({ token, onBack }) => {
 
     setIsLoading(true);
     try {
-      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/reset-password/', {
+      const res = await fetch(`${API}/api/reset-password/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, new_password: newPassword }),

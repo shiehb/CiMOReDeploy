@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send, X, CheckCircle, AlertCircle, Loader2, Info, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { API, authHeaders } from '../config/api';
 
 const DRAFT_KEY = 'cimore_new_request_draft';
 
@@ -170,7 +171,7 @@ const NewRequest = () => {
               keywords:       form.keywords,
             };
 
-      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/marketing/', {
+      const res = await fetch(`${API}/api/marketing/`, {
         method: 'POST',
         headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

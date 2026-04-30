@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, User, ArrowLeft, ArrowRight, ShieldCheck, Info, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
+import { API } from '../config/api';
 
 const DOMAIN = '@slc-sflu.edu.ph';
 const DOMAIN_ERROR = `Only ${DOMAIN} school accounts are allowed to access this system.`;
@@ -86,7 +87,7 @@ const Register = ({ onBack }) => {
         body.append('avatar', avatarFile);
       }
 
-      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/register/', {
+      const res = await fetch(`${API}/api/register/`, {
         method: 'POST',
         body,
       });

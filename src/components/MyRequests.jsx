@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, ExternalLink, Loader2, AlertCircle, Filter, ChevronDown, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { API, authHeaders } from '../config/api';
 
 const STATUS_STYLES = {
   Pending:  'bg-amber-50 text-amber-600',
@@ -18,11 +19,6 @@ const STATUS_DOT = {
 const STATUS_ORDER   = { Pending: 0, Approved: 1, Rejected: 2 };
 const ALL_STATUSES   = ['Pending', 'Approved', 'Rejected'];
 const SHOWN_STATUSES = new Set(ALL_STATUSES);
-
-const authHeaders = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Token ${localStorage.getItem('authToken')}`,
-});
 
 const formatDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '';
@@ -50,7 +46,7 @@ const MyRequests = ({ onViewDetail }) => {
 
   const fetchRequests = async () => {
     try {
-      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/marketing/', { headers: authHeaders() });
+      const res = await fetch(`${API}/api/marketing/`, { headers: authHeaders() });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setRequests(await res.json());
     } catch (err) {

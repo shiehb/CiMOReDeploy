@@ -5,13 +5,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
-
-const API = 'https://ci-mo-re-deploy-isra.vercel.app';
-
-const authHeaders = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Token ${localStorage.getItem('authToken')}`,
-});
+import { API, authHeaders } from '../config/api';
 
 const fmtDate = (d) =>
   d

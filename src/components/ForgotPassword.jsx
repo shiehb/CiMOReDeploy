@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, ArrowLeft, ShieldCheck, Send, CheckCircle2, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { API } from '../config/api';
 
 const DOMAIN = '@slc-sflu.edu.ph';
 
@@ -21,7 +22,7 @@ const ForgotPassword = ({ onBack }) => {
 
     setIsLoading(true);
     try {
-      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/forgot-password/', {
+      const res = await fetch(`${API}/api/forgot-password/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

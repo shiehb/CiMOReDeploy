@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Megaphone, ClipboardList, Settings as SettingsIcon, Eye, EyeOff, Lock, Loader2, AlertCircle, CheckCircle, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { API, authHeaders } from '../config/api';
 import Header from './Header';
 import NewRequest from './NewRequest';
 import MyRequests from './MyRequests';
@@ -47,7 +48,7 @@ const FirstLoginChangePage = ({ onChanged }) => {
 
     setIsLoading(true);
     try {
-      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/profile/', {
+      const res = await fetch(`${API}/api/profile/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

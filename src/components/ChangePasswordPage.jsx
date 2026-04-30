@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Lock, Eye, EyeOff, ArrowLeft, Loader2, AlertCircle, CheckCircle, ShieldCheck, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { API, authHeaders } from '../config/api';
 
 const checkComplexity = (pw) => ({
   length:  pw.length >= 8,
@@ -51,7 +52,7 @@ const ChangePasswordPage = ({ onBack }) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch('https://ci-mo-re-deploy-isra.vercel.app/api/profile/', {
+      const res = await fetch(`${API}/api/profile/change-password/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

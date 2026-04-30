@@ -15,8 +15,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import logo from '../assets/logo.png';
-
-const API = 'https://ci-mo-re-deploy-isra.vercel.app';
+import { API } from '../config/api';
 
 const NOTIF_ICONS = {
   request:      FileText,
