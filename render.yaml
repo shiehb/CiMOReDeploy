@@ -1,13 +1,14 @@
 services:
   - type: web
-    name: cimore-backend
+    name: CiMOReDeploy
+    runtime: python
     env: python
     plan: free
-    # Added 'server/' prefix to match your repository structure
     buildCommand: pip install -r server/requirements.txt && python server/manage.py collectstatic --noinput
-    # Told gunicorn to look inside the 'server' directory
     startCommand: gunicorn --pythonpath server cimore_backend.wsgi
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"  # This forces a stable version
       - key: DATABASE_URL
         sync: false
       - key: SECRET_KEY
