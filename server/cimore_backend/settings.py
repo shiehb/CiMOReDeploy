@@ -80,14 +80,14 @@ TEMPLATES = [
 WSGI_APPLICATION = 'cimore_backend.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# settings.py around line 87
+db_url = config('DATABASE_URL', default=None)
 
-if config('DATABASE_URL', default=None):
+if db_url and "YOUR_PASSWORD" not in db_url: # Extra safety check
     import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(
-            default=config('DATABASE_URL'),
+            default=db_url,
             conn_max_age=600,
             conn_health_checks=True,
         )
