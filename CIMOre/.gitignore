@@ -1,0 +1,20 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# React/Frontend
+node_modules/
+dist/
+.env
+.env.local
+
+# Django/Backend
+db.sqlite3
+__pycache__/
+*.pyc
+.vscode/
