@@ -7,8 +7,34 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { API, authHeaders } from '../config/api';
-    'Authorization': `Token ${localStorage.getItem('authToken')}`,
-  });
+
+const STRAND_OPTIONS = ['STEM', 'ABM', 'HUMSS', 'GAS', 'TVL', 'ICT'];
+
+const initialForm = {
+  schoolName: '', street: '', barangay: '', city: '', province: '',
+  contactInfo: '', principalName: '', strands: [],
+  estimatedStudents: '', lastVisited: '',
+};
+
+const SchoolIntelligence = () => {
+  const [schools, setSchools] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedSchools, setArchivedSchools] = useState([]);
+  const [archivedLoading, setArchivedLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editingSchool, setEditingSchool] = useState(null);
+  const [viewingSchool, setViewingSchool] = useState(null);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [focusedRowId, setFocusedRowId] = useState(null);
+  const [formData, setFormData] = useState(initialForm);
+
+  const actionButtonBase = 'inline-flex items-center justify-center h-10 w-10 rounded-xl transition-colors duration-200 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/20';
 
   const showSuccess = (msg) => {
     setSuccessMessage(msg);
