@@ -1,0 +1,22 @@
+{
+  "name": "cimore-node-service",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Node.js service for CiMORe with Prisma ORM",
+  "scripts": {
+    "dev": "node server.js",
+    "migrate": "prisma migrate dev",
+    "generate": "prisma generate",
+    "studio": "prisma studio"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "@prisma/client": "latest",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "prisma": "latest",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0"
+  }
+}
