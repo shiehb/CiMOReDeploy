@@ -21,7 +21,7 @@ const CollaboratorHome = ({ onNavigate }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeService, setActiveService] = useState(0);
-  const [isPaused, setIsPaused] = useState(false); // New state for pause feature
+  const [isPaused, setIsPaused] = useState(false);
   
   const [announcements] = useState([
     {
@@ -55,14 +55,13 @@ const CollaboratorHome = ({ onNavigate }) => {
   ];
 
   useEffect(() => {
-    // Timer only advances if isPaused is false
     const timer = setInterval(() => {
       if (!isPaused) {
         setActiveService((prev) => (prev + 1) % services.length);
       }
     }, 10000);
     return () => clearInterval(timer);
-  }, [services.length, isPaused]); // Add isPaused as a dependency
+  }, [services.length, isPaused]);
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -81,6 +80,32 @@ const CollaboratorHome = ({ onNavigate }) => {
     fetchRequests();
   }, []);
 
+  // Shared component for the Information Bureau to keep code clean
+  const InformationBureauContent = () => (
+    <div className="border border-gray-200 p-8 space-y-8 bg-white shadow-sm">
+      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2 border-b border-gray-50 pb-2">
+        <HelpCircle className="w-4 h-4 text-primary" /> Information Bureau
+      </h3>
+      <nav className="space-y-4">
+        {[
+          { title: 'Content Protocols', desc: 'Editorial 250-500 words rule' },
+          { title: 'Headline Standards', desc: 'Active voice, 10 words limit' },
+          { title: 'Identity Guidelines', desc: 'Official Media & Branding specs' }
+        ].map((item, idx) => (
+          <a key={idx} href="#" className="block group border-b border-gray-50 pb-4 last:border-0 hover:translate-x-1 transition-transform">
+            <span className="flex items-center justify-between text-sm font-black text-gray-900 group-hover:text-yellow-500 transition-colors uppercase tracking-tight">
+              {item.title} <ExternalLink className="w-3 h-3 text-light" />
+            </span>
+            <span className="text-[11px] text-gray-500 font-medium">{item.desc}</span>
+          </a>
+        ))}
+      </nav>
+      <button className="w-full py-4 bg-white border-2 border-primary text-primary font-black text-[10px] uppercase tracking-[0.2em] hover:bg-yellow-400 hover:border-yellow-400 hover:text-gray-900 transition-all active:scale-95">
+        Contact CIMO Helpdesk
+      </button>
+    </div>
+  );
+
   return (
     <div className="max-w-8xl mx-auto px-2 sm:px-2 lg:px-4 py-2 space-y-4 animate-in fade-in duration-700 bg-bg min-h-screen">
       
@@ -92,16 +117,16 @@ const CollaboratorHome = ({ onNavigate }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4">
         
-        {/* RIGHT COLUMN */}
-        <div className="lg:col-span-4 space-y-4 order-1 lg:order-2">
-          <div className="space-y-4">
+        {/* MOBILE ANNOUNCEMENTS (Hidden on Desktop) */}
+        {announcements.length > 0 && (
+          <div className="block lg:hidden space-y-4">
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
               <Megaphone className="w-4 h-4 text-amber-500" /> Announcements
             </h3>
             {announcements.map((ann) => (
-              <div key={ann.id} className="relative bg-white border border-gray-200 p-6 shadow-sm overflow-hidden group">
+              <div key={ann.id} className="relative bg-white border border-gray-200 p-6 shadow-sm overflow-hidden">
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400" />
                 <div className="flex items-center justify-between mb-3">
                   <span className="bg-amber-100 text-amber-700 text-[9px] font-black uppercase px-2 py-0.5 rounded">{ann.tag}</span>
@@ -109,40 +134,18 @@ const CollaboratorHome = ({ onNavigate }) => {
                 </div>
                 <h3 className="text-sm font-black text-gray-900 uppercase mb-2 tracking-tight">{ann.title}</h3>
                 <p className="text-xs text-gray-500 font-medium leading-relaxed mb-4">{ann.body}</p>
-                <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:text-yellow-500 transition-colors">
+                <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
                   Read Details <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
             ))}
           </div>
+        )}
 
-          <div className="border border-gray-200 p-8 space-y-8 bg-white shadow-sm">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2 border-b border-gray-50 pb-2">
-              <HelpCircle className="w-4 h-4 text-primary" /> Information Bureau
-            </h3>
-            <nav className="space-y-4">
-              {[
-                { title: 'Content Protocols', desc: 'Editorial 250-500 words rule' },
-                { title: 'Headline Standards', desc: 'Active voice, 10 words limit' },
-                { title: 'Identity Guidelines', desc: 'Official Media & Branding specs' }
-              ].map((item, idx) => (
-                <a key={idx} href="#" className="block group border-b border-gray-50 pb-4 last:border-0 hover:translate-x-1 transition-transform">
-                  <span className="flex items-center justify-between text-sm font-black text-gray-900 group-hover:text-yellow-500 transition-colors uppercase tracking-tight">
-                    {item.title} <ExternalLink className="w-3 h-3 text-light" />
-                  </span>
-                  <span className="text-[11px] text-gray-500 font-medium">{item.desc}</span>
-                </a>
-              ))}
-            </nav>
-            <button className="w-full py-4 bg-white border-2 border-primary text-primary font-black text-[10px] uppercase tracking-[0.2em] hover:bg-yellow-400 hover:border-yellow-400 hover:text-gray-900 transition-all active:scale-95 active:shadow-inner">
-              Contact CIMO Helpdesk
-            </button>
-          </div>
-        </div>
-
-        {/* LEFT COLUMN */}
-        <div className="lg:col-span-8 space-y-4 order-2 lg:order-1">
-          {/* Service Slider - Added onMouseEnter and onMouseLeave */}
+        {/* LEFT COLUMN (Desktop: Main Content) */}
+        <div className="lg:col-span-8 flex flex-col gap-4">
+          
+          {/* CAROUSEL */}
           <div 
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
@@ -151,50 +154,29 @@ const CollaboratorHome = ({ onNavigate }) => {
             {services.map((service, idx) => {
               const isActive = activeService === idx;
               return (
-                <div 
-                  key={idx} 
-                  className={cn(
+                <div key={idx} className={cn(
                     "absolute inset-0 w-full h-full p-8 border-l-[6px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-center",
                     service.accent,
                     isActive ? "translate-x-0 opacity-100 z-10" : "-translate-x-full opacity-0 z-0"
-                  )}
-                >
-                  <div 
-                    className="absolute inset-0 z-0 opacity-[0.20] bg-cover bg-center grayscale pointer-events-none mix-blend-multiply bg-yellow-100 transition-opacity duration-500"
-                    style={{ backgroundImage: `url(${service.image})` }}
-                  />
-
+                )}>
+                  <div className="absolute inset-0 z-0 opacity-[0.20] bg-cover bg-center grayscale pointer-events-none mix-blend-multiply bg-yellow-100"
+                    style={{ backgroundImage: `url(${service.image})` }} />
                   <div className="relative z-10">
                     <div className="flex justify-between items-start mb-6">
-                      <div className="p-3 bg-primary text-white shadow-lg animate-in zoom-in duration-700">
-                        {service.icon}
-                      </div>
+                      <div className="p-3 bg-primary text-white shadow-lg">{service.icon}</div>
                       <div className="flex gap-2">
                         {services.map((_, i) => (
                           <div key={i} className="relative h-1.5 overflow-hidden rounded-full bg-gray-100" style={{ width: activeService === i ? '40px' : '16px' }}>
-                            {activeService === i && (
-                              <div className={cn(
-                                "absolute inset-0 bg-primary origin-left animate-[progress_10s_linear_forwards]",
-                                isPaused && "pause" // Pauses the CSS progress bar animation
-                              )} />
-                            )}
+                            {activeService === i && <div className={cn("absolute inset-0 bg-primary origin-left animate-[progress_10s_linear_forwards]", isPaused && "pause")} />}
                           </div>
                         ))}
                       </div>
                     </div>
-                    
                     <div className={cn("transition-all duration-1000 delay-300", isActive ? "translate-x-0 opacity-100" : "-translate-x-12 opacity-0")}>
                       <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-1">{service.title}</h2>
                       <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-4 opacity-80">{service.type}</p>
-                      <p className="text-gray-600 text-sm font-medium leading-relaxed mb-8 max-w-lg">{service.desc}</p>
-                      
-                      {/* BUTTON ANIMATION: active:scale-95 and hover shadow changes */}
-                      <button 
-                        onClick={() => onNavigate?.('new-request', service.title)} 
-                        className="flex items-center gap-3 bg-primary text-white px-8 py-4 text-xs font-black uppercase tracking-[0.2em] 
-                        hover:bg-yellow-400 hover:text-gray-900 transition-all duration-300 group shadow-md shadow-primary/20 
-                        active:scale-95 active:shadow-inner hover:shadow-lg hover:shadow-yellow-400/20"
-                      >
+                      <p className="text-gray-600 text-sm font-medium mb-8 max-w-lg">{service.desc}</p>
+                      <button onClick={() => onNavigate?.('new-request', service.title)} className="flex items-center gap-3 bg-primary text-white px-8 py-4 text-xs font-black uppercase tracking-[0.2em] hover:bg-yellow-400 hover:text-gray-900 transition-all active:scale-95 group">
                         {service.action} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </button>
                     </div>
@@ -204,41 +186,70 @@ const CollaboratorHome = ({ onNavigate }) => {
             })}
           </div>
 
-          {/* Submission Log */}
+          {/* SUBMISSION LOG */}
           <div className="border border-gray-200 shadow-sm overflow-hidden bg-white">
-            <div className="bg-primary text-white px-6 py-4 flex items-center justify-between font-sans">
+            <div className="bg-primary text-white px-6 py-4 flex items-center justify-between">
               <h3 className="text-xs font-black uppercase tracking-[0.2em]">Submission Log</h3>
               <span className="text-[10px] font-bold opacity-80">{requests.length} RECORDS FOUND</span>
             </div>
             <div className="divide-y divide-gray-100 min-h-[200px]">
               {loading ? (
-                <div className="p-12 text-center text-xs font-bold uppercase text-gray-300 animate-pulse">Syncing Portal Data...</div>
+                <div className="p-12 text-center text-xs font-bold text-gray-300 animate-pulse">Syncing Portal Data...</div>
               ) : requests.length === 0 ? (
-                <div className="p-16 text-center text-gray-400 text-sm font-medium italic">No active records found.</div>
+                <div className="p-16 text-center text-gray-400 text-sm italic">No active records found.</div>
               ) : (
                 requests.slice(0, 5).map((req) => (
                   <div key={req.id} className="p-6 hover:bg-bg transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer">
                     <div className="space-y-1">
-                      <h4 className="text-lg font-bold text-gray-900 uppercase tracking-tight group-hover:text-primary transition-colors">
-                        {req.title || req.type}
-                      </h4>
+                      <h4 className="text-lg font-bold text-gray-900 uppercase group-hover:text-primary transition-colors">{req.title || req.type}</h4>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                        <Clock className="w-3 h-3" /> 
-                        Submitted: {new Date(req.created_at).toLocaleDateString()} • REF: #{req.id}
+                        <Clock className="w-3 h-3" /> Submitted: {new Date(req.created_at).toLocaleDateString()} • REF: #{req.id}
                       </p>
                     </div>
-                    <span className={cn(
-                      'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 border-l-4 shadow-sm',
-                      STATUS_STYLES[req.status] || 'bg-gray-100 text-gray-500 border-gray-300'
-                    )}>
-                      <span className={cn('w-1.5 h-1.5 rounded-full', STATUS_DOT[req.status] || 'bg-gray-400')} />
-                      {req.status}
+                    <span className={cn('px-3 py-1 rounded-full text-[10px] font-black uppercase border-l-4 shadow-sm', STATUS_STYLES[req.status] || 'bg-gray-100 text-gray-500 border-gray-300')}>
+                      <span className={cn('w-1.5 h-1.5 rounded-full', STATUS_DOT[req.status] || 'bg-gray-400')} /> {req.status}
                     </span>
                   </div>
                 ))
               )}
             </div>
           </div>
+        </div>
+
+        {/* RIGHT COLUMN (Desktop: Sidebar) */}
+        <div className="lg:col-span-4 flex flex-col gap-4">
+          {/* DESKTOP ANNOUNCEMENTS (Hidden on Mobile) */}
+          {announcements.length > 0 && (
+            <div className="hidden lg:block space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-amber-500" /> Announcements
+              </h3>
+              {announcements.map((ann) => (
+                <div key={ann.id} className="relative bg-white border border-gray-200 p-6 shadow-sm overflow-hidden group">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400" />
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="bg-amber-100 text-amber-700 text-[9px] font-black uppercase px-2 py-0.5 rounded">{ann.tag}</span>
+                    <span className="text-[10px] font-bold text-gray-400">{ann.date}</span>
+                  </div>
+                  <h3 className="text-sm font-black text-gray-900 uppercase mb-2 tracking-tight">{ann.title}</h3>
+                  <p className="text-xs text-gray-500 font-medium leading-relaxed mb-4">{ann.body}</p>
+                  <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:text-yellow-500 transition-colors">
+                    Read Details <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* DESKTOP BUREAU (Hidden on Mobile) */}
+          <div className="hidden lg:block">
+            <InformationBureauContent />
+          </div>
+        </div>
+
+        {/* MOBILE BUREAU (Visible only on Mobile, at the very bottom) */}
+        <div className="block lg:hidden">
+          <InformationBureauContent />
         </div>
 
       </div>
