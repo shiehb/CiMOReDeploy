@@ -61,11 +61,30 @@ ROOT_URLCONF = 'cimore_backend.urls'
 WSGI_APPLICATION = 'cimore_backend.wsgi.application'
 
 # ---------------------------------------------------------------------------
-# Database
+# Templates configuration
+# ---------------------------------------------------------------------------
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+# ---------------------------------------------------------------------------
+# Database (Supabase)
 # ---------------------------------------------------------------------------
 DATABASES = {
     'default': dj_database_url.config(
-        default=config('DATABASE_URL', default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        default=config('DATABASE_URL'),
         conn_max_age=600,
         conn_health_checks=True,
     )
@@ -104,7 +123,7 @@ if not DEBUG:
 # ---------------------------------------------------------------------------
 EMAIL_BACKEND = 'gmailapi_backend.mail.GmailBackend'
 
-# Values from your Google Cloud Console and OAuth Playground
+# Credentials from your Google Cloud Console
 GMAIL_API_CLIENT_ID = config('GMAIL_API_CLIENT_ID')
 GMAIL_API_CLIENT_SECRET = config('GMAIL_API_CLIENT_SECRET')
 GMAIL_API_REFRESH_TOKEN = config('GMAIL_API_REFRESH_TOKEN')
