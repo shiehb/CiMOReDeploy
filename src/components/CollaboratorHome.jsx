@@ -91,7 +91,7 @@ const CollaboratorHome = ({ onNavigate }) => {
 
   const InformationBureauContent = () => (
     <div className="border border-slate-200/80 p-8 space-y-8 bg-white shadow rounded-lg">
-      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2 border-b border-slate-50 pb-2">
+      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-secondary/70 flex items-center gap-2 border-b border-slate-50 pb-2">
         <HelpCircle className="w-4 h-4" style={{ color: THEME.primary }} /> Information Bureau
       </h3>
       <nav className="space-y-4">

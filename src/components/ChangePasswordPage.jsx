@@ -137,13 +137,13 @@ const ChangePasswordPage = ({ onBack }) => {
             <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
-            <h3 className="text-xl font-bold text-slate-800 tracking-tight">Password Changed!</h3>
+            <h3 className="text-xl font-bold text-secondary tracking-tight">Password Changed!</h3>
             <p className="text-sm text-slate-400 mt-2">Redirecting you back shortly...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-slate-800">Change Password</h2>
+              <h2 className="text-xl font-bold text-secondary">Change Password</h2>
               <p className="text-slate-500 text-sm mt-1">Update your security credentials</p>
             </div>
 

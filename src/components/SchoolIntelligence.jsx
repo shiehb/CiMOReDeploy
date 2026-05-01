@@ -34,7 +34,7 @@ const SchoolIntelligence = () => {
   const [focusedRowId, setFocusedRowId] = useState(null);
   const [formData, setFormData] = useState(initialForm);
 
-  const actionButtonBase = 'inline-flex items-center justify-center h-10 w-10 rounded-xl transition-colors duration-200 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/20';
+  const actionButtonBase = 'inline-flex items-center justify-center h-10 w-10 rounded-xl transition-colors duration-200 text-secondary/70 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/20';
 
   const showSuccess = (msg) => {
     setSuccessMessage(msg);
@@ -309,7 +309,7 @@ const SchoolIntelligence = () => {
 
   if (loading) {
     return (
-      <div className="h-96 flex flex-col items-center justify-center text-gray-400 gap-3">
+      <div className="h-96 flex flex-col items-center justify-center text-secondary/70 gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
         <p className="text-sm font-medium">Loading school intelligence...</p>
       </div>
@@ -317,7 +317,7 @@ const SchoolIntelligence = () => {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 text-secondary">
 
       {/* Success Toast */}
       <AnimatePresence>
@@ -351,18 +351,20 @@ const SchoolIntelligence = () => {
         </motion.div>
       )}
 
-      {/* Header */}
+{/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">School Intelligence & Trailblazing</h2>
-          <p className="text-gray-500 text-sm mt-1">Strategic data on feeder schools and recruitment efforts.</p>
+          <h2 className="text-2xl font-black text-secondary uppercase tracking-tight">School Intelligence & Trailblazing</h2>
+          <p className="text-secondary/70 text-sm font-medium">Strategic data on feeder schools and recruitment efforts.</p>
         </div>
+
+        {/* EFFECT: Blue to Yellow flip */}
         <button
           onClick={openAddModal}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group"
+          className="flex items-center justify-center gap-2 px-6 py-2.5 font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 border-2 border-transparent rounded-lg bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black hover:shadow-lg active:scale-[0.99] group outline-none"
         >
-          <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-          Add New School
+          <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+          <span>Add New School</span>
         </button>
       </div>
 
@@ -372,7 +374,7 @@ const SchoolIntelligence = () => {
           {/* Search */}
           <div className="bg-white rounded shadow-sm border border-gray-100 flex flex-col md:flex-row gap-4 items-center">
             <div className="relative flex-1 w-full group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary/70 group-focus-within:text-primary transition-colors" />
               <input
                 type="text"
                 placeholder="Search schools by name or location..."
@@ -388,13 +390,13 @@ const SchoolIntelligence = () => {
                   "flex items-center gap-2 px-4 py-2.5 rounded text-sm font-bold transition-all whitespace-nowrap border",
                   showArchived
                     ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
-                    : "bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
+                    : "bg-white text-secondary/70 border-gray-200 hover:bg-gray-50"
                 )}
               >
                 <Archive className="w-4 h-4" />
                 {showArchived ? 'View Active' : 'View Archived'}
               </button>
-              <button className="p-2.5 bg-white border border-gray-200 text-gray-500 rounded hover:bg-gray-50 transition-colors">
+              <button className="p-2.5 bg-white border border-gray-200 text-secondary/70 rounded hover:bg-gray-50 transition-colors">
                 <Filter className="w-4 h-4" />
               </button>
             </div>
@@ -414,7 +416,7 @@ const SchoolIntelligence = () => {
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
               ) : filteredSchools.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+                <div className="flex flex-col items-center justify-center py-24 text-secondary/70">
                   <School className="w-10 h-10 mb-3 opacity-30" />
                   <p className="text-sm font-medium">
                     {searchQuery ? 'No schools match your search.' : showArchived ? 'No archived schools.' : 'No schools added yet.'}
@@ -433,10 +435,10 @@ const SchoolIntelligence = () => {
                   <table className="w-full text-left border-separate border-spacing-0">
                     <thead className="bg-gray-100 border-b-2 border-gray-200">
                       <tr>
-                        <th className="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">School</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">Strands Offered</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200">Last Visited</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider text-right">Actions</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-secondary/80 uppercase tracking-wider border-r border-gray-200">School</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-secondary/80 uppercase tracking-wider border-r border-gray-200">Strands Offered</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-secondary/80 uppercase tracking-wider border-r border-gray-200">Last Visited</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-secondary/80 uppercase tracking-wider text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -460,12 +462,12 @@ const SchoolIntelligence = () => {
                                 <School className="w-4 h-4 text-white" />
                               </div>
                               <div>
-                                <p className="text-sm font-bold text-gray-900">{school.school_name}</p>
+                                <p className="text-sm font-bold text-secondary">{school.school_name}</p>
                                 <div className="flex items-center gap-3 mt-0.5">
-                                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                                  <span className="flex items-center gap-1 text-xs text-secondary/70">
                                     <MapPin className="w-3 h-3" />{school.address}
                                   </span>
-                                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                                  <span className="flex items-center gap-1 text-xs text-secondary/70">
                                     <Users className="w-3 h-3" />{school.estimated_students.toLocaleString()} students
                                   </span>
                                 </div>
@@ -476,22 +478,22 @@ const SchoolIntelligence = () => {
                             <div className="flex flex-wrap gap-1.5">
                               {school.offered_strands
                                 ? school.offered_strands.split(',').map(s => s.trim()).filter(Boolean).map((strand, idx) => (
-                                    <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md text-[10px] font-bold uppercase">
+                                    <span key={idx} className="px-2 py-0.5 bg-gray-100 text-secondary rounded-md text-[10px] font-bold uppercase">
                                       {strand}
                                     </span>
                                   ))
-                                : <span className="text-xs text-gray-400">—</span>
+                                : <span className="text-xs text-secondary/70">—</span>
                               }
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">
+                          <td className="px-6 py-4 text-sm text-secondary/70">
                             {school.last_visited ? (
                               <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-gray-400" />
+                                <Calendar className="w-4 h-4 text-secondary/70" />
                                 {formatDate(school.last_visited)}
                               </div>
                             ) : (
-                              <span className="text-gray-400">Not visited</span>
+                              <span className="text-secondary/70">Not visited</span>
                             )}
                           </td>
                           <td className="px-6 py-4 text-right">
@@ -544,7 +546,7 @@ const SchoolIntelligence = () => {
         {/* Right: Insights */}
         <div className="space-y-6">
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Recruitment Insights</h3>
+            <h3 className="text-lg font-bold text-secondary mb-6">Recruitment Insights</h3>
             <div className="space-y-6">
               {topFeeder ? (
                 <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
@@ -552,28 +554,28 @@ const SchoolIntelligence = () => {
                     <span className="text-xs font-bold text-primary uppercase tracking-wider">Top Feeder</span>
                     <TrendingUp className="w-4 h-4 text-primary" />
                   </div>
-                  <p className="text-sm font-bold text-gray-900">{topFeeder.school_name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{topFeeder.address}</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-sm font-bold text-secondary">{topFeeder.school_name}</p>
+                  <p className="text-xs text-secondary/70 mt-0.5">{topFeeder.address}</p>
+                  <p className="text-xs text-secondary/70 mt-1">
                     {totalStudents > 0 ? Math.round((topFeeder.estimated_students / totalStudents) * 100) : 0}% of total students
                   </p>
                 </div>
               ) : (
                 <div className="p-4 bg-gray-50 rounded-2xl text-center">
-                  <p className="text-xs text-gray-400">No schools added yet.</p>
+                  <p className="text-xs text-secondary/70">No schools added yet.</p>
                 </div>
               )}
 
               {topMunicipalities.length > 0 && (
                 <div className="space-y-4">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Performance by Municipality</h4>
+                  <h4 className="text-xs font-bold text-secondary/70 uppercase tracking-wider">Performance by Municipality</h4>
                   {topMunicipalities.map(([city, count], idx) => {
                     const pct = Math.round((count / maxMunicipalityStudents) * 100);
                     return (
                       <div key={idx} className="space-y-1.5">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="font-bold text-gray-700">{city}</span>
-                          <span className="font-bold text-gray-500">{pct}%</span>
+                          <span className="font-bold text-secondary">{city}</span>
+                          <span className="font-bold text-secondary/70">{pct}%</span>
                         </div>
                         <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                           <motion.div
@@ -640,9 +642,9 @@ const SchoolIntelligence = () => {
                 <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto">
                   {/* School Name */}
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">School Name</label>
+                    <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">School Name</label>
                     <div className="relative group">
-                      <School className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                      <School className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary/70 group-focus-within:text-primary transition-colors" />
                       <input
                         required
                         type="text"
@@ -657,7 +659,7 @@ const SchoolIntelligence = () => {
                   {/* Address fields */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Street</label>
+                      <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">Street</label>
                       <input
                         type="text"
                         placeholder="Street address"
@@ -667,7 +669,7 @@ const SchoolIntelligence = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Barangay</label>
+                      <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">Barangay</label>
                       <input
                         type="text"
                         placeholder="Barangay"
@@ -677,7 +679,7 @@ const SchoolIntelligence = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">City / Municipality</label>
+                      <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">City / Municipality</label>
                       <input
                         required
                         type="text"
@@ -688,7 +690,7 @@ const SchoolIntelligence = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Province</label>
+                      <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">Province</label>
                       <input
                         type="text"
                         placeholder="Province"
@@ -701,9 +703,9 @@ const SchoolIntelligence = () => {
 
                   {/* Contact Info */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Contact Info</label>
+                    <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">Contact Info</label>
                     <div className="relative group">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary/70 group-focus-within:text-primary transition-colors" />
                       <input
                         type="text"
                         placeholder="Phone or Email"
@@ -716,9 +718,9 @@ const SchoolIntelligence = () => {
 
                   {/* Principal */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">School Principal</label>
+                    <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">School Principal</label>
                     <div className="relative group">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary/70 group-focus-within:text-primary transition-colors" />
                       <input
                         type="text"
                         placeholder="Full Name of Principal"
@@ -731,7 +733,7 @@ const SchoolIntelligence = () => {
 
                   {/* Strands */}
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Strands Offered</label>
+                    <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">Strands Offered</label>
                     <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-2xl">
                       {STRAND_OPTIONS.map(strand => (
                         <button
@@ -742,7 +744,7 @@ const SchoolIntelligence = () => {
                             "px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
                             formData.strands.includes(strand)
                               ? "bg-primary text-white shadow-sm"
-                              : "bg-white text-gray-500 border border-gray-200 hover:border-primary/30"
+                              : "bg-white text-secondary/70 border border-gray-200 hover:border-primary/30"
                           )}
                         >
                           {strand}
@@ -753,9 +755,9 @@ const SchoolIntelligence = () => {
 
                   {/* Estimated Students */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Estimated Students</label>
+                    <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">Estimated Students</label>
                     <div className="relative group">
-                      <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                      <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary/70 group-focus-within:text-primary transition-colors" />
                       <input
                         type="number"
                         min="0"
@@ -769,9 +771,9 @@ const SchoolIntelligence = () => {
 
                   {/* Last Visited */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Last Visited</label>
+                    <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">Last Visited</label>
                     <div className="relative group">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary/70 group-focus-within:text-primary transition-colors" />
                       <input
                         type="date"
                         value={formData.lastVisited}
@@ -786,7 +788,7 @@ const SchoolIntelligence = () => {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="flex-1 px-6 py-4 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-100 transition-all"
+                    className="flex-1 px-6 py-4 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-secondary/70 hover:bg-gray-100 transition-all"
                   >
                     Cancel
                   </button>
@@ -828,8 +830,8 @@ const SchoolIntelligence = () => {
                     {cfg.icon}
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900">{cfg.title}</h3>
-                    <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                    <h3 className="text-lg font-bold text-secondary">{cfg.title}</h3>
+                    <p className="text-sm text-secondary/70 mt-2 leading-relaxed">
                       {cfg.message(pendingAction.schoolName)}
                     </p>
                   </div>
@@ -837,7 +839,7 @@ const SchoolIntelligence = () => {
                     <button
                       onClick={() => setPendingAction(null)}
                       disabled={isSubmitting}
-                      className="flex-1 px-6 py-3 bg-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-200 transition-all disabled:opacity-50"
+                      className="flex-1 px-6 py-3 bg-gray-100 rounded-2xl text-sm font-bold text-secondary/70 hover:bg-gray-200 transition-all disabled:opacity-50"
                     >
                       Cancel
                     </button>
@@ -895,43 +897,43 @@ const SchoolIntelligence = () => {
               <div className="p-8 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-2xl p-4">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Students</p>
+                    <p className="text-[10px] font-bold text-secondary/70 uppercase tracking-wider mb-1">Students</p>
                     <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-gray-400" />
-                      <p className="text-sm font-semibold text-gray-800">{viewingSchool.estimated_students.toLocaleString()}</p>
+                      <Users className="w-4 h-4 text-secondary/70" />
+                      <p className="text-sm font-semibold text-secondary">{viewingSchool.estimated_students.toLocaleString()}</p>
                     </div>
                   </div>
                   <div className="bg-gray-50 rounded-2xl p-4">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Last Visited</p>
+                    <p className="text-[10px] font-bold text-secondary/70 uppercase tracking-wider mb-1">Last Visited</p>
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-gray-400" />
-                      <p className="text-sm font-semibold text-gray-800">{formatDate(viewingSchool.last_visited) || '—'}</p>
+                      <Calendar className="w-4 h-4 text-secondary/70" />
+                      <p className="text-sm font-semibold text-secondary">{formatDate(viewingSchool.last_visited) || '—'}</p>
                     </div>
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-2xl p-4">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Strands Offered</p>
+                  <p className="text-[10px] font-bold text-secondary/70 uppercase tracking-wider mb-2">Strands Offered</p>
                   <div className="flex flex-wrap gap-1.5">
                     {viewingSchool.offered_strands
                       ? viewingSchool.offered_strands.split(',').map(s => s.trim()).filter(Boolean).map((strand, idx) => (
                           <span key={idx} className="px-2.5 py-1 bg-primary/10 text-primary rounded-lg text-[10px] font-bold uppercase">{strand}</span>
                         ))
-                      : <span className="text-xs text-gray-400">—</span>
+                      : <span className="text-xs text-secondary/70">—</span>
                     }
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-2xl p-4">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Principal</p>
+                  <p className="text-[10px] font-bold text-secondary/70 uppercase tracking-wider mb-1">Principal</p>
                   <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-gray-400" />
-                    <p className="text-sm font-semibold text-gray-800">{viewingSchool.principal_name || '—'}</p>
+                    <User className="w-4 h-4 text-secondary/70" />
+                    <p className="text-sm font-semibold text-secondary">{viewingSchool.principal_name || '—'}</p>
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-2xl p-4">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Contact</p>
+                  <p className="text-[10px] font-bold text-secondary/70 uppercase tracking-wider mb-1">Contact</p>
                   <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-gray-400" />
-                    <p className="text-sm font-semibold text-gray-800">{viewingSchool.contact_info || '—'}</p>
+                    <Phone className="w-4 h-4 text-secondary/70" />
+                    <p className="text-sm font-semibold text-secondary">{viewingSchool.contact_info || '—'}</p>
                   </div>
                 </div>
               </div>
@@ -944,7 +946,7 @@ const SchoolIntelligence = () => {
                 </button>
                 <button
                   onClick={() => setViewingSchool(null)}
-                  className="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-all"
+                  className="flex-1 py-3.5 bg-gray-100 text-secondary/70 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-all"
                 >
                   Close
                 </button>

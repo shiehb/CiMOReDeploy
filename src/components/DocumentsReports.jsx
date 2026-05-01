@@ -26,22 +26,28 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell
 } from 'recharts';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 
+// SLC Corporate Theme Mapping
+const THEME = {
+  primary: '#1072b3',
+  secondary: '#03396c',
+  accent: '#f6ce11',
+  bg: '#F5F7FA',
+};
+
 const DocumentsReports = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const documents = [
-    { id: 1, name: 'Marketing Plan 2026.pdf', type: 'PDF', size: '2.4 MB', date: 'Apr 05, 2026', icon: FileText, color: 'text-red-500 bg-red-50' },
-    { id: 2, name: 'Campus Event Photo.jpg', type: 'Image', size: '4.1 MB', date: 'Apr 04, 2026', icon: FileImage, color: 'text-blue-500 bg-blue-50' },
-    { id: 3, name: 'Enrollment Data.xlsx', type: 'Excel', size: '1.2 MB', date: 'Apr 03, 2026', icon: FileText, color: 'text-green-500 bg-green-50' },
-    { id: 4, name: 'Social Media Assets.zip', type: 'Archive', size: '15.8 MB', date: 'Apr 02, 2026', icon: FileCode, color: 'text-purple-500 bg-purple-50' },
-    { id: 5, name: 'Institutional Report.pdf', type: 'PDF', size: '5.6 MB', date: 'Apr 01, 2026', icon: FileText, color: 'text-red-500 bg-red-50' },
+    { id: 1, name: 'Marketing Plan 2026.pdf', type: 'PDF', size: '2.4 MB', date: 'Apr 05, 2026', icon: FileText, color: 'text-[#1072b3] bg-blue-50' },
+    { id: 2, name: 'Campus Event Photo.jpg', type: 'Image', size: '4.1 MB', date: 'Apr 04, 2026', icon: FileImage, color: 'text-[#03396c] bg-slate-50' },
+    { id: 3, name: 'Enrollment Data.xlsx', type: 'Excel', size: '1.2 MB', date: 'Apr 03, 2026', icon: FileText, color: 'text-green-600 bg-green-50' },
+    { id: 4, name: 'Social Media Assets.zip', type: 'Archive', size: '15.8 MB', date: 'Apr 02, 2026', icon: FileCode, color: 'text-purple-600 bg-purple-50' },
+    { id: 5, name: 'Institutional Report.pdf', type: 'PDF', size: '5.6 MB', date: 'Apr 01, 2026', icon: FileText, color: 'text-[#1072b3] bg-blue-50' },
   ];
 
   const enrollmentData = [
@@ -52,81 +58,71 @@ const DocumentsReports = () => {
     { name: '2026', value: 4500 },
   ];
 
-  const COLORS = ['#1E4FA3', '#2F80ED', '#56CCF2', '#FFD600'];
+  const CHART_COLORS = ['#1072b3', '#03396c', '#2F80ED', '#56CCF2', '#f6ce11'];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Documents & Reports</h2>
-          <p className="text-gray-500 text-sm mt-1">Centralized repository for institutional intelligence and analytics.</p>
+          <h2 className="text-2xl font-black text-secondary uppercase tracking-tight">Documents & Reports</h2>
+          <p className="text-slate-500 text-sm mt-1 font-medium">Centralized repository for institutional intelligence and analytics.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm">
-            <Download className="w-5 h-5" />
+          {/* EFFECT: Yellow to Blue flip */}
+          <button className="flex items-center justify-center gap-2 px-6 py-3.5 bg-[#f6ce11] text-black rounded-lg text-[11px] font-black uppercase tracking-widest hover:bg-[#1072b3] hover:text-white transition-all duration-300 shadow-md">
+            <Download className="w-4 h-4" />
             Export All
           </button>
-          <button className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group">
-            <Upload className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
+          {/* EFFECT: Blue to Yellow flip */}
+          <button className="flex items-center justify-center gap-2 px-6 py-3.5 bg-[#1072b3] text-white rounded-lg text-[11px] font-black uppercase tracking-widest hover:bg-[#f6ce11] hover:text-black transition-all duration-300 shadow-md group">
+            <Upload className="w-4 h-4 group-hover:-translate-y-1 transition-transform" />
             Upload Document
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Left Side: Document Management */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Document Management Card */}
+        <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 flex flex-col gap-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-gray-900">Document Management</h3>
+            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Document Management</h3>
             <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                <Filter className="w-4 h-4 text-gray-400" />
-              </button>
-              <button className="p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                <MoreVertical className="w-4 h-4 text-gray-400" />
+              <button className="p-2 hover:bg-slate-50 rounded-md transition-colors text-slate-400">
+                <Filter className="w-4 h-4" />
               </button>
             </div>
           </div>
 
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#1072b3] transition-colors" />
             <input 
               type="text" 
               placeholder="Search documents..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50 border-none rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+              className="w-full bg-slate-50 border border-slate-100 rounded-lg py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:bg-white focus:border-[#1072b3] transition-all"
             />
           </div>
 
-          <div className="space-y-4 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
+          <div className="space-y-3 overflow-y-auto max-h-[500px] pr-1 custom-scrollbar">
             {documents.map((doc) => {
               const Icon = doc.icon;
               return (
-                <div key={doc.id} className="p-4 bg-gray-50/50 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100 rounded-2xl transition-all group flex items-center gap-4">
-                  <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110", doc.color)}>
-                    <Icon className="w-6 h-6" />
+                <div key={doc.id} className="p-4 bg-slate-50/50 hover:bg-white hover:shadow-lg border border-transparent hover:border-slate-100 rounded-lg transition-all group flex items-center gap-4">
+                  <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105", doc.color)}>
+                    <Icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">{doc.name}</p>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{doc.type}</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">•</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{doc.size}</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">•</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{doc.date}</span>
+                    <p className="text-xs font-black text-slate-800 uppercase tracking-tight truncate">{doc.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{doc.type}</span>
+                      <span className="text-[9px] font-black text-slate-400 opacity-30">•</span>
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{doc.date}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-2 hover:bg-primary/10 text-primary rounded-lg transition-colors" title="View">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 text-gray-600 rounded-lg transition-colors" title="Edit">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 text-gray-600 rounded-lg transition-colors" title="Print">
-                      <Printer className="w-4 h-4" />
-                    </button>
+                    <button className="p-2 hover:text-[#1072b3] transition-colors"><Eye className="w-4 h-4" /></button>
+                    <button className="p-2 hover:text-[#f6ce11] transition-colors"><Download className="w-4 h-4" /></button>
                   </div>
                 </div>
               );
@@ -134,31 +130,29 @@ const DocumentsReports = () => {
           </div>
         </div>
 
-        {/* Right Side: Reports & Analytics */}
-        <div className="space-y-8">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+        {/* Reports & Analytics */}
+        <div className="space-y-6">
+          <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Enrollment Trends</h3>
-                <p className="text-sm text-gray-500">Annual institutional growth</p>
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Enrollment Trends</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">Institutional Growth Analytics</p>
               </div>
-              <button className="p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                <BarChart2 className="w-5 h-5 text-gray-400" />
-              </button>
+              <BarChart2 className="w-5 h-5 text-slate-300" />
             </div>
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={enrollmentData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 12}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 12}} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}} />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase' }}
                     cursor={{ fill: '#F1F5F9' }}
                   />
-                  <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                     {enrollmentData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -167,21 +161,21 @@ const DocumentsReports = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Conversion Rate</p>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Conversion Rate</p>
               <div className="flex items-center justify-between">
-                <h4 className="text-2xl font-bold text-gray-900">68.4%</h4>
-                <div className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                <h4 className="text-2xl font-black text-slate-900">68.4%</h4>
+                <div className="flex items-center gap-1 text-[9px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-md">
                   <ArrowUpRight className="w-3 h-3" />
                   +4.2%
                 </div>
               </div>
             </div>
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Enrollees</p>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Enrollees</p>
               <div className="flex items-center justify-between">
-                <h4 className="text-2xl font-bold text-gray-900">4,520</h4>
-                <div className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                <h4 className="text-2xl font-black text-slate-900">4,520</h4>
+                <div className="flex items-center gap-1 text-[9px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-md">
                   <ArrowUpRight className="w-3 h-3" />
                   +12%
                 </div>
@@ -189,20 +183,21 @@ const DocumentsReports = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-primary to-secondary p-8 rounded-3xl shadow-lg shadow-primary/20 text-white relative overflow-hidden group">
-            <div className="absolute -right-12 -top-12 w-40 h-40 bg-white/10 rounded-full group-hover:scale-150 transition-transform duration-700" />
-            <div className="flex items-center gap-3 mb-4">
-              <Sparkles className="w-6 h-6 text-accent" />
-              <h3 className="text-lg font-bold">AI Predictive Insights</h3>
+          {/* AI Insights Card */}
+          <div className="bg-[#03396c] p-8 rounded-lg shadow-xl shadow-slate-200 text-white relative overflow-hidden group">
+            <div className="absolute -right-12 -top-12 w-40 h-40 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-700" />
+            <div className="flex items-center gap-3 mb-5">
+              <Sparkles className="w-5 h-5 text-[#f6ce11]" />
+              <h3 className="text-xs font-black uppercase tracking-widest">Predictive Intelligence</h3>
             </div>
-            <div className="space-y-4">
-              <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10">
-                <p className="text-sm font-medium leading-relaxed">
-                  Based on current trends, enrollment for 2027 is projected to increase by <span className="text-accent font-bold">15%</span>. 
-                  We recommend focusing marketing efforts on <span className="text-accent font-bold">STEM strands</span> in Bangar, La Union.
+            <div className="space-y-5">
+              <div className="p-5 bg-white/10 backdrop-blur-md rounded-lg border border-white/10">
+                <p className="text-xs font-medium leading-relaxed">
+                  Based on current trends, enrollment for 2027 is projected to increase by <span className="text-[#f6ce11] font-black">15%</span>. 
+                  Target marketing efforts on <span className="text-[#f6ce11] font-black">STEM strands</span> in Bangar, La Union.
                 </p>
               </div>
-              <button className="w-full py-3 bg-accent text-primary rounded-xl text-sm font-bold hover:bg-white hover:text-primary transition-all flex items-center justify-center gap-2">
+              <button className="w-full py-3.5 bg-[#f6ce11] text-black rounded-lg text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white transition-all flex items-center justify-center gap-2">
                 Generate Full Analysis
                 <TrendingUp className="w-4 h-4" />
               </button>

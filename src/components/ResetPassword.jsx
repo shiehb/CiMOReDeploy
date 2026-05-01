@@ -167,7 +167,7 @@ const ResetPassword = ({ token, onBack }) => {
                 className="space-y-5"
               >
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-bold text-slate-800">Set New Password</h2>
+                  <h2 className="text-xl font-bold text-secondary">Set New Password</h2>
                   <p className="text-slate-500 text-sm mt-1">Choose a strong password for your account.</p>
                 </div>
 

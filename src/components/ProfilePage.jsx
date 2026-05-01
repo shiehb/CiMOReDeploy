@@ -118,7 +118,7 @@ const ProfilePage = ({ onBack }) => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">My Profile</h2>
+          <h2 className="text-2xl font-bold text-secondary">My Profile</h2>
           <p className="text-gray-500 text-sm mt-0.5">Your account information</p>
         </div>
       </div>

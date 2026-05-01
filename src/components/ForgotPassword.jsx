@@ -108,8 +108,8 @@ const ForgotPassword = ({ onBack }) => {
                 className="space-y-6"
               >
                 <div className="text-center mb-2">
-                  <h2 className="text-xl font-bold text-slate-800">Password Recovery</h2>
-                  <p className="text-slate-500 text-sm mt-1">
+                  <h2 className="text-xl font-bold text-secondary uppercase">Password Recovery</h2>
+                  <p className="text-slate-500 text-sm mt-1 ">
                     Enter your email to receive a reset link.
                   </p>
                 </div>

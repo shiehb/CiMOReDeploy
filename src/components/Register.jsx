@@ -167,7 +167,7 @@ const Register = ({ onBack }) => {
           ) : (
             <motion.div key="form-container">
               <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-slate-800">Create Account</h2>
+                <h2 className="text-xl font-bold text-secondary uppercase">Create Account</h2>
               </div>
 
               <form onSubmit={handleSubmit} noValidate className="space-y-5">

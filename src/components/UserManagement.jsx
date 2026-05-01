@@ -390,17 +390,19 @@ const UserManagement = () => {
         </motion.div>
       )}
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
-          <p className="text-gray-500 text-sm mt-1">Manage institutional access and roles.</p>
+          <h2 className="text-2xl font-black text-secondary uppercase tracking-tight">User Management</h2>
+          <p className="text-slate-500 text-sm font-medium">Manage institutional access and roles.</p>
         </div>
+        
+        {/* EFFECT: Blue to Yellow flip */}
         <button
           onClick={handleOpenModal}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-md text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group"
+          className="flex items-center justify-center gap-2 px-6 py-2.5 font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 border-2 border-transparent rounded-lg bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black hover:shadow-lg active:scale-[0.99] group outline-none"
         >
-          <UserPlus className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          Add New User
+          <UserPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          <span>Add New User</span>
         </button>
       </div>
 
@@ -924,7 +926,7 @@ const UserManagement = () => {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </div>  
   );
 };
 

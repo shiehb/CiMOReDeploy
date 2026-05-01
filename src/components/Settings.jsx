@@ -1112,6 +1112,16 @@ const PANELS = {
   api:           ApiPanel,
 };
 
+
+
+// SLC Corporate Theme Mapping
+const THEME = {
+  primary: '#1072b3',   // SLC Corporate Blue
+  secondary: '#03396c', // SLC Deep Navy
+  accent: '#f6ce11',    // SLC Gold
+  bg: '#F5F7FA',
+};
+
 const Settings = ({ initialPanel = 'profile' }) => {
   const role = localStorage.getItem('userRole') || 'Staff';
   const sections = ALL_SECTIONS.filter(s => s.roles.includes(role));
@@ -1119,15 +1129,16 @@ const Settings = ({ initialPanel = 'profile' }) => {
   const Panel = PANELS[active] ?? ProfilePanel;
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">System Settings</h2>
-        <p className="text-gray-500 text-sm mt-1">Configure and manage your CIMORe experience.</p>
+        <h2 className="text-2xl font-black text-secondary uppercase tracking-tight">System Settings</h2>
+        <p className="text-slate-500 text-sm mt-1 font-medium">Configure and manage your CIMORe experience.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* ── Sidebar ── */}
-        <div className="lg:col-span-1 space-y-2">
+        <div className="lg:col-span-1 space-y-3">
           {sections.map(({ id, label, icon: Icon, desc }) => {
             const isActive = active === id;
             return (
@@ -1135,29 +1146,41 @@ const Settings = ({ initialPanel = 'profile' }) => {
                 key={id}
                 onClick={() => setActive(id)}
                 className={cn(
-                  'w-full p-5 rounded-3xl flex items-center gap-4 text-left transition-all group',
+                  'w-full p-5 rounded-lg flex items-center gap-4 text-left transition-all duration-300 group outline-none',
                   isActive
-                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                    : 'bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-primary/20'
+                    ? 'bg-[#1072b3] text-white shadow-lg shadow-[#1072b3]/20'
+                    : 'bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-[#f6ce11]/50'
                 )}
               >
+                {/* Icon Container with Blue-to-Yellow Hover flip */}
                 <div className={cn(
-                  'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110',
-                  isActive ? 'bg-white/20 text-white' : 'bg-gray-50 text-gray-400 group-hover:text-primary'
+                  'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-105',
+                  isActive 
+                    ? 'bg-white/20 text-white' 
+                    : 'bg-slate-50 text-slate-400 group-hover:bg-[#f6ce11] group-hover:text-black'
                 )}>
                   <Icon className="w-5 h-5" />
                 </div>
+
+                {/* Label & Description */}
                 <div className="flex-1 min-w-0">
-                  <p className={cn('text-sm font-bold', isActive ? 'text-white' : 'text-gray-900')}>
+                  <p className={cn(
+                    'text-[11px] font-black uppercase tracking-widest', 
+                    isActive ? 'text-white' : 'text-slate-900 group-hover:text-[#1072b3]'
+                  )}>
                     {label}
                   </p>
-                  <p className={cn('text-xs mt-0.5 line-clamp-1', isActive ? 'text-white/70' : 'text-gray-500')}>
+                  <p className={cn(
+                    'text-[10px] font-bold mt-1 line-clamp-1 uppercase tracking-tighter', 
+                    isActive ? 'text-white/70' : 'text-slate-500'
+                  )}>
                     {desc}
                   </p>
                 </div>
+
                 <ChevronRight className={cn(
-                  'w-4 h-4 flex-shrink-0 transition-colors',
-                  isActive ? 'text-white/60' : 'text-gray-300 group-hover:text-primary'
+                  'w-4 h-4 flex-shrink-0 transition-all duration-300',
+                  isActive ? 'text-white/60' : 'text-slate-300 group-hover:text-[#f6ce11] group-hover:translate-x-1'
                 )} />
               </button>
             );
@@ -1172,7 +1195,8 @@ const Settings = ({ initialPanel = 'profile' }) => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden"
             >
               <Panel />
             </motion.div>
