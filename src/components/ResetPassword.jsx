@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { Lock, Eye, EyeOff, ShieldCheck, CheckCircle2, Info, ArrowLeft, Check, X } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle2, Info, ArrowLeft, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { API } from '../config/api';
+
+// Exact Color Theme Mapping
+const THEME = {
+  primary: '#2f80de',
+  secondary: '#2F80ED',
+  light: '#56CCF2',
+  accent: '#FFD600',
+  bg: '#F5F7FA',
+};
 
 // ---------------------------------------------------------------------------
 // Strength helpers
@@ -45,6 +54,28 @@ const StrengthMeter = ({ password }) => {
         {meta.label}
       </p>
     </div>
+  );
+};
+
+// Top Header: Logo and Title only (no profile or notification icons)
+const AuthHeader = () => {
+  return (
+    <header className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 sm:px-6 flex items-center justify-between z-50">
+      <div className="flex items-center gap-3">
+        <div 
+          style={{ background: `linear-gradient(135deg, ${THEME.primary}, ${THEME.light})` }}
+          className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md shadow-blue-100"
+        >
+          <span className="text-white font-bold text-lg">C</span>
+        </div>
+        <div>
+          <h1 className="text-base font-bold text-slate-800 leading-none tracking-tight">CiMORe</h1>
+          <p className="text-[10px] font-semibold text-slate-400 mt-0.5 tracking-wider uppercase">
+            Institutional Intelligence Hub
+          </p>
+        </div>
+      </div>
+    </header>
   );
 };
 
@@ -97,27 +128,44 @@ const ResetPassword = ({ token, onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center p-4 font-sans">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 font-sans relative pt-24"
+      style={{ backgroundColor: THEME.bg }}
+    >
+      <AuthHeader />
+
+      {/* Subtle background blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
+        <div 
+          style={{ backgroundColor: THEME.primary, opacity: 0.05 }} 
+          className="absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl" 
+        />
+        <div 
+          style={{ backgroundColor: THEME.secondary, opacity: 0.05 }} 
+          className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full blur-3xl" 
+        />
       </div>
 
+      {/* Form Card Layout
+        - Mobile: Seamless background (no cards, no shadows)
+        - Tablet & Desktop: White rounded card with soft shadows
+      */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white rounded-[15px] shadow-2xl border border-gray-100 overflow-hidden relative z-10"
+        className="w-full max-w-md sm:bg-white sm:rounded-3xl sm:shadow-xl sm:shadow-slate-100 sm:border sm:border-slate-100 p-2 sm:p-10 transition-all duration-300 relative z-10"
       >
-        {/* Header */}
-        <div className="p-5  bg-primary text-white text-center relative overflow-hidden">
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
-          <div className="relative z-10">
-            <h1 className="text-3xl font-bold tracking-tight">CiMORe</h1>
-            <p className="text-white/60 text-[10px] uppercase tracking-[0.2em] mt-2 font-bold">Set New Password</p>
-          </div>
+        {/* Responsive Section Header instead of colored banner */}
+        <div className="mb-8">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
+            Set New Password
+          </h2>
+          <p className="text-slate-400 text-sm mt-2">
+            Choose a strong new password for your account.
+          </p>
         </div>
 
-        <div className="p-10 space-y-6">
+        <div className="space-y-6">
           <AnimatePresence mode="wait">
             {success ? (
               <motion.div
@@ -130,9 +178,9 @@ const ResetPassword = ({ token, onBack }) => {
                   <CheckCircle2 className="w-8 h-8 text-green-500" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Password reset!</h3>
-                  <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-                    Your password has been changed successfully. You can now log in with your new password.
+                  <h3 className="text-lg font-bold text-slate-900">Password reset!</h3>
+                  <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+                    Your password has been changed successfully. You can now log in with your new credentials.
                   </p>
                 </div>
               </motion.div>
@@ -142,29 +190,32 @@ const ResetPassword = ({ token, onBack }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 onSubmit={handleSubmit}
-                className="space-y-4"
+                className="space-y-5"
               >
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  Choose a strong new password for your account.
-                </p>
-
-                {/* New Password + strength meter */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">New Password</label>
+                {/* New Password input */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 tracking-wider uppercase mb-2 ml-1">
+                    New Password <span className="text-red-500">*</span>
+                  </label>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#2f80de] transition-colors">
+                      <Lock 
+                        className="w-5 h-5" 
+                        style={{ color: newPassword ? THEME.primary : undefined }}
+                      />
+                    </div>
                     <input
                       type={showNew ? 'text' : 'password'}
                       required
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-12 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                      className="w-full pl-12 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#2f80de] focus:ring-4 focus:ring-blue-50 transition-all duration-200"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNew(p => !p)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
                     >
                       {showNew ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -172,48 +223,59 @@ const ResetPassword = ({ token, onBack }) => {
                   <StrengthMeter password={newPassword} />
                 </div>
 
-                {/* Confirm Password + live match indicator */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Confirm Password</label>
+                {/* Confirm Password input */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 tracking-wider uppercase mb-2 ml-1">
+                    Confirm Password <span className="text-red-500">*</span>
+                  </label>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#2f80de] transition-colors">
+                      <Lock 
+                        className="w-5 h-5" 
+                        style={{ color: confirmPassword ? THEME.primary : undefined }}
+                      />
+                    </div>
                     <input
                       type={showConfirm ? 'text' : 'password'}
                       required
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
-                      className={`w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-12 text-sm focus:ring-2 transition-all outline-none ${
+                      className={`w-full pl-12 pr-12 py-3.5 bg-slate-50 border rounded-2xl text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white transition-all duration-200 ${
                         passwordsMismatch
-                          ? 'ring-2 ring-red-200 focus:ring-red-300'
+                          ? 'border-red-300 bg-red-50 focus:ring-4 focus:ring-red-100'
                           : passwordsMatch
-                            ? 'ring-2 ring-green-200 focus:ring-green-300'
-                            : 'focus:ring-primary/20'
+                            ? 'border-green-300 focus:ring-4 focus:ring-green-50'
+                            : 'border-slate-200 focus:border-[#2f80de] focus:ring-4 focus:ring-blue-50'
                       }`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirm(p => !p)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
                     >
                       {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
 
-                  {/* Inline match feedback */}
+                  {/* Inline password match validation */}
                   <AnimatePresence>
                     {passwordsMatch && (
                       <motion.p
-                        initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="flex items-center gap-1 text-[11px] font-semibold text-green-600 ml-1 mt-1"
+                        initial={{ opacity: 0, y: -4 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-1 text-[11px] font-bold text-green-600 ml-1 mt-1"
                       >
                         <Check className="w-3 h-3" /> Passwords match
                       </motion.p>
                     )}
                     {passwordsMismatch && (
                       <motion.p
-                        initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="flex items-center gap-1 text-[11px] font-semibold text-red-500 ml-1 mt-1"
+                        initial={{ opacity: 0, y: -4 }} 
+                        animate={{ opacity: 1, y: 0 }} 
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-1 text-[11px] font-bold text-red-500 ml-1 mt-1"
                       >
                         <X className="w-3 h-3" /> Passwords do not match
                       </motion.p>
@@ -221,37 +283,46 @@ const ResetPassword = ({ token, onBack }) => {
                   </AnimatePresence>
                 </div>
 
+                {/* API-level error box */}
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3"
+                    className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 mt-2"
                   >
                     <Info className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                     <p className="text-xs text-red-600 font-medium leading-relaxed">{error}</p>
                   </motion.div>
                 )}
 
+                {/* Submit resetting action */}
                 <button
                   type="submit"
                   disabled={isLoading || passwordsMismatch}
-                  className="w-full py-4 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  style={{ 
+                    backgroundColor: THEME.primary,
+                    boxShadow: `0 10px 15px -3px rgba(47, 128, 237, 0.25)` 
+                  }}
+                  className="w-full py-4 text-white font-bold rounded-2xl hover:brightness-110 active:scale-[0.99] flex items-center justify-center gap-2 group transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed outline-none"
                 >
                   {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
-                    'Reset Password'
+                    <span>Reset Password</span>
                   )}
                 </button>
               </motion.form>
             )}
           </AnimatePresence>
 
+          {/* Action Link Footer */}
           <button
             onClick={onBack}
-            className="w-full py-3 border-2 border-primary/20 text-primary rounded-2xl text-sm font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
+            style={{ borderColor: `${THEME.primary}33`, color: THEME.primary }}
+            className="w-full py-3.5 bg-white border-2 hover:bg-slate-50 text-sm font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 outline-none"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to Login
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Login</span>
           </button>
         </div>
       </motion.div>
