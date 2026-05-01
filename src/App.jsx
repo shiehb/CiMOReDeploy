@@ -142,7 +142,7 @@ export default function App() {
 
   return (
     <div 
-      className="min-h-screen font-sans text-slate-900 selection:bg-[#1072b3]/10 selection:text-[#1072b3]"
+      className="min-h-[calc(100vh-200px)] font-sans text-slate-900 selection:bg-[#1072b3]/10 selection:text-[#1072b3]"
       style={{ backgroundColor: THEME.bg }}
     >
       <Header 
@@ -174,7 +174,7 @@ export default function App() {
           setIsOpen={setIsOpen}
         />
 
-        <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
+        <main className="flex-1 md:ml-64 min-h-[calc(100vh-300px)] flex flex-col">
           <div className="flex-1 px-4 lg:px-8">
             <div className="py-6 w-full max-w-7xl mx-auto">
               <AnimatePresence mode="wait">

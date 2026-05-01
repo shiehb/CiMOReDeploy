@@ -131,7 +131,7 @@ function ProfilePanel() {
   );
 
   if (error) return (
-    <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3">
+    <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
       <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
       <p className="text-sm font-medium text-red-600">{error}</p>
     </div>
@@ -139,12 +139,12 @@ function ProfilePanel() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         {/* Avatar section */}
         <div className="p-8 space-y-4 border-b border-gray-100">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="relative w-28 h-28 rounded-3xl overflow-hidden border border-gray-200 bg-gray-50 shadow-sm flex-shrink-0">
+              <div className="relative w-28 h-28 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 shadow-sm flex-shrink-0">
                 {avatarPreview || profile?.avatar_url ? (
                   <img src={avatarPreview || profile.avatar_url} alt="Profile avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -159,18 +159,18 @@ function ProfilePanel() {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <label htmlFor="avatar-upload-settings" className="py-3 px-4 bg-gray-100 text-gray-700 rounded-2xl text-sm font-semibold hover:bg-gray-200 transition-colors cursor-pointer border border-gray-200">
+              <label htmlFor="avatar-upload-settings" className="py-3 px-4 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors cursor-pointer border border-gray-200">
                 Choose photo
                 <input id="avatar-upload-settings" type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarSelect} />
               </label>
               <button type="button" onClick={handleAvatarUpload} disabled={!avatarFile || avatarUploading}
-                className="py-3 px-4 bg-primary text-white rounded-2xl text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                className="py-3 px-4 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
                 {avatarUploading ? 'Uploading…' : 'Save Photo'}
               </button>
             </div>
           </div>
-          {avatarSuccess && <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-sm text-emerald-700">{avatarSuccess}</div>}
-          {avatarError  && <div className="p-3 bg-red-50 border border-red-100 rounded-2xl text-sm text-red-700">{avatarError}</div>}
+          {avatarSuccess && <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-lg text-sm text-emerald-700">{avatarSuccess}</div>}
+          {avatarError  && <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700">{avatarError}</div>}
         </div>
 
         {/* Info cards */}
@@ -181,7 +181,7 @@ function ProfilePanel() {
             { icon: Calendar,    label: 'Account Created', value: profile.date_joined ? new Date(profile.date_joined).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—' },
             { icon: ShieldCheck, label: 'Account Role',    value: profile.role },
           ].map(({ icon: Icon, label, value }) => (
-            <div key={label} className="flex items-center gap-4 bg-gray-50 rounded-2xl p-4">
+            <div key={label} className="flex items-center gap-4 bg-gray-50 rounded-lg p-4">
               <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Icon className="w-5 h-5 text-primary" />
               </div>
@@ -195,7 +195,7 @@ function ProfilePanel() {
       </div>
 
       {/* Preferences */}
-      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+      <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-4">
         <h4 className="text-sm font-bold text-gray-900">Preferences</h4>
         <div className="space-y-3">
           {[
@@ -203,7 +203,7 @@ function ProfilePanel() {
             { key: 'realtime',      label: 'Real-time Alerts',    desc: 'Get instant notifications for new marketing requests.' },
             { key: 'publicProfile', label: 'Public Profile',      desc: 'Allow other staff members to view your profile.' },
           ].map(({ key, label, desc }) => (
-            <div key={key} className="flex items-center justify-between p-4 bg-gray-50/60 rounded-2xl">
+            <div key={key} className="flex items-center justify-between p-4 bg-gray-50/60 rounded-lg">
               <div>
                 <p className="text-sm font-bold text-gray-900">{label}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
@@ -268,14 +268,14 @@ function SecurityPanel() {
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
       {/* Toast notification */}
       <AnimatePresence>
         {notification && (
           <motion.div
             initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
             className={cn(
-              'fixed top-6 right-6 z-50 flex items-start gap-3 max-w-sm rounded-3xl border px-4 py-3 shadow-2xl',
+              'fixed top-6 right-6 z-50 flex items-start gap-3 max-w-sm rounded-lg border px-4 py-3 shadow-2xl',
               notification.type === 'success' ? 'bg-white border-green-200 text-green-900' : 'bg-white border-red-200 text-red-900'
             )}
           >
@@ -312,7 +312,7 @@ function SecurityPanel() {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
               <input type={showCur ? 'text' : 'password'} value={currentPw} onChange={e => setCurrentPw(e.target.value)}
                 placeholder="Enter your current password"
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 pl-11 pr-11 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-4 pl-11 pr-11 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
               <button type="button" onClick={() => setShowCur(v => !v)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
                 {showCur ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -327,7 +327,7 @@ function SecurityPanel() {
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
               <input type={showNew ? 'text' : 'password'} value={newPw} onChange={e => setNewPw(e.target.value)}
                 placeholder="Min. 8 characters"
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 pl-11 pr-11 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-4 pl-11 pr-11 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
               <button type="button" onClick={() => setShowNew(v => !v)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
                 {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -359,7 +359,7 @@ function SecurityPanel() {
               <input type={showCon ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)}
                 placeholder="Re-enter your new password"
                 className={cn(
-                  'w-full bg-gray-50 rounded-2xl py-4 pl-11 pr-11 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
+                  'w-full bg-gray-50 rounded-lg py-4 pl-11 pr-11 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all',
                   confirm.length > 0 && confirm !== newPw ? 'border border-red-300 bg-red-50' : 'border border-gray-200'
                 )} />
               <button type="button" onClick={() => setShowCon(v => !v)}
@@ -373,7 +373,7 @@ function SecurityPanel() {
           </div>
 
           <button type="submit" disabled={isLoading}
-            className="w-full py-4 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+            className="w-full py-4 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
             {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : 'Save Changes'}
           </button>
           </div>
@@ -386,19 +386,19 @@ function SecurityPanel() {
           <motion.div key="confirm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">Confirm Password Change</h3>
               <p className="text-sm text-gray-500 mt-2">Are you sure you want to change your password? This will update your account credentials immediately.</p>
               <div className="flex gap-3 mt-8">
                 <button type="button" onClick={() => setShowConfirm(false)}
-                  className="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-all">
+                  className="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-200 transition-all">
                   Cancel
                 </button>
                 <button type="button" onClick={executePasswordChange} disabled={isLoading}
-                  className="flex-1 py-3.5 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-70">
+                  className="flex-1 py-3.5 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-70">
                   {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Confirming...</> : 'Confirm'}
                 </button>
               </div>
@@ -420,10 +420,6 @@ function NotificationsPanel() {
   const [prefsLoading, setPrefsLoading] = useState(true);
   const [saving, setSaving]     = useState(false);
   const [saveMsg, setSaveMsg]   = useState(null);
-
-  // test email state
-  const [testLoading, setTestLoading] = useState(false);
-  const [testMsg,     setTestMsg]     = useState(null);
 
   // broadcast state (admin only)
   const [bc, setBc] = useState({ title: '', body: '', target: 'all', send_email: true });
@@ -462,21 +458,6 @@ function NotificationsPanel() {
     }
   };
 
-  const sendTestEmail = async () => {
-    setTestLoading(true);
-    setTestMsg(null);
-    try {
-      const res  = await fetch(`${API}/api/notifications/test-email/`, { method: 'POST', headers });
-      const data = await res.json();
-      setTestMsg({ type: res.ok ? 'success' : 'error', text: data.message || data.error || 'Unknown error.' });
-    } catch {
-      setTestMsg({ type: 'error', text: 'Network error. Please try again.' });
-    } finally {
-      setTestLoading(false);
-      setTimeout(() => setTestMsg(null), 5000);
-    }
-  };
-
   const sendBroadcast = async () => {
     if (!bc.title.trim()) { setBcMsg({ type: 'error', text: 'Title is required.' }); return; }
     setBcLoading(true);
@@ -509,7 +490,7 @@ function NotificationsPanel() {
     <div className="space-y-5">
 
       {/* ── Preferences ── */}
-      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+      <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-6">
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-bold text-gray-900">Notification Preferences</h3>
@@ -525,7 +506,7 @@ function NotificationsPanel() {
         ) : (
           <div className="space-y-3">
             {prefItems.map(({ field, icon: Icon, label, desc }) => (
-              <div key={field} className="flex items-center justify-between p-5 bg-gray-50/60 rounded-2xl">
+              <div key={field} className="flex items-center justify-between p-5 bg-gray-50/60 rounded-lg">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                     <Icon className="w-5 h-5" />
@@ -543,7 +524,7 @@ function NotificationsPanel() {
 
         {saveMsg && (
           <div className={cn(
-            'flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold',
+            'flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold',
             saveMsg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
           )}>
             {saveMsg.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -552,33 +533,9 @@ function NotificationsPanel() {
         )}
       </div>
 
-      {/* ── Test Email ── */}
-      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-        <div>
-          <h3 className="text-base font-bold text-gray-900">Test Email Delivery</h3>
-          <p className="text-sm text-gray-500 mt-1">Send a test notification to your account email to verify delivery settings.</p>
-        </div>
-        {testMsg && (
-          <div className={cn(
-            'flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold',
-            testMsg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
-          )}>
-            {testMsg.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-            {testMsg.text}
-          </div>
-        )}
-        <button
-          onClick={sendTestEmail}
-          disabled={testLoading}
-          className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl text-sm font-bold hover:border-primary/30 hover:text-primary transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {testLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</> : <><Mail className="w-4 h-4" /> Send Test Email</>}
-        </button>
-      </div>
-
       {/* ── Admin Broadcast ── */}
       {isAdmin && (
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-5">
+        <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-5">
           <div>
             <h3 className="text-base font-bold text-gray-900">Broadcast Notification</h3>
             <p className="text-sm text-gray-500 mt-1">Send an in-app notification (and optionally an email) to a group of users.</p>
@@ -592,7 +549,7 @@ function NotificationsPanel() {
                 value={bc.title}
                 onChange={e => setBc(p => ({ ...p, title: e.target.value }))}
                 placeholder="Notification title…"
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
               />
             </div>
 
@@ -603,7 +560,7 @@ function NotificationsPanel() {
                 onChange={e => setBc(p => ({ ...p, body: e.target.value }))}
                 placeholder="Message body…"
                 rows={3}
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
               />
             </div>
 
@@ -613,7 +570,7 @@ function NotificationsPanel() {
                 <select
                   value={bc.target}
                   onChange={e => setBc(p => ({ ...p, target: e.target.value }))}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 px-4 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 px-4 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 >
                   <option value="all">All Users</option>
                   <option value="staff_admin">Staff & Admin</option>
@@ -623,7 +580,7 @@ function NotificationsPanel() {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Also Send Email</label>
-                <div className="h-[46px] flex items-center px-4 bg-gray-50 border border-gray-200 rounded-2xl">
+                <div className="h-[46px] flex items-center px-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <Toggle on={bc.send_email} onChange={v => setBc(p => ({ ...p, send_email: v }))} />
                   <span className="ml-3 text-xs text-gray-600 font-medium">{bc.send_email ? 'Yes' : 'No'}</span>
                 </div>
@@ -633,7 +590,7 @@ function NotificationsPanel() {
 
           {bcMsg && (
             <div className={cn(
-              'flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-semibold',
+              'flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold',
               bcMsg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
             )}>
               {bcMsg.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
@@ -644,7 +601,7 @@ function NotificationsPanel() {
           <button
             onClick={sendBroadcast}
             disabled={bcLoading || !bc.title.trim()}
-            className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {bcLoading
               ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
@@ -672,14 +629,14 @@ function SystemPanel() {
   ];
 
   return (
-    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+    <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-6">
       <div>
         <h3 className="text-lg font-bold text-gray-900">System Configuration</h3>
         <p className="text-sm text-gray-500 mt-1">Adjust global system settings and defaults.</p>
       </div>
       <div className="space-y-3">
         {items.map(({ key, icon: Icon, label, desc }) => (
-          <div key={key} className="flex items-center justify-between p-5 bg-gray-50/60 rounded-2xl">
+          <div key={key} className="flex items-center justify-between p-5 bg-gray-50/60 rounded-lg">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                 <Icon className="w-5 h-5" />
@@ -820,7 +777,7 @@ function DatabasePanel() {
     <div className="space-y-5">
 
       {/* ── Create Backup ── */}
-      <div className="bg-white p-7 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+      <div className="bg-white p-7 rounded-lg shadow-sm border border-gray-100 space-y-6">
         <div>
           <h3 className="text-base font-bold text-gray-900">Create Backup</h3>
           <p className="text-xs text-gray-500 mt-0.5">
@@ -839,7 +796,7 @@ function DatabasePanel() {
               value={filename}
               onChange={e => setFilename(e.target.value)}
               placeholder="e.g. cimore_backup_april2026"
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-3 pl-4 pr-14 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+              className="w-full bg-gray-50 border border-gray-200 rounded-lg py-3 pl-4 pr-14 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">.zip</span>
           </div>
@@ -866,7 +823,7 @@ function DatabasePanel() {
                   type="button"
                   onClick={() => toggleModel(key)}
                   className={cn(
-                    'flex items-center gap-3 p-3.5 rounded-2xl border text-left transition-all',
+                    'flex items-center gap-3 p-3.5 rounded-lg border text-left transition-all',
                     on ? 'border-primary/40 bg-primary/5' : 'border-gray-200 bg-gray-50/50 hover:border-gray-300'
                   )}
                 >
@@ -892,7 +849,7 @@ function DatabasePanel() {
 
         {backupMsg && (
           <div className={cn(
-            'flex items-start gap-2 px-4 py-3 rounded-2xl text-xs font-semibold',
+            'flex items-start gap-2 px-4 py-3 rounded-lg text-xs font-semibold',
             backupMsg.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
           )}>
             {backupMsg.type === 'success'
@@ -905,7 +862,7 @@ function DatabasePanel() {
         <button
           onClick={handleBackup}
           disabled={backupLoading || selectedModels.length === 0}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {backupLoading
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Packing ZIP…</>
@@ -914,7 +871,7 @@ function DatabasePanel() {
       </div>
 
       {/* ── Restore ── */}
-      <div className="bg-white p-7 rounded-3xl shadow-sm border border-gray-100 space-y-5">
+      <div className="bg-white p-7 rounded-lg shadow-sm border border-gray-100 space-y-5">
         <div>
           <h3 className="text-base font-bold text-gray-900">Restore from Backup</h3>
           <p className="text-xs text-gray-500 mt-0.5">
@@ -924,13 +881,13 @@ function DatabasePanel() {
 
         {/* File picker */}
         <label className={cn(
-          'flex items-center gap-4 p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all group',
+          'flex items-center gap-4 p-5 border-2 border-dashed rounded-lg cursor-pointer transition-all group',
           restoreFile
             ? 'border-primary/40 bg-primary/5'
             : 'border-gray-200 hover:border-primary/30 bg-gray-50/50'
         )}>
           <div className={cn(
-            'w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors',
+            'w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors',
             restoreFile ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400 group-hover:text-primary'
           )}>
             <Database className="w-6 h-6" />
@@ -971,7 +928,7 @@ function DatabasePanel() {
 
         {restoreResult && (
           <div className={cn(
-            'rounded-2xl p-4 space-y-2',
+            'rounded-lg p-4 space-y-2',
             restoreResult.type === 'success' ? 'bg-green-50' : 'bg-red-50'
           )}>
             <p className={cn('text-xs font-bold flex items-center gap-2', restoreResult.type === 'success' ? 'text-green-700' : 'text-red-600')}>
@@ -993,7 +950,7 @@ function DatabasePanel() {
         <button
           onClick={() => setRestoreConfirm(true)}
           disabled={restoreLoading || !restoreFile}
-          className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-2xl text-sm font-bold hover:border-primary/30 hover:text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-bold hover:border-primary/30 hover:text-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {restoreLoading
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Restoring…</>
@@ -1007,8 +964,8 @@ function DatabasePanel() {
           <motion.div key="restore-confirm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-yellow-50 text-yellow-500">
+              className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8 text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-yellow-50 text-yellow-500">
                 <Database className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-gray-900">Confirm Restore</h3>
@@ -1018,11 +975,11 @@ function DatabasePanel() {
               </p>
               <div className="flex gap-3 mt-8">
                 <button type="button" onClick={() => setRestoreConfirm(false)}
-                  className="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-all">
+                  className="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-lg text-sm font-bold hover:bg-gray-200 transition-all">
                   Cancel
                 </button>
                 <button type="button" onClick={handleRestore}
-                  className="flex-1 py-3.5 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                  className="flex-1 py-3.5 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
                   Yes, Restore
                 </button>
               </div>
@@ -1048,7 +1005,7 @@ function ApiPanel() {
   };
 
   return (
-    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+    <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-6">
       <div>
         <h3 className="text-lg font-bold text-gray-900">API & Integrations</h3>
         <p className="text-sm text-gray-500 mt-1">Manage third-party connections and API keys.</p>
@@ -1056,7 +1013,7 @@ function ApiPanel() {
 
       <div className="space-y-3">
         {keys.map(({ name, key, active }) => (
-          <div key={name} className="flex items-center justify-between p-5 bg-gray-50/60 rounded-2xl gap-4">
+          <div key={name} className="flex items-center justify-between p-5 bg-gray-50/60 rounded-lg gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
                 <Key className="w-5 h-5" />
@@ -1085,7 +1042,7 @@ function ApiPanel() {
         ))}
       </div>
 
-      <button className="flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+      <button className="flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
         <Cloud className="w-4 h-4" /> Connect New Integration
       </button>
     </div>
@@ -1196,7 +1153,7 @@ const Settings = ({ initialPanel = 'profile' }) => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden"
+              className=" overflow-hidden"
             >
               <Panel />
             </motion.div>

@@ -193,7 +193,7 @@ const MarketingRequests = ({ onViewDetail }) => {
           className="bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col overflow-hidden"
           style={{ maxHeight: 'calc(100vh - 240px)' }}
         >
-          <div className="flex-1 overflow-auto min-h-0">
+          <div className="flex-1 overflow-auto min-h-250px">
             {loading ? (
               <div className="flex items-center justify-center h-full min-h-[300px]">
                 <Loader2 className="w-8 h-8 animate-spin text-[#1072b3]" />

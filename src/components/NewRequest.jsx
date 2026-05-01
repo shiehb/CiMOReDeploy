@@ -304,7 +304,7 @@ const NewRequest = ({ initialRequestType }) => {
       {/* ── Page Header ── */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">New Request</h2>
+          <h2 className="text-2xl font-bold text-secondary uppercase">New Request</h2>
           <p className="text-gray-500 text-sm mt-1">
             Submit a request to the College Information and Marketing Office.
           </p>

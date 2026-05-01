@@ -481,10 +481,10 @@ const UserManagement = () => {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 20 }}
           className="bg-white rounded shadow-sm border border-gray-100 flex flex-col overflow-hidden"
-          style={{ maxHeight: 'calc(100vh - 320px)' }}
+          style={{ maxHeight: 'calc(100vh - 350px)' }}
         >
           {/* Scrollable body */}
-          <div className="flex-1 overflow-auto min-h-0">
+          <div className="flex-1 overflow-auto min-h-[250px]">
           {loading ? (
             <div className="flex items-center justify-center h-full min-h-[200px]">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />

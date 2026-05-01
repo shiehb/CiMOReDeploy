@@ -34,7 +34,7 @@ const SchoolIntelligence = () => {
   const [focusedRowId, setFocusedRowId] = useState(null);
   const [formData, setFormData] = useState(initialForm);
 
-  const actionButtonBase = 'inline-flex items-center justify-center h-10 w-10 rounded-xl transition-colors duration-200 text-secondary/70 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/20';
+  const actionButtonBase = 'inline-flex items-center justify-center h-10 w-10 rounded-lg transition-colors duration-200 text-secondary/70 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/20';
 
   const showSuccess = (msg) => {
     setSuccessMessage(msg);
@@ -326,7 +326,7 @@ const SchoolIntelligence = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-6 right-6 z-[300] bg-primary text-white px-6 py-3 rounded-2xl shadow-lg text-sm font-bold flex items-center gap-3"
+            className="fixed top-6 right-6 z-[300] bg-primary text-white px-6 py-3 rounded-lg shadow-lg text-sm font-bold flex items-center gap-3"
           >
             <span>{successMessage}</span>
             <button onClick={() => setSuccessMessage(null)} className="opacity-70 hover:opacity-100 transition-opacity">
@@ -341,7 +341,7 @@ const SchoolIntelligence = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3"
+          className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3"
         >
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
           <p className="text-sm font-medium text-red-600">{error}</p>
@@ -424,7 +424,7 @@ const SchoolIntelligence = () => {
                   {!searchQuery && !showArchived && (
                     <button
                       onClick={openAddModal}
-                      className="mt-3 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all"
+                      className="mt-3 px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all"
                     >
                       Add First School
                     </button>
@@ -545,11 +545,11 @@ const SchoolIntelligence = () => {
 
         {/* Right: Insights */}
         <div className="space-y-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+          <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-secondary mb-6">Recruitment Insights</h3>
             <div className="space-y-6">
               {topFeeder ? (
-                <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold text-primary uppercase tracking-wider">Top Feeder</span>
                     <TrendingUp className="w-4 h-4 text-primary" />
@@ -561,7 +561,7 @@ const SchoolIntelligence = () => {
                   </p>
                 </div>
               ) : (
-                <div className="p-4 bg-gray-50 rounded-2xl text-center">
+                <div className="p-4 bg-gray-50 rounded-lg text-center">
                   <p className="text-xs text-secondary/70">No schools added yet.</p>
                 </div>
               )}
@@ -593,7 +593,7 @@ const SchoolIntelligence = () => {
             </div>
           </div>
 
-          <div className="bg-primary p-8 rounded-3xl shadow-lg shadow-primary/20 text-white relative overflow-hidden group">
+          <div className="bg-primary p-8 rounded-lg shadow-lg shadow-primary/20 text-white relative overflow-hidden group">
             <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full group-hover:scale-150 transition-transform duration-700" />
             <GraduationCap className="w-10 h-10 text-accent mb-4" />
             <h3 className="text-lg font-bold mb-2">Trailblazing Goals</h3>
@@ -603,7 +603,7 @@ const SchoolIntelligence = () => {
                 ? ` ${schools.length - schools.filter(s => s.last_visited).length} more to go.`
                 : schools.length > 0 ? ' All schools visited!' : ''}
             </p>
-            <button className="w-full py-3 bg-white text-primary rounded-xl text-sm font-bold hover:bg-accent hover:text-primary transition-all flex items-center justify-center gap-2">
+            <button className="w-full py-3 bg-white text-primary rounded-lg text-sm font-bold hover:bg-accent hover:text-primary transition-all flex items-center justify-center gap-2">
               View Schedule
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -651,7 +651,7 @@ const SchoolIntelligence = () => {
                         placeholder="Enter official school name"
                         value={formData.schoolName}
                         onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-gray-50 border-none rounded-lg py-4 pl-12 pr-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       />
                     </div>
                   </div>
@@ -665,7 +665,7 @@ const SchoolIntelligence = () => {
                         placeholder="Street address"
                         value={formData.street}
                         onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-gray-50 border-none rounded-lg py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       />
                     </div>
                     <div className="space-y-2">
@@ -675,7 +675,7 @@ const SchoolIntelligence = () => {
                         placeholder="Barangay"
                         value={formData.barangay}
                         onChange={(e) => setFormData({ ...formData, barangay: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-gray-50 border-none rounded-lg py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       />
                     </div>
                     <div className="space-y-2">
@@ -686,7 +686,7 @@ const SchoolIntelligence = () => {
                         placeholder="City or Municipality"
                         value={formData.city}
                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-gray-50 border-none rounded-lg py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       />
                     </div>
                     <div className="space-y-2">
@@ -696,7 +696,7 @@ const SchoolIntelligence = () => {
                         placeholder="Province"
                         value={formData.province}
                         onChange={(e) => setFormData({ ...formData, province: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-gray-50 border-none rounded-lg py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       />
                     </div>
                   </div>
@@ -711,7 +711,7 @@ const SchoolIntelligence = () => {
                         placeholder="Phone or Email"
                         value={formData.contactInfo}
                         onChange={(e) => setFormData({ ...formData, contactInfo: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-gray-50 border-none rounded-lg py-4 pl-12 pr-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       />
                     </div>
                   </div>
@@ -726,7 +726,7 @@ const SchoolIntelligence = () => {
                         placeholder="Full Name of Principal"
                         value={formData.principalName}
                         onChange={(e) => setFormData({ ...formData, principalName: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-gray-50 border-none rounded-lg py-4 pl-12 pr-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       />
                     </div>
                   </div>
@@ -734,14 +734,14 @@ const SchoolIntelligence = () => {
                   {/* Strands */}
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-xs font-bold text-secondary/70 uppercase tracking-wider ml-1">Strands Offered</label>
-                    <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-2xl">
+                    <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg">
                       {STRAND_OPTIONS.map(strand => (
                         <button
                           key={strand}
                           type="button"
                           onClick={() => toggleStrand(strand)}
                           className={cn(
-                            "px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+                            "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
                             formData.strands.includes(strand)
                               ? "bg-primary text-white shadow-sm"
                               : "bg-white text-secondary/70 border border-gray-200 hover:border-primary/30"
@@ -764,7 +764,7 @@ const SchoolIntelligence = () => {
                         placeholder="Total population"
                         value={formData.estimatedStudents}
                         onChange={(e) => setFormData({ ...formData, estimatedStudents: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-gray-50 border-none rounded-lg py-4 pl-12 pr-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       />
                     </div>
                   </div>
@@ -778,7 +778,7 @@ const SchoolIntelligence = () => {
                         type="date"
                         value={formData.lastVisited}
                         onChange={(e) => setFormData({ ...formData, lastVisited: e.target.value })}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-gray-50 border-none rounded-lg py-4 pl-12 pr-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                       />
                     </div>
                   </div>
@@ -788,13 +788,13 @@ const SchoolIntelligence = () => {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="flex-1 px-6 py-4 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-secondary/70 hover:bg-gray-100 transition-all"
+                    className="flex-1 px-6 py-4 bg-white border border-gray-200 rounded-lg text-sm font-bold text-secondary/70 hover:bg-gray-100 transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-4 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                    className="flex-1 px-6 py-4 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
                   >
                     {editingSchool ? 'Save Changes' : 'Save School Data'}
                   </button>
@@ -839,7 +839,7 @@ const SchoolIntelligence = () => {
                     <button
                       onClick={() => setPendingAction(null)}
                       disabled={isSubmitting}
-                      className="flex-1 px-6 py-3 bg-gray-100 rounded-2xl text-sm font-bold text-secondary/70 hover:bg-gray-200 transition-all disabled:opacity-50"
+                      className="flex-1 px-6 py-3 bg-gray-100 rounded-lg text-sm font-bold text-secondary/70 hover:bg-gray-200 transition-all disabled:opacity-50"
                     >
                       Cancel
                     </button>
@@ -847,7 +847,7 @@ const SchoolIntelligence = () => {
                       onClick={handleConfirm}
                       disabled={isSubmitting}
                       className={cn(
-                        "flex-1 px-6 py-3 text-white rounded-2xl text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2",
+                        "flex-1 px-6 py-3 text-white rounded-lg text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2",
                         cfg.confirmClass
                       )}
                     >
@@ -878,11 +878,11 @@ const SchoolIntelligence = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+              className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden"
             >
               <div className="bg-primary p-8 text-white flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-lg bg-white/20 flex items-center justify-center">
                     <School className="w-7 h-7" />
                   </div>
                   <div>
@@ -890,20 +890,20 @@ const SchoolIntelligence = () => {
                     <p className="text-white/60 text-xs mt-0.5">{viewingSchool.address}</p>
                   </div>
                 </div>
-                <button onClick={() => setViewingSchool(null)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                <button onClick={() => setViewingSchool(null)} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               <div className="p-8 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-2xl p-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-[10px] font-bold text-secondary/70 uppercase tracking-wider mb-1">Students</p>
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4 text-secondary/70" />
                       <p className="text-sm font-semibold text-secondary">{viewingSchool.estimated_students.toLocaleString()}</p>
                     </div>
                   </div>
-                  <div className="bg-gray-50 rounded-2xl p-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-[10px] font-bold text-secondary/70 uppercase tracking-wider mb-1">Last Visited</p>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-secondary/70" />
@@ -911,7 +911,7 @@ const SchoolIntelligence = () => {
                     </div>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-2xl p-4">
+                <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-[10px] font-bold text-secondary/70 uppercase tracking-wider mb-2">Strands Offered</p>
                   <div className="flex flex-wrap gap-1.5">
                     {viewingSchool.offered_strands
@@ -922,14 +922,14 @@ const SchoolIntelligence = () => {
                     }
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-2xl p-4">
+                <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-[10px] font-bold text-secondary/70 uppercase tracking-wider mb-1">Principal</p>
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-secondary/70" />
                     <p className="text-sm font-semibold text-secondary">{viewingSchool.principal_name || '—'}</p>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-2xl p-4">
+                <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-[10px] font-bold text-secondary/70 uppercase tracking-wider mb-1">Contact</p>
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-secondary/70" />
@@ -940,13 +940,13 @@ const SchoolIntelligence = () => {
               <div className="px-8 pb-8 flex gap-3">
                 <button
                   onClick={() => { setViewingSchool(null); openEditModal(viewingSchool); }}
-                  className="flex-1 py-3.5 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all"
+                  className="flex-1 py-3.5 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => setViewingSchool(null)}
-                  className="flex-1 py-3.5 bg-gray-100 text-secondary/70 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-all"
+                  className="flex-1 py-3.5 bg-gray-100 text-secondary/70 rounded-lg text-sm font-bold hover:bg-gray-200 transition-all"
                 >
                   Close
                 </button>
