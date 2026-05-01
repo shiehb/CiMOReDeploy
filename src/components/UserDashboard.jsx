@@ -191,7 +191,8 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
   const [detailRequestId, setDetailRequestId] = useState(null);
   const [settingsPanel, setSettingsPanel]   = useState('profile');
   const [settingsNavKey, setSettingsNavKey] = useState(0);
-  const [isOpen, setIsOpen] = useState(false); // mobile sidebar toggle
+  const [isOpen, setIsOpen] = useState(false);
+  const [requestTypeParam, setRequestTypeParam] = useState(null);
 
   const handleViewDetail = (id) => {
     setDetailRequestId(id);
@@ -208,10 +209,16 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
     return <FirstLoginChangePage onChanged={onPasswordChanged} />;
   }
 
+  const handleNavigate = (tab, requestType) => {
+    setActiveTab(tab);
+    setRequestTypeParam(requestType);
+    setIsOpen(false);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
-      case 'home':          return <CollaboratorHome />;
-      case 'new-request':    return <NewRequest />;
+      case 'home':          return <CollaboratorHome onNavigate={handleNavigate} />;
+      case 'new-request':    return <NewRequest initialRequestType={requestTypeParam} />;
       case 'my-requests':    return <MyRequests onViewDetail={handleViewDetail} />;
       case 'request-detail': return (
         <RequestDetail

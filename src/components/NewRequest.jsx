@@ -44,24 +44,34 @@ const FieldError = ({ error }) =>
 
 // ---------------------------------------------------------------------------
 
-const NewRequest = () => {
-  const [form, setForm]               = useState({ requestType: '' });
+const NewRequest = ({ initialRequestType }) => {
+  const [form, setForm]               = useState(({ requestType: initialRequestType || '' }));
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess]         = useState(false);
   const [apiError, setApiError]       = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Restore draft on mount
+  // Initialize form with initialRequestType if provided, otherwise restore from draft
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(DRAFT_KEY);
-      if (saved) {
-        const draft = JSON.parse(saved);
-        if (draft?.requestType) setForm(draft);
+    if (initialRequestType) {
+      // Pre-select request type based on prop
+      if (initialRequestType === 'Information Dissemination') {
+        setForm({ ...EMPTY_DISSEMINATION });
+      } else if (initialRequestType === 'Production Request') {
+        setForm({ ...EMPTY_PRODUCTION });
       }
-    } catch {}
-  }, []);
+    } else {
+      // Restore draft if no initialRequestType
+      try {
+        const saved = localStorage.getItem(DRAFT_KEY);
+        if (saved) {
+          const draft = JSON.parse(saved);
+          if (draft?.requestType) setForm(draft);
+        }
+      } catch {}
+    }
+  }, [initialRequestType]);
 
   // Auto-save draft on every change
   useEffect(() => {

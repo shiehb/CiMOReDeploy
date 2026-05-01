@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Clock, AlertCircle, ChevronRight, FileText, Image as ImageIcon, ArrowRight, ExternalLink, HelpCircle, Megaphone } from 'lucide-react';
+import { Home, Clock, ChevronRight, FileText, Image as ImageIcon, ArrowRight, ExternalLink, HelpCircle, Megaphone } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { API, authHeaders } from '../config/api';
 
@@ -17,10 +17,11 @@ const STATUS_DOT = {
   'Returned for Revision': 'bg-red-600',
 };
 
-const CollaboratorHome = () => {
+const CollaboratorHome = ({ onNavigate }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeService, setActiveService] = useState(0);
+  const [isPaused, setIsPaused] = useState(false); // New state for pause feature
   
   const [announcements] = useState([
     {
@@ -54,11 +55,14 @@ const CollaboratorHome = () => {
   ];
 
   useEffect(() => {
+    // Timer only advances if isPaused is false
     const timer = setInterval(() => {
-      setActiveService((prev) => (prev + 1) % services.length);
-    }, 12000);
+      if (!isPaused) {
+        setActiveService((prev) => (prev + 1) % services.length);
+      }
+    }, 10000);
     return () => clearInterval(timer);
-  }, [services.length]);
+  }, [services.length, isPaused]); // Add isPaused as a dependency
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -77,8 +81,6 @@ const CollaboratorHome = () => {
     fetchRequests();
   }, []);
 
-  const actionRequired = requests.filter(r => r.status === 'Returned for Revision');
-
   return (
     <div className="max-w-8xl mx-auto px-2 sm:px-2 lg:px-4 py-2 space-y-4 animate-in fade-in duration-700 bg-bg min-h-screen">
       
@@ -91,113 +93,9 @@ const CollaboratorHome = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div className="lg:col-span-8 space-y-4">
-          
-          {/* 2. Service Slider (Carousel) */}
-          <div className="bg-white border border-gray-200 shadow-sm relative overflow-hidden h-[340px] md:h-[300px]">
-            {services.map((service, idx) => {
-              const isActive = activeService === idx;
-              return (
-                <div 
-                  key={idx} 
-                  className={cn(
-                    "absolute inset-0 w-full h-full p-8 border-l-[6px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-center",
-                    service.accent,
-                    isActive ? "translate-x-0 opacity-100 z-10" : "-translate-x-full opacity-0 z-0"
-                  )}
-                >
-                  {/* Background Image Layer */}
-                  <div 
-                    className="absolute inset-0 z-0 opacity-[0.20] bg-cover bg-center grayscale pointer-events-none mix-blend-multiply bg-yellow-100 transition-opacity duration-500"
-                    style={{ backgroundImage: `url(${service.image})` }}
-                  />
-
-                  {/* Foreground Content */}
-                  <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="p-3 bg-primary text-white shadow-lg animate-in zoom-in duration-700">
-                        {service.icon}
-                      </div>
-                      <div className="flex gap-2">
-                        {services.map((_, i) => (
-                          <div key={i} className="relative h-1.5 overflow-hidden rounded-full bg-gray-100" style={{ width: activeService === i ? '40px' : '16px' }}>
-                            {activeService === i && (
-                              <div className="absolute inset-0 bg-primary origin-left animate-[progress_10s_linear_forwards]" />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className={cn("transition-all duration-1000 delay-300", isActive ? "translate-x-0 opacity-100" : "-translate-x-12 opacity-0")}>
-                      <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-1">{service.title}</h2>
-                      <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-4 opacity-80">{service.type}</p>
-                      <p className="text-gray-600 text-sm font-medium leading-relaxed mb-8 max-w-lg">{service.desc}</p>
-                      
-                      {/* UPDATED BUTTON: Yellow hover effect */}
-                      <button className="flex items-center gap-3 bg-primary text-white px-8 py-4 text-xs font-black uppercase tracking-[0.2em] hover:bg-yellow-400 hover:text-gray-900 transition-all duration-300 group shadow-md shadow-primary/20">
-                        {service.action} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className={cn(
-            "p-6 border flex items-center justify-between transition-all duration-500",
-            actionRequired.length > 0 ? "bg-red-50 border-red-200" : "bg-white border-gray-200 opacity-80"
-          )}>
-            <div className="flex items-center gap-4">
-              <AlertCircle className={cn("w-6 h-6", actionRequired.length > 0 ? "text-red-600" : "text-gray-400")} />
-              <div>
-                <span className="block text-[10px] font-black uppercase tracking-widest text-gray-400">System Notifications</span>
-                <span className="text-lg font-bold text-gray-900">
-                  {actionRequired.length > 0 ? `${actionRequired.length} Items Awaiting Revision` : '0 Items Awaiting Revision'}
-                </span>
-              </div>
-            </div>
-            {actionRequired.length > 0 && <ChevronRight className="w-5 h-5 text-red-600 animate-pulse" />}
-          </div>
-
-          <div className="border border-gray-200 shadow-sm overflow-hidden bg-white">
-            <div className="bg-primary text-white px-6 py-4 flex items-center justify-between font-sans">
-              <h3 className="text-xs font-black uppercase tracking-[0.2em]">Submission Log</h3>
-              <span className="text-[10px] font-bold opacity-80">{requests.length} RECORDS FOUND</span>
-            </div>
-            <div className="divide-y divide-gray-100 min-h-[200px]">
-              {loading ? (
-                <div className="p-12 text-center text-xs font-bold uppercase text-gray-300 animate-pulse">Syncing Portal Data...</div>
-              ) : requests.length === 0 ? (
-                <div className="p-16 text-center text-gray-400 text-sm font-medium italic">No active records found.</div>
-              ) : (
-                requests.slice(0, 5).map((req) => (
-                  <div key={req.id} className="p-6 hover:bg-bg transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer">
-                    <div className="space-y-1">
-                      <h4 className="text-lg font-bold text-gray-900 uppercase tracking-tight group-hover:text-primary transition-colors">
-                        {req.title || req.type}
-                      </h4>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                        <Clock className="w-3 h-3" /> 
-                        Submitted: {new Date(req.created_at).toLocaleDateString()} • REF: #{req.id}
-                      </p>
-                    </div>
-                    <span className={cn(
-                      'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 border-l-4 shadow-sm',
-                      STATUS_STYLES[req.status] || 'bg-gray-100 text-gray-500 border-gray-300'
-                    )}>
-                      <span className={cn('w-1.5 h-1.5 rounded-full', STATUS_DOT[req.status] || 'bg-gray-400')} />
-                      {req.status}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:col-span-4 space-y-4">
+        
+        {/* RIGHT COLUMN */}
+        <div className="lg:col-span-4 space-y-4 order-1 lg:order-2">
           <div className="space-y-4">
             <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
               <Megaphone className="w-4 h-4 text-amber-500" /> Announcements
@@ -236,11 +134,113 @@ const CollaboratorHome = () => {
                 </a>
               ))}
             </nav>
-            <button className="w-full py-4 bg-white border-2 border-primary text-primary font-black text-[10px] uppercase tracking-[0.2em] hover:bg-yellow-400 hover:border-yellow-400 hover:text-gray-900 transition-all active:scale-95">
+            <button className="w-full py-4 bg-white border-2 border-primary text-primary font-black text-[10px] uppercase tracking-[0.2em] hover:bg-yellow-400 hover:border-yellow-400 hover:text-gray-900 transition-all active:scale-95 active:shadow-inner">
               Contact CIMO Helpdesk
             </button>
           </div>
         </div>
+
+        {/* LEFT COLUMN */}
+        <div className="lg:col-span-8 space-y-4 order-2 lg:order-1">
+          {/* Service Slider - Added onMouseEnter and onMouseLeave */}
+          <div 
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            className="bg-white border border-gray-200 shadow-sm relative overflow-hidden h-[340px] md:h-[300px]"
+          >
+            {services.map((service, idx) => {
+              const isActive = activeService === idx;
+              return (
+                <div 
+                  key={idx} 
+                  className={cn(
+                    "absolute inset-0 w-full h-full p-8 border-l-[6px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-center",
+                    service.accent,
+                    isActive ? "translate-x-0 opacity-100 z-10" : "-translate-x-full opacity-0 z-0"
+                  )}
+                >
+                  <div 
+                    className="absolute inset-0 z-0 opacity-[0.20] bg-cover bg-center grayscale pointer-events-none mix-blend-multiply bg-yellow-100 transition-opacity duration-500"
+                    style={{ backgroundImage: `url(${service.image})` }}
+                  />
+
+                  <div className="relative z-10">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="p-3 bg-primary text-white shadow-lg animate-in zoom-in duration-700">
+                        {service.icon}
+                      </div>
+                      <div className="flex gap-2">
+                        {services.map((_, i) => (
+                          <div key={i} className="relative h-1.5 overflow-hidden rounded-full bg-gray-100" style={{ width: activeService === i ? '40px' : '16px' }}>
+                            {activeService === i && (
+                              <div className={cn(
+                                "absolute inset-0 bg-primary origin-left animate-[progress_10s_linear_forwards]",
+                                isPaused && "pause" // Pauses the CSS progress bar animation
+                              )} />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className={cn("transition-all duration-1000 delay-300", isActive ? "translate-x-0 opacity-100" : "-translate-x-12 opacity-0")}>
+                      <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-1">{service.title}</h2>
+                      <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-4 opacity-80">{service.type}</p>
+                      <p className="text-gray-600 text-sm font-medium leading-relaxed mb-8 max-w-lg">{service.desc}</p>
+                      
+                      {/* BUTTON ANIMATION: active:scale-95 and hover shadow changes */}
+                      <button 
+                        onClick={() => onNavigate?.('new-request', service.title)} 
+                        className="flex items-center gap-3 bg-primary text-white px-8 py-4 text-xs font-black uppercase tracking-[0.2em] 
+                        hover:bg-yellow-400 hover:text-gray-900 transition-all duration-300 group shadow-md shadow-primary/20 
+                        active:scale-95 active:shadow-inner hover:shadow-lg hover:shadow-yellow-400/20"
+                      >
+                        {service.action} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Submission Log */}
+          <div className="border border-gray-200 shadow-sm overflow-hidden bg-white">
+            <div className="bg-primary text-white px-6 py-4 flex items-center justify-between font-sans">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em]">Submission Log</h3>
+              <span className="text-[10px] font-bold opacity-80">{requests.length} RECORDS FOUND</span>
+            </div>
+            <div className="divide-y divide-gray-100 min-h-[200px]">
+              {loading ? (
+                <div className="p-12 text-center text-xs font-bold uppercase text-gray-300 animate-pulse">Syncing Portal Data...</div>
+              ) : requests.length === 0 ? (
+                <div className="p-16 text-center text-gray-400 text-sm font-medium italic">No active records found.</div>
+              ) : (
+                requests.slice(0, 5).map((req) => (
+                  <div key={req.id} className="p-6 hover:bg-bg transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer">
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-bold text-gray-900 uppercase tracking-tight group-hover:text-primary transition-colors">
+                        {req.title || req.type}
+                      </h4>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <Clock className="w-3 h-3" /> 
+                        Submitted: {new Date(req.created_at).toLocaleDateString()} • REF: #{req.id}
+                      </p>
+                    </div>
+                    <span className={cn(
+                      'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 border-l-4 shadow-sm',
+                      STATUS_STYLES[req.status] || 'bg-gray-100 text-gray-500 border-gray-300'
+                    )}>
+                      <span className={cn('w-1.5 h-1.5 rounded-full', STATUS_DOT[req.status] || 'bg-gray-400')} />
+                      {req.status}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
