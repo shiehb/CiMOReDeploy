@@ -202,7 +202,7 @@ const NewRequest = () => {
   const hasType         = isProduction || isDissemination;
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24 md:pb-0">
 
       {/* ── Page Header ── */}
       <div className="flex items-start justify-between">
@@ -258,7 +258,7 @@ const NewRequest = () => {
           <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
             Request Type <span className="text-red-500">*</span>
           </label>
-          <div className="relative max-w-xs bg-gray-50 border border-gray-300 rounded-2xl">
+          <div className="relative w-full md:max-w-xs bg-gray-50 border border-gray-300 rounded-2xl">
             <select
               value={form.requestType}
               onChange={(e) => switchType(e.target.value)}
@@ -284,7 +284,7 @@ const NewRequest = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="bg-white rounded shadow-sm border border-gray-100 p-8 space-y-6"
+              className="bg-white rounded shadow-sm border border-gray-100 p-4 md:p-8 space-y-6"
             >
               {isProduction ? (
                 <>
@@ -588,13 +588,13 @@ const NewRequest = () => {
         </AnimatePresence>
       </form>
 
-            <div className="flex items-start justify-between">
+            <div className="md:flex md:items-start md:justify-between">
               <div></div>
         <button
           type="submit"
           form="cimoRequestForm"
           disabled={isSubmitting}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed"
+          className="md:relative fixed bottom-4 left-4 right-4 w-full md:w-auto flex items-center justify-center gap-2 px-4 md:px-6 py-4 md:py-3 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed z-10"
         >
           {isSubmitting
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>

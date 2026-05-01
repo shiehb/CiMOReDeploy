@@ -18,11 +18,15 @@ const ALL_ITEMS = [
   { id: 'settings',     label: 'Settings',             icon: SettingsIcon,    roles: ['Admin', 'Staff'] },
 ];
 
-const Sidebar = ({ activeTab, setActiveTab, userRole }) => {
+const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, setIsOpen }) => {
   const menuItems = ALL_ITEMS.filter((item) => item.roles.includes(userRole));
 
   return (
-    <div className="w-64 bg-white fixed left-0 top-13 h-[calc(100vh-3rem)] flex flex-col shadow-xl z-40">
+    <aside className={`
+      fixed top-0 left-0 h-full z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
+      ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      md:translate-x-0 md:fixed md:top-15 md:h-[calc(100vh-3.75rem)] md:block
+    `}>
       <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
@@ -30,7 +34,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole }) => {
           return (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => { setActiveTab(item.id); setIsOpen(false); }} // Close on mobile after click
               className={cn(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group',
                 isActive
@@ -48,7 +52,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole }) => {
           );
         })}
       </nav>
-    </div>
+    </aside>
   );
 };
 

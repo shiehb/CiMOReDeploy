@@ -37,6 +37,7 @@ export default function App() {
   const [detailRequestId, setDetailRequestId] = useState(null);
   const [settingsPanel, setSettingsPanel]     = useState('profile');
   const [settingsNavKey, setSettingsNavKey]   = useState(0);
+  const [isOpen, setIsOpen] = useState(false); // For mobile sidebar
 
   const handleViewDetail = (id) => {
     setDetailRequestId(id);
@@ -141,17 +142,27 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-bg font-sans text-gray-900 selection:bg-primary/10 selection:text-primary">
-      <Header onLogout={handleLogout} onNavigate={navigateTo} onNavigateToSettings={navigateToSettings} />
+      <Header onLogout={handleLogout} onNavigate={navigateTo} onNavigateToSettings={navigateToSettings} setIsOpen={setIsOpen} />
       <div className="flex pt-15">
+        {/* Backdrop for mobile */}
+        {isOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+            onClick={() => setIsOpen(false)} 
+          />
+        )}
+
         <Sidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           onLogout={handleLogout}
           userRole={userRole}
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
         />
-        <main className="flex-1 ml-64 min-h-[calc(100vh-4rem)] flex flex-col">
+        <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
           <div className="flex-1 px-4">
-            <div className="max-w-8xl mx-auto py-2">
+            <div className="py-2 w-full">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}

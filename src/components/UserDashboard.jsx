@@ -189,6 +189,7 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
   const [detailRequestId, setDetailRequestId] = useState(null);
   const [settingsPanel, setSettingsPanel]   = useState('profile');
   const [settingsNavKey, setSettingsNavKey] = useState(0);
+  const [isOpen, setIsOpen] = useState(false); // mobile sidebar toggle
 
   const handleViewDetail = (id) => {
     setDetailRequestId(id);
@@ -225,17 +226,30 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
 
   return (
     <div className="min-h-screen bg-bg font-sans text-gray-900 selection:bg-primary/10 selection:text-primary">
-      <Header onLogout={onLogout} onNavigate={setActiveTab} onNavigateToSettings={navigateToSettings} />
+      <Header onLogout={onLogout} onNavigate={setActiveTab} onNavigateToSettings={navigateToSettings} setIsOpen={setIsOpen} />
 
       <div className="flex pt-15">
+        {isOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+
         {/* Simplified sidebar — two pages only */}
-        <div className="w-64 bg-white fixed left-0 top-13 h-[calc(100vh-3rem)] flex flex-col shadow-xl z-40">
+        <aside className={`
+          fixed left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0 md:fixed md:top-15 md:h-[calc(100vh-3.75rem)] md:block
+          top-0 h-full
+        `}>
           <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
             {NAV.map(({ id, label, icon: Icon }) => {
               const isActive = isMainTab && activeTab === id;
               return (
                 <button
-                  key={id} onClick={() => setActiveTab(id)}
+                  key={id}
+                  onClick={() => { setActiveTab(id); setIsOpen(false); }}
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group',
                     isActive
@@ -250,12 +264,12 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
               );
             })}
           </nav>
-        </div>
+        </aside>
 
         {/* Main content */}
-        <main className="flex-1 ml-64 min-h-[calc(100vh-4rem)] flex flex-col">
+        <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
           <div className="flex-1 px-4">
-            <div className="max-w-8xl mx-auto py-2">
+            <div className="py-2 w-full">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}

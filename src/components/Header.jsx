@@ -12,6 +12,7 @@ import {
   FileText,
   Settings,
   Check,
+  Menu,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import logo from '../assets/logo.png';
@@ -32,7 +33,7 @@ function timeAgo(iso) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-const Header = ({ onLogout, onNavigate, onNavigateToSettings }) => {
+const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen }) => {
   const [showProfile, setShowProfile] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showLogoutNotification, setShowLogoutNotification] = useState(false);
@@ -142,8 +143,14 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings }) => {
   };
 
   return (
-    <header className="h-15 bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 pr-0 shadow-md">
+    <header className="h-15 bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 pr-0 shadow-md">
       <div className="flex items-center gap-4">
+        <button
+          onClick={() => setIsOpen(v => !v)}
+          className="md:hidden p-2 text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full transition-all"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
         <img src={logo} alt="CIMO Logo" className="h-12 w-auto object-contain" />
         <p className="text-base text-gray-600 uppercase tracking-widest hidden md:block">Institutional Intelligence Hub</p>
       </div>
@@ -242,7 +249,7 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings }) => {
             )}
           </AnimatePresence>
         </div>
-        
+
         <div className="h-8 w-px bg-gray-200 mx-2" />
         
         <div className="relative" ref={profileRef}>
