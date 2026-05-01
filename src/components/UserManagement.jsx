@@ -472,9 +472,6 @@ const UserManagement = () => {
                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-[18%]">Name</th>
                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-[24%]">Email</th>
                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-[12%]">Role</th>
-                    {!showArchived && (
-                      <th className="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-[12%]">Status</th>
-                    )}
                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-[16%]">Last Login</th>
                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider text-right">Actions</th>
                   </tr>
@@ -509,17 +506,6 @@ const UserManagement = () => {
                       <td className="px-6 py-4">
                         <span className="text-[10px] font-black text-gray-600 uppercase tracking-wider">{user.role}</span>
                       </td>
-                      {!showArchived && (
-                        <td className="px-6 py-4">
-                          <span className={cn(
-                            'px-3 py-1 rounded text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1.5',
-                            user.is_active ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
-                          )}>
-                            <span className={cn('w-1.5 h-1.5 rounded-full', user.is_active ? 'bg-green-600' : 'bg-gray-400')} />
-                            {user.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                      )}
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {formatTimestamp(user.last_login)}
                       </td>

@@ -1,5 +1,5 @@
 // Environment-based API configuration
-const API_BASE = import.meta.env.VITE_API_URL || 'https://cimoredeploy.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const API = API_BASE;
 export const authHeaders = () => ({
