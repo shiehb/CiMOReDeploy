@@ -644,7 +644,7 @@ const UserManagement = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* Unified Confirmation Dialog */}
+     {/* Unified Confirmation Dialog */}
       <AnimatePresence>
         {pendingAction && (() => {
           const cfg = confirmConfig[pendingAction.type];
@@ -655,42 +655,45 @@ const UserManagement = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => !isSubmitting && setPendingAction(null)}
-                className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
               />
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-sm bg-white rounded-[32px] shadow-2xl p-8"
+                className="relative w-full max-w-sm bg-white rounded-lg shadow-2xl p-8 border border-slate-100"
               >
                 <div className="flex flex-col items-center text-center gap-4">
-                  <div className={cn("w-16 h-16 rounded-full flex items-center justify-center", cfg.iconBg)}>
+                  <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center", cfg.iconBg)}>
                     {cfg.icon}
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900">{cfg.title}</h3>
-                    <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                    <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">{cfg.title}</h3>
+                    <p className="text-[11px] font-bold text-slate-500 mt-2 leading-relaxed uppercase tracking-wide">
                       {cfg.message(pendingAction.userName)}
                     </p>
                   </div>
-                  <div className="flex gap-3 w-full mt-2">
+                  <div className="flex gap-3 w-full mt-4">
                     <button
                       onClick={() => setPendingAction(null)}
                       disabled={isSubmitting}
-                      className="flex-1 px-6 py-3 bg-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-200 transition-all disabled:opacity-50"
+                      className="flex-1 px-4 py-3.5 bg-slate-100 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-200 transition-all disabled:opacity-50 outline-none"
                     >
                       Cancel
                     </button>
+                    {/* EFFECT: Blue to Yellow flip */}
                     <button
                       onClick={handleConfirm}
                       disabled={isSubmitting}
                       className={cn(
-                        "flex-1 px-6 py-3 text-white rounded-2xl text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2",
-                        cfg.confirmClass
+                        "flex-1 px-4 py-3.5 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 outline-none",
+                        cfg.confirmClass.includes('bg-primary') 
+                          ? 'bg-[#1072b3] hover:bg-[#f6ce11] hover:text-black hover:shadow-lg' 
+                          : cfg.confirmClass
                       )}
                     >
                       {isSubmitting ? (
-                        <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Processing</>
                       ) : cfg.confirmLabel}
                     </button>
                   </div>
@@ -709,23 +712,24 @@ const UserManagement = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
             onClick={(e) => e.target === e.currentTarget && setViewingUser(null)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+              className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden border border-slate-100"
             >
               {/* Header */}
-              <div className="bg-primary p-8 text-white flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white/20 flex items-center justify-center text-xl font-bold uppercase">
+              <div className="bg-[#03396c] p-8 text-white flex items-center justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16" />
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="w-14 h-14 rounded-lg overflow-hidden bg-white/20 flex items-center justify-center text-xl font-black uppercase shadow-inner">
                     {viewingUser.avatar_url ? (
                       <img
                         src={viewingUser.avatar_url}
-                        alt={`${capitalize(viewingUser.first_name)} ${capitalize(viewingUser.last_name)}`}
+                        alt="Avatar"
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -733,76 +737,63 @@ const UserManagement = () => {
                     )}
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold">{capitalize(viewingUser.first_name)} {capitalize(viewingUser.last_name)}</h3>
-                    <p className="text-white/60 text-xs mt-0.5">{viewingUser.email}</p>
+                    <h3 className="text-lg font-black uppercase tracking-tight leading-none">{viewingUser.first_name} {viewingUser.last_name}</h3>
+                    <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-1.5">{viewingUser.email}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setViewingUser(null)}
-                  className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors relative z-10 outline-none"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Body */}
-              <div className="p-8 space-y-5">
+              <div className="p-8 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-2xl p-4">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Role</p>
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Role</p>
                     <div className="flex items-center gap-2">
-                      <Shield className={cn("w-4 h-4", viewingUser.role === 'Admin' ? 'text-primary' : 'text-gray-400')} />
-                      <p className="text-sm font-semibold text-gray-800">{viewingUser.role}</p>
+                      <Shield className={cn("w-3.5 h-3.5", viewingUser.role === 'Admin' ? 'text-[#1072b3]' : 'text-slate-400')} />
+                      <p className="text-xs font-black text-slate-800 uppercase">{viewingUser.role}</p>
                     </div>
                   </div>
-                  <div className="bg-gray-50 rounded-2xl p-4">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status</p>
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Status</p>
                     <span className={cn(
-                      "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5",
-                      viewingUser.is_active ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'
+                      "px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 border",
+                      viewingUser.is_active ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-100 text-slate-500 border-slate-200'
                     )}>
-                      <div className={cn("w-1.5 h-1.5 rounded-full", viewingUser.is_active ? 'bg-green-600' : 'bg-gray-400')} />
+                      <div className={cn("w-1.5 h-1.5 rounded-full", viewingUser.is_active ? 'bg-green-600' : 'bg-slate-400')} />
                       {viewingUser.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-2xl p-4">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Email</p>
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Institutional Link</p>
                   <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <p className="text-sm font-semibold text-gray-800">{viewingUser.email}</p>
+                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                    <p className="text-xs font-bold text-slate-800">{viewingUser.email}</p>
                   </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-2xl p-4">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Last Login</p>
-                  <p className="text-sm font-semibold text-gray-800">
-                    {viewingUser.last_login
-                      ? new Date(viewingUser.last_login).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                      : 'Never logged in'}
-                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-2xl p-4">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Welcome Email</p>
-                    <span className={cn(
-                      'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5',
-                      viewingUser.email_delivered === false ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
-                    )}>
-                      <span className={cn('w-1.5 h-1.5 rounded-full', viewingUser.email_delivered === false ? 'bg-red-500' : 'bg-green-500')} />
-                      {viewingUser.email_delivered === false ? 'Not Delivered' : 'Delivered'}
-                    </span>
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Last Activity</p>
+                    <p className="text-[10px] font-black text-slate-800 uppercase">
+                      {viewingUser.last_login ? new Date(viewingUser.last_login).toLocaleDateString() : 'N/A'}
+                    </p>
                   </div>
-                  <div className="bg-gray-50 rounded-2xl p-4">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Password</p>
+                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Security</p>
                     <span className={cn(
-                      'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5',
-                      viewingUser.must_change_password ? 'bg-amber-50 text-amber-600' : 'bg-gray-100 text-gray-500'
+                      'px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-widest border flex items-center gap-1.5',
+                      viewingUser.must_change_password ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-100 text-slate-400 border-slate-200'
                     )}>
-                      <span className={cn('w-1.5 h-1.5 rounded-full', viewingUser.must_change_password ? 'bg-amber-500' : 'bg-gray-400')} />
-                      {viewingUser.must_change_password ? 'Pending Change' : 'Set'}
+                      <span className={cn('w-1.5 h-1.5 rounded-full', viewingUser.must_change_password ? 'bg-amber-500' : 'bg-slate-400')} />
+                      {viewingUser.must_change_password ? 'Temp Pwd' : 'Verified'}
                     </span>
                   </div>
                 </div>
@@ -810,11 +801,12 @@ const UserManagement = () => {
 
               {/* Footer */}
               <div className="px-8 pb-8">
+                {/* EFFECT: Bureau style Ghost to Yellow */}
                 <button
                   onClick={() => setViewingUser(null)}
-                  className="w-full py-3.5 bg-gray-100 text-gray-600 rounded-2xl text-sm font-bold hover:bg-gray-200 transition-all"
+                  className="w-full py-4 bg-white border-2 border-[#1072b3] text-[#1072b3] rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#f6ce11] hover:border-[#f6ce11] hover:text-black transition-all duration-300 outline-none"
                 >
-                  Close
+                  Close Record
                 </button>
               </div>
             </motion.div>
@@ -831,24 +823,27 @@ const UserManagement = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleCloseModal}
-              className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-[32px] shadow-2xl overflow-hidden"
+              className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl overflow-hidden border border-slate-200"
             >
               <form onSubmit={handleFormSubmit}>
-                <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-primary text-white">
-                  <div>
-                    <h3 className="text-xl font-bold">{editingUser ? 'Edit User' : 'Add New User'}</h3>
-                    <p className="text-white/60 text-xs mt-1 uppercase tracking-widest font-bold">Institutional Access</p>
+                <div className="p-8 bg-[#1072b3] text-white flex items-center justify-between relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -mr-32 -mt-32" />
+                  </div>
+                  <div className="relative z-10">
+                    <h3 className="text-xl font-black uppercase tracking-tight">{editingUser ? 'Update Profile' : 'New Institutional Access'}</h3>
+                    <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mt-1.5">User Identity Management</p>
                   </div>
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors relative z-10 outline-none"
                   >
                     <X className="w-6 h-6" />
                   </button>
@@ -857,68 +852,67 @@ const UserManagement = () => {
                 <div className="p-8 space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">First Name</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Given Name</label>
                       <input
                         required
                         type="text"
-                        placeholder="First name"
+                        placeholder="FIRST NAME"
                         value={formData.firstName}
                         onChange={(e) => setFormData({...formData, firstName: e.target.value.replace(/[^a-zA-Z\s\-']/g, '').toUpperCase()})}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg py-4 px-5 text-sm font-bold uppercase focus:bg-white focus:border-[#1072b3] focus:ring-4 focus:ring-[#1072b3]/5 transition-all outline-none"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Last Name</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Surname</label>
                       <input
                         required
                         type="text"
-                        placeholder="Last name"
+                        placeholder="LAST NAME"
                         value={formData.lastName}
                         onChange={(e) => setFormData({...formData, lastName: e.target.value.replace(/[^a-zA-Z\s\-']/g, '').toUpperCase()})}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg py-4 px-5 text-sm font-bold uppercase focus:bg-white focus:border-[#1072b3] focus:ring-4 focus:ring-[#1072b3]/5 transition-all outline-none"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Institutional Email</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Institutional Email</label>
                     <input
                       required
                       type="email"
-                      placeholder="example@slc.edu.ph"
+                      placeholder="NAME@SLC-SFLU.EDU.PH"
                       value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                      onChange={(e) => setFormData({...formData, email: e.target.value.toLowerCase()})}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-4 px-5 text-sm font-bold focus:bg-white focus:border-[#1072b3] focus:ring-4 focus:ring-[#1072b3]/5 transition-all outline-none"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Role</label>
-                      <select
-                        value={formData.role}
-                        onChange={(e) => setFormData({...formData, role: e.target.value})}
-                        className="w-full bg-gray-50 border-none rounded-2xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none appearance-none cursor-pointer"
-                      >
-                        <option value="Staff">Staff</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Collaborator">Collaborator</option>
-                      </select>
-                    </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Hub Designation</label>
+                    <select
+                      value={formData.role}
+                      onChange={(e) => setFormData({...formData, role: e.target.value})}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-4 px-5 text-[11px] font-black uppercase tracking-widest focus:bg-white focus:border-[#1072b3] transition-all outline-none cursor-pointer appearance-none"
+                    >
+                      <option value="Staff">Staff</option>
+                      <option value="Admin">Admin</option>
+                      <option value="Collaborator">Collaborator</option>
+                    </select>
                   </div>
                 </div>
 
-                <div className="p-8 bg-gray-50 flex gap-4">
+                <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="flex-1 px-6 py-4 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-100 transition-all"
+                    className="flex-1 px-6 py-4 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-100 transition-all outline-none"
                   >
-                    Cancel
+                    Discard
                   </button>
+                  {/* EFFECT: Blue to Yellow flip */}
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-4 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-4 bg-[#1072b3] text-white rounded-lg text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#f6ce11] hover:text-black transition-all duration-300 shadow-lg shadow-[#1072b3]/20 flex items-center justify-center gap-2 outline-none"
                   >
-                    {editingUser ? 'Save Changes' : 'Create User'}
+                    {editingUser ? 'Commit Changes' : 'Initialize Account'}
                   </button>
                 </div>
               </form>
@@ -926,7 +920,7 @@ const UserManagement = () => {
           </div>
         )}
       </AnimatePresence>
-    </div>  
+          </div>  
   );
 };
 

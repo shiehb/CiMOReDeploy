@@ -686,76 +686,96 @@ const NewRequest = ({ initialRequestType }) => {
         </AnimatePresence>
       </form>
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur z-10 md:static md:p-0 md:bg-transparent md:backdrop-blur-none md:flex md:items-start md:justify-between">
-              <div></div>
+{/* Form Submission Footer */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md z-10 border-t border-slate-100 md:static md:p-0 md:bg-transparent md:backdrop-blur-none md:border-none md:flex md:items-start md:justify-between">
+        <div></div>
+        
+        {/* EFFECT: Blue to Yellow flip */}
         <button
           type="submit"
           form="cimoRequestForm"
           disabled={isSubmitting || !isFormValid()}
-          className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed md:relative md:w-auto md:px-6 md:py-3"
+          className="w-full flex items-center justify-center gap-2 px-6 py-4 font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 border-2 border-transparent rounded-lg bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black hover:shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed md:w-auto md:py-3.5"
         >
-          {isSubmitting
-            ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
-            : <><Send className="w-4 h-4" /> Submit Request</>}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4" />
+              <span>Submit Request</span>
+            </>
+          )}
         </button>
       </div>
 
       {/* ── Confirmation Modal ── */}
       <AnimatePresence>
         {showConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-          >
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowConfirm(false)}
+            />
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-5"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-white rounded-[32px] w-full max-w-2xl flex flex-col overflow-hidden shadow-2xl"
+              style={{ maxHeight: '90vh' }}
             >
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900">Confirm Submission</h3>
-                <button onClick={() => setShowConfirm(false)} className="text-gray-400 hover:text-gray-600">
-                  <X className="w-5 h-5" />
-                </button>
+              <div className="p-6 border-b border-gray-100 bg-primary text-white shrink-0">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-bold">Confirm Submission</h3>
+                  <button
+                    onClick={() => setShowConfirm(false)}
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
-                <ConfirmRow label="Request Type">
-                  {form.requestType === 'Production'
-                    ? 'Request for Production'
-                    : 'Request for Information Dissemination'}
-                </ConfirmRow>
-                <ConfirmRow label="Date Needed">{form.dateNeeded}</ConfirmRow>
+              <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
+                <div className="bg-gray-50 rounded-3xl p-4 space-y-3 text-sm">
+                  <ConfirmRow label="Request Type">
+                    {form.requestType === 'Production'
+                      ? 'Request for Production'
+                      : 'Request for Information Dissemination'}
+                  </ConfirmRow>
+                  <ConfirmRow label="Date Needed">{form.dateNeeded}</ConfirmRow>
 
-                {form.requestType === 'Production' ? (
-                  <>
-                    <ConfirmRow label="Requesting Unit">{form.requestingUnit}</ConfirmRow>
-                    <ConfirmRow label="Medium">{form.expectedMedium}</ConfirmRow>
-                    <ConfirmRow label="Audience">{form.audience}</ConfirmRow>
-                    <ConfirmRow label="Venue">{form.eventVenue}</ConfirmRow>
-                    <ConfirmRow label="Event Date">{form.eventDate}</ConfirmRow>
-                    <ConfirmRow label="Materials Endorsed">{form.materialsEndorsed}</ConfirmRow>
-                  </>
-                ) : (
-                  <>
-                    <ConfirmRow label="Platform">{form.platform}</ConfirmRow>
-                    <ConfirmRow label="Headline">{form.headline}</ConfirmRow>
-                    <ConfirmRow label="Writer/s">{form.writers}</ConfirmRow>
-                    <ConfirmRow label="Word Count">{wordCount} words</ConfirmRow>
-                  </>
-                )}
+                  {form.requestType === 'Production' ? (
+                    <>
+                      <ConfirmRow label="Requesting Unit">{form.requestingUnit}</ConfirmRow>
+                      <ConfirmRow label="Medium">{form.expectedMedium}</ConfirmRow>
+                      <ConfirmRow label="Audience">{form.audience}</ConfirmRow>
+                      <ConfirmRow label="Venue">{form.eventVenue}</ConfirmRow>
+                      <ConfirmRow label="Event Date">{form.eventDate}</ConfirmRow>
+                      <ConfirmRow label="Materials Endorsed">{form.materialsEndorsed}</ConfirmRow>
+                    </>
+                  ) : (
+                    <>
+                      <ConfirmRow label="Platform">{form.platform}</ConfirmRow>
+                      <ConfirmRow label="Headline">{form.headline}</ConfirmRow>
+                      <ConfirmRow label="Writer/s">{form.writers}</ConfirmRow>
+                      <ConfirmRow label="Word Count">{wordCount} words</ConfirmRow>
+                    </>
+                  )}
+                </div>
+
+                <p className="text-xs text-gray-500">
+                  Await confirmation from CIMO within 2 working days. Approval depends on
+                  availability of CIMO staff.
+                </p>
               </div>
 
-              <p className="text-xs text-gray-500">
-                Await confirmation from CIMO within 2 working days. Approval depends on
-                availability of CIMO staff.
-              </p>
-
-              <div className="flex gap-3">
+              <div className="p-6 bg-gray-50 border-t border-gray-100 flex flex-col gap-3 shrink-0 md:flex-row">
                 <button
                   onClick={() => setShowConfirm(false)}
-                  className="flex-1 py-3 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-3 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
                 >
                   Go Back
                 </button>
@@ -767,7 +787,7 @@ const NewRequest = ({ initialRequestType }) => {
                 </button>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
