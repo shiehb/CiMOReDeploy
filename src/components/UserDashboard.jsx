@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Megaphone, ClipboardList, Settings as SettingsIcon, Eye, EyeOff, Lock, Loader2, AlertCircle, CheckCircle, ShieldCheck } from 'lucide-react';
+import { Home, Megaphone, ClipboardList, Settings as SettingsIcon, Eye, EyeOff, Lock, Loader2, AlertCircle, CheckCircle, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { API, authHeaders } from '../config/api';
 import Header from './Header';
+import CollaboratorHome from './CollaboratorHome';
 import NewRequest from './NewRequest';
 import MyRequests from './MyRequests';
 import RequestDetail from './RequestDetail';
@@ -179,13 +180,14 @@ const FirstLoginChangePage = ({ onChanged }) => {
 // User Dashboard — layout for Collaborator role
 // ---------------------------------------------------------------------------
 const NAV = [
+  { id: 'home',        label: 'Home',        icon: Home },
   { id: 'new-request', label: 'New Request', icon: Megaphone },
   { id: 'my-requests', label: 'My Requests', icon: ClipboardList },
   { id: 'settings',    label: 'Settings',    icon: SettingsIcon },
 ];
 
 const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
-  const [activeTab, setActiveTab]           = useState('new-request');
+  const [activeTab, setActiveTab]           = useState('home');
   const [detailRequestId, setDetailRequestId] = useState(null);
   const [settingsPanel, setSettingsPanel]   = useState('profile');
   const [settingsNavKey, setSettingsNavKey] = useState(0);
@@ -208,6 +210,7 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'home':          return <CollaboratorHome />;
       case 'new-request':    return <NewRequest />;
       case 'my-requests':    return <MyRequests onViewDetail={handleViewDetail} />;
       case 'request-detail': return (
@@ -218,7 +221,7 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
         />
       );
       case 'settings':       return <Settings key={settingsNavKey} initialPanel={settingsPanel} />;
-      default:               return <NewRequest />;
+      default:               return <CollaboratorHome />;
     }
   };
 
