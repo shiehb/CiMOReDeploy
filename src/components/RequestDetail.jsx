@@ -49,10 +49,6 @@ const ReadTextArea = ({ label, value }) => (
   </div>
 );
 
-// Checkbox-style read-only multi-option display.
-// value = stored string (e.g. 'Social Media', 'Both', 'Video')
-// options = the items to show as checkboxes
-// 'Both' means every option in the list is checked.
 const ReadCheckbox = ({ label, options, value }) => {
   const isChecked = (opt) => {
     if (!value) return false;
@@ -309,6 +305,13 @@ const RequestDetail = ({ requestId, onBack, canManage }) => {
   const [submitting, setSubmitting]     = useState(false);
   const [flashMsg, setFlashMsg]         = useState('');
 
+  // Cancel modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling]           = useState(false);
+
+  // Read userRole from localStorage (same pattern as MarketingRequests)
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') || '' : '';
+
   const fetchRequest = async () => {
     setLoading(true);
     setError('');
@@ -382,6 +385,34 @@ const RequestDetail = ({ requestId, onBack, canManage }) => {
     submitAction({ status: 'Rejected', notes: actionForm.remarks }, 'Request disapproved.');
   };
 
+  // ---------------------------------------------------------------------------
+  // Cancel handlers
+  // ---------------------------------------------------------------------------
+
+  const handleCancelClick = () => setShowCancelModal(true);
+
+  const confirmCancel = async () => {
+    setCancelling(true);
+    setShowCancelModal(false);
+    try {
+      const res = await fetch(`${API}/api/marketing/${requestId}/`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ status: 'Cancelled' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.detail || `HTTP ${res.status}`);
+      setFlashMsg('Request cancelled successfully.');
+      setTimeout(() => setFlashMsg(''), 4000);
+      await fetchRequest();
+    } catch (err) {
+      setFlashMsg(`Failed to cancel: ${err.message}`);
+      setTimeout(() => setFlashMsg(''), 4000);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const inputCls = (field) =>
     `w-full bg-gray-50 border rounded-2xl py-4 px-5 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all ${
       actionErrors[field] ? 'border-red-300 bg-red-50' : 'border-transparent'
@@ -421,6 +452,9 @@ const RequestDetail = ({ requestId, onBack, canManage }) => {
   const isPending    = request.status === 'Pending';
   const isApproved   = request.status === 'Approved';
   const isRejected   = request.status === 'Rejected';
+
+  // Show cancel button only for Approved requests and Admin/Staff roles
+  const canCancel = isApproved && ['Admin', 'Staff'].includes(userRole);
 
   // ---------------------------------------------------------------------------
   // Render
@@ -654,14 +688,14 @@ const RequestDetail = ({ requestId, onBack, canManage }) => {
                   <div className="flex gap-3 pt-1">
                     <button
                       onClick={cancelAction}
-                      className="flex-1 py-3 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                      className="flex-1 py-3 border-2 border-slate-300 text-slate-600 hover:bg-slate-100 hover:border-slate-400 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-[0.99] outline-none"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleApprove}
                       disabled={submitting}
-                      className="flex-1 py-3 rounded-2xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 shadow-md shadow-green-600/20"
+                      className="flex-1 py-3 bg-[#1072b3] border-2 border-[#1072b3] text-white hover:bg-[#f6ce11] hover:border-[#f6ce11] hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-[0.99] flex items-center justify-center gap-2 outline-none disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save as Approved'}
                     </button>
@@ -704,14 +738,14 @@ const RequestDetail = ({ requestId, onBack, canManage }) => {
                   <div className="flex gap-3 pt-1">
                     <button
                       onClick={cancelAction}
-                      className="flex-1 py-3 rounded-2xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                      className="flex-1 py-3 border-2 border-slate-300 text-slate-600 hover:bg-slate-100 hover:border-slate-400 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-[0.99] outline-none"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleDisapprove}
                       disabled={submitting}
-                      className="flex-1 py-3 rounded-2xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 shadow-md shadow-red-600/20"
+                      className="flex-1 py-3 bg-[#1072b3] border-2 border-[#1072b3] text-white hover:bg-[#f6ce11] hover:border-[#f6ce11] hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-[0.99] flex items-center justify-center gap-2 outline-none disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save as Disapproved'}
                     </button>
@@ -734,31 +768,92 @@ const RequestDetail = ({ requestId, onBack, canManage }) => {
       <div className="flex items-center justify-between gap-4 pb-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-5 py-3 bg-gray-100 text-gray-600 rounded-2xl text-sm font-semibold hover:bg-gray-200 transition-colors"
+          className="flex items-center gap-2 px-5 py-3 border-2 border-[#1072b3] text-[#1072b3] hover:bg-[#f6ce11] hover:border-[#f6ce11] hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-[0.99] outline-none"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to List
         </button>
 
-        {canManage && isPending && actionMode === null && (
-          <div className="flex gap-3">
+        <div className="flex gap-3">
+          {/* Cancel button — visible for Approved requests to Admin/Staff */}
+          {canCancel && (
             <button
-              onClick={() => setActionMode('disapprove')}
-              className="flex items-center gap-2 px-5 py-3 bg-red-50 text-red-600 border border-red-200 rounded-2xl text-sm font-semibold hover:bg-red-100 transition-colors"
+              onClick={handleCancelClick}
+              disabled={cancelling}
+              className="flex items-center gap-2 px-5 py-3 bg-[#1072b3] border-2 border-[#1072b3] text-white hover:bg-[#f6ce11] hover:border-[#f6ce11] hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-[0.99] outline-none disabled:opacity-50"
             >
-              <XCircle className="w-4 h-4" />
-              Disapprove
+              {cancelling ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <X className="w-4 h-4" />
+              )}
+              Cancel Request
             </button>
-            <button
-              onClick={() => setActionMode('approve')}
-              className="flex items-center gap-2 px-5 py-3 bg-green-600 text-white rounded-2xl text-sm font-bold hover:bg-green-700 transition-colors shadow-md shadow-green-600/20"
-            >
-              <CheckCircle className="w-4 h-4" />
-              Approve
-            </button>
-          </div>
-        )}
+          )}
+
+          {/* Approve / Disapprove buttons */}
+          {canManage && isPending && actionMode === null && (
+            <>
+              <button
+                onClick={() => setActionMode('disapprove')}
+                className="flex items-center gap-2 px-5 py-3 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-[0.99] outline-none"
+              >
+                <XCircle className="w-4 h-4" />
+                Disapprove
+              </button>
+              <button
+                onClick={() => setActionMode('approve')}
+                className="flex items-center gap-2 px-5 py-3 bg-[#1072b3] border-2 border-[#1072b3] text-white hover:bg-[#f6ce11] hover:border-[#f6ce11] hover:text-black rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 active:scale-[0.99] outline-none"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Approve
+              </button>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* ── Cancel Confirmation Modal ── */}
+      <AnimatePresence>
+        {showCancelModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-lg shadow-2xl p-8 max-w-sm w-full text-center border border-slate-100"
+            >
+              <div className="w-16 h-16 bg-[#1072b3]/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <X className="w-8 h-8 text-[#1072b3]" />
+              </div>
+              <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight mb-2">Cancel Request</h3>
+              <p className="text-gray-500 text-sm mb-8 leading-relaxed">
+                Are you sure you want to cancel this approved request? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  className="flex-1 px-6 py-3.5 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all duration-300 hover:bg-slate-200 active:scale-[0.99] outline-none"
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={confirmCancel}
+                  className="flex-1 px-6 py-3.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 bg-[#1072b3] border-2 border-[#1072b3] text-white hover:bg-[#f6ce11] hover:border-[#f6ce11] hover:text-black rounded-lg active:scale-[0.99] outline-none"
+                >
+                  Confirm
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };

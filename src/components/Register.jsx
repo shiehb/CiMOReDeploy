@@ -26,7 +26,21 @@ const Register = ({ onBack }) => {
   const [success, setSuccess] = useState(false);
 
   const set = (field) => (e) => {
-    setForm((f) => ({ ...f, [field]: e.target.value }));
+    const value = e.target.value;
+    setForm((f) => {
+      if (field === 'email') {
+        let localPart = value;
+        if (localPart.endsWith(DOMAIN)) {
+          localPart = localPart.slice(0, -DOMAIN.length);
+        }
+        const atIndex = localPart.indexOf('@');
+        if (atIndex >= 0) {
+          localPart = localPart.slice(0, atIndex);
+        }
+        return { ...f, email: localPart };
+      }
+      return { ...f, [field]: value };
+    });
     if (fieldErrors[field]) setFieldErrors((fe) => ({ ...fe, [field]: '' }));
   };
 
@@ -91,7 +105,7 @@ const Register = ({ onBack }) => {
       const body = new FormData();
       body.append('first_name', form.firstName.trim());
       body.append('last_name', form.lastName.trim());
-      body.append('email', form.email.trim().toLowerCase());
+      body.append('email', `${form.email.trim().toLowerCase()}${DOMAIN}`);
       if (avatarFile) {
         body.append('avatar', avatarFile);
       }
@@ -152,9 +166,8 @@ const Register = ({ onBack }) => {
               <h2 className="text-xl font-bold text-slate-800">Account Created!</h2>
               <p className="text-sm text-slate-500 mt-3 leading-relaxed">
                 A temporary password has been sent to:<br />
-                <span className="font-bold text-slate-700">{form.email}</span>
+                <span className="font-bold text-slate-700">{`${form.email}${DOMAIN}`}</span>
               </p>
-              
               {/* EFFECT: Blue to Yellow */}
               <button
                 onClick={onBack}
@@ -235,16 +248,19 @@ const Register = ({ onBack }) => {
                       />
                     </div>
                     <input
-                      type="email"
+                      type="text"
                       value={form.email}
                       onChange={set('email')}
-                      placeholder={`yourname${DOMAIN}`}
-                      className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border rounded-lg text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white transition-all duration-200 ${
+                      placeholder="yourname"
+                      className={`w-full pl-12 pr-32 py-3.5 bg-slate-50 border rounded-lg text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white transition-all duration-200 ${
                         fieldErrors.email 
                           ? 'border-red-300 bg-red-50 focus:ring-4 focus:ring-red-50' 
                           : 'border-slate-200 focus:border-[#1072b3] focus:ring-4 focus:ring-blue-50'
                       }`}
                     />
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none select-none text-slate-400 text-sm">
+                      {DOMAIN}
+                    </div>
                   </div>
                 </div>
 

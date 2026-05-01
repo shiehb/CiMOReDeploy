@@ -25,16 +25,18 @@ const STATUS_STYLE = {
   Approved: 'bg-green-50 text-green-600 border-green-100',
   Pending:  'bg-yellow-50 text-yellow-600 border-yellow-100',
   Rejected: 'bg-red-50 text-red-600 border-red-100',
+  Cancelled: 'bg-gray-50 text-gray-600 border-gray-100',
 };
 
 const DOT_STYLE = {
   Approved: 'bg-green-600',
   Pending:  'bg-yellow-600',
   Rejected: 'bg-red-600',
+  Cancelled: 'bg-gray-600',
 };
 
-const STATUS_ORDER   = { Pending: 0, Approved: 1, Rejected: 2 };
-const ALL_STATUSES   = ['Pending', 'Approved', 'Rejected'];
+const STATUS_ORDER   = { Pending: 0, Approved: 1, Rejected: 2, Cancelled: 3 };
+const ALL_STATUSES   = ['Pending', 'Approved', 'Rejected', 'Cancelled'];
 const SHOWN_STATUSES = new Set(ALL_STATUSES);
 
 const initials = (name = '') =>
@@ -92,7 +94,7 @@ const MarketingRequests = ({ onViewDetail }) => {
     })
     .sort((a, b) => (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3));
 
-  const totalPages       = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
+  const totalPages        = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
   const paginatedRequests = filteredRequests.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   useEffect(() => { setCurrentPage(1); }, [searchQuery, filterStatuses, pageSize]);
@@ -125,7 +127,6 @@ const MarketingRequests = ({ onViewDetail }) => {
           />
         </div>
 
-        {/* Checklist filter */}
         <div className="relative w-full md:w-64 border-t md:border-t-0 md:border-l border-slate-100" ref={filterRef}>
           <button
             onClick={() => setShowFilterPanel(p => !p)}
@@ -193,7 +194,7 @@ const MarketingRequests = ({ onViewDetail }) => {
           className="bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col overflow-hidden"
           style={{ maxHeight: 'calc(100vh - 240px)' }}
         >
-          <div className="flex-1 overflow-auto min-h-250px">
+          <div className="flex-1 overflow-auto min-h-[250px]">
             {loading ? (
               <div className="flex items-center justify-center h-full min-h-[300px]">
                 <Loader2 className="w-8 h-8 animate-spin text-[#1072b3]" />
@@ -249,7 +250,6 @@ const MarketingRequests = ({ onViewDetail }) => {
                       </td>
                       <td className="px-6 py-5 text-[11px] font-bold text-slate-500 whitespace-nowrap">{formatDate(row.created_at)}</td>
                       <td className="px-6 py-5 text-right">
-                        {/* EFFECT: Blue to Yellow */}
                         <button
                           onClick={(e) => { e.stopPropagation(); onViewDetail(row.id); }}
                           className="inline-flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black rounded-lg active:scale-95 whitespace-nowrap outline-none"
