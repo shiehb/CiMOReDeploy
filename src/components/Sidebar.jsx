@@ -18,7 +18,7 @@ const ALL_ITEMS = [
   { id: 'settings',     label: 'Settings',             icon: SettingsIcon,    roles: ['Admin', 'Staff'] },
 ];
 
-const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, setIsOpen }) => {
+const Sidebar = ({ activeTab, onNavigate, userRole, isOpen, setIsOpen }) => {
   const menuItems = ALL_ITEMS.filter((item) => item.roles.includes(userRole));
 
   return (
@@ -34,7 +34,7 @@ const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, setIsOpen }) => {
           return (
             <button
               key={item.id}
-              onClick={() => { setActiveTab(item.id); setIsOpen(false); }}
+              onClick={() => { onNavigate(item.id); setIsOpen(false); }}
               className={cn(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group outline-none',
                 isActive

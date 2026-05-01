@@ -19,6 +19,65 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
+const VALID_TABS = new Set([
+  'dashboard',
+  'users',
+  'marketing',
+  'request-detail',
+  'intelligence',
+  'documents',
+  'settings',
+  'profile',
+  'change-password',
+]);
+
+const parseAppRoute = (rawPath) => {
+  if (!rawPath || rawPath === 'dashboard') return { tab: 'dashboard', requestId: null, requestType: null };
+  if (rawPath.startsWith('request-detail')) {
+    const [, id] = rawPath.split('/');
+    return { tab: 'request-detail', requestId: id || null, requestType: null };
+  }
+  if (rawPath.startsWith('new-request')) {
+    const [, requestType] = rawPath.split('/');
+    return { tab: 'new-request', requestId: null, requestType: requestType ? decodeURIComponent(requestType) : null };
+  }
+  if (VALID_TABS.has(rawPath)) return { tab: rawPath, requestId: null, requestType: null };
+  return { tab: 'dashboard', requestId: null, requestType: null };
+};
+
+const getInitialRoute = () => {
+  const rawPath = window.location.pathname.replace(/^\/+/g, '').replace(/\/+$/g, '');
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  const authToken = localStorage.getItem('authToken');
+  const session = localStorage.getItem('cimore_auth');
+  const authenticated = Boolean(authToken && session);
+
+  if (token || rawPath === 'reset-password') {
+    return {
+      view: 'reset-password',
+      tab: 'dashboard',
+      requestId: null,
+      requestType: null,
+      resetToken: token || '',
+    };
+  }
+
+  if (rawPath === 'register') {
+    return { view: 'register', tab: 'dashboard', requestId: null, requestType: null, resetToken: '' };
+  }
+
+  if (rawPath === 'forgot-password') {
+    return { view: 'forgot-password', tab: 'dashboard', requestId: null, requestType: null, resetToken: '' };
+  }
+
+  if (!authenticated) {
+    return { view: 'login', tab: 'dashboard', requestId: null, requestType: null, resetToken: '' };
+  }
+
+  return { view: 'app', ...parseAppRoute(rawPath), resetToken: '' };
+};
+
 // SLC Corporate Theme Mapping
 const THEME = {
   primary: '#1072b3',   // SLC Corporate Blue
@@ -29,20 +88,14 @@ const THEME = {
 };
 
 export default function App() {
-  const [view, setView] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('token')) return 'reset-password';
-    const token = localStorage.getItem('authToken');
-    const session = localStorage.getItem('cimore_auth');
-    return token && session ? 'app' : 'login';
-  });
-
-  const resetToken = new URLSearchParams(window.location.search).get('token') || '';
+  const initialRoute = getInitialRoute();
+  const [view, setView] = useState(initialRoute.view);
+  const [resetToken, setResetToken] = useState(initialRoute.resetToken || '');
   const [userRole, setUserRole] = useState(() => localStorage.getItem('userRole') || '');
   const [mustChangePassword, setMustChangePassword] = useState(false);
-  const [activeTab, setActiveTab]             = useState('dashboard');
-  const [previousTab, setPreviousTab]         = useState('dashboard');
-  const [detailRequestId, setDetailRequestId] = useState(null);
+  const [activeTab, setActiveTab]             = useState(initialRoute.tab);
+  const [previousTab, setPreviousTab]         = useState(initialRoute.tab);
+  const [detailRequestId, setDetailRequestId] = useState(initialRoute.requestId);
   const [settingsPanel, setSettingsPanel]     = useState('profile');
   const [settingsNavKey, setSettingsNavKey]   = useState(0);
   const [isOpen, setIsOpen] = useState(false); 
@@ -52,17 +105,115 @@ export default function App() {
     navigateTo('request-detail');
   };
 
-  const navigateTo = (tab) => {
+  const navigateTo = (tab, routeOptions = {}) => {
     setPreviousTab(activeTab);
     setActiveTab(tab);
+    if (routeOptions.requestId) {
+      setDetailRequestId(routeOptions.requestId);
+    }
   };
 
   const navigateToSettings = (panel) => {
     setSettingsPanel(panel);
-    setSettingsNavKey(k => k + 1);
+    setSettingsNavKey((k) => k + 1);
     setPreviousTab(activeTab);
     setActiveTab('settings');
   };
+
+  const getUrlForTab = () => {
+    if (activeTab === 'dashboard') return '/dashboard';
+    if (activeTab === 'request-detail') {
+      return detailRequestId ? `/request-detail/${detailRequestId}` : '/request-detail';
+    }
+    return `/${activeTab}`;
+  };
+
+  const getUrlForRoute = () => {
+    if (view === 'login') return '/login';
+    if (view === 'register') return '/register';
+    if (view === 'forgot-password') return '/forgot-password';
+    if (view === 'reset-password') {
+      return resetToken ? `/reset-password?token=${encodeURIComponent(resetToken)}` : '/reset-password';
+    }
+    if (view === 'app') return getUrlForTab();
+    return '/login';
+  };
+
+  useEffect(() => {
+    const targetUrl = getUrlForRoute();
+    const currentUrl = window.location.pathname + window.location.search;
+    if (currentUrl !== targetUrl) {
+      if (window.location.pathname === '/' && (view === 'login' || (view === 'app' && activeTab === 'dashboard'))) {
+        window.history.replaceState({ view, tab: activeTab }, document.title, targetUrl);
+      } else {
+        window.history.pushState({ view, tab: activeTab }, document.title, targetUrl);
+      }
+    } else {
+      window.history.replaceState({ view, tab: activeTab }, document.title, targetUrl);
+    }
+  }, [view, activeTab, detailRequestId, resetToken]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const rawPath = window.location.pathname.replace(/^\/+/g, '').replace(/\/+$/g, '');
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const authToken = localStorage.getItem('authToken');
+      const session = localStorage.getItem('cimore_auth');
+      const authenticated = Boolean(authToken && session);
+
+      if (token || rawPath === 'reset-password') {
+        setView('reset-password');
+        setResetToken(token || '');
+        return;
+      }
+      if (rawPath === 'register') {
+        setView('register');
+        return;
+      }
+      if (rawPath === 'forgot-password') {
+        setView('forgot-password');
+        return;
+      }
+      if (!authenticated) {
+        setView('login');
+        return;
+      }
+
+      setView('app');
+      if (!rawPath || rawPath === 'dashboard') {
+        setPreviousTab(activeTab);
+        setActiveTab('dashboard');
+        setDetailRequestId(null);
+        return;
+      }
+      if (rawPath.startsWith('request-detail')) {
+        const [, id] = rawPath.split('/');
+        setPreviousTab(activeTab);
+        setActiveTab('request-detail');
+        setDetailRequestId(id || null);
+        return;
+      }
+      if (rawPath.startsWith('new-request')) {
+        setPreviousTab(activeTab);
+        setActiveTab('marketing');
+        setDetailRequestId(null);
+        return;
+      }
+      if (VALID_TABS.has(rawPath)) {
+        setPreviousTab(activeTab);
+        setActiveTab(rawPath);
+        setDetailRequestId(null);
+      } else {
+        setPreviousTab(activeTab);
+        setActiveTab('dashboard');
+        setDetailRequestId(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [activeTab]);
 
   const handleLogout = useCallback(() => {
     setView('login');
@@ -121,22 +272,22 @@ export default function App() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard':        return <Dashboard onNavigate={setActiveTab} />;
+      case 'dashboard':        return <Dashboard onNavigate={navigateTo} />;
       case 'users':            return <UserManagement />;
       case 'marketing':        return <MarketingRequests onViewDetail={handleViewDetail} />;
       case 'request-detail':   return (
         <RequestDetail
           requestId={detailRequestId}
-          onBack={() => setActiveTab(previousTab)}
+          onBack={() => navigateTo(previousTab)}
           canManage={true}
         />
       );
       case 'intelligence':     return <SchoolIntelligence />;
       case 'documents':        return <DocumentsReports />;
       case 'settings':         return <Settings key={settingsNavKey} initialPanel={settingsPanel} />;
-      case 'profile':          return <ProfilePage onBack={() => setActiveTab(previousTab)} />;
-      case 'change-password':  return <ChangePasswordPage onBack={() => setActiveTab(previousTab)} />;
-      default:                 return <Dashboard />;
+      case 'profile':          return <ProfilePage onBack={() => navigateTo(previousTab)} />;
+      case 'change-password':  return <ChangePasswordPage onBack={() => navigateTo(previousTab)} />;
+      default:                 return <Dashboard onNavigate={navigateTo} />;
     }
   };
 
@@ -167,7 +318,7 @@ export default function App() {
 
         <Sidebar
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          onNavigate={navigateTo}
           onLogout={handleLogout}
           userRole={userRole}
           isOpen={isOpen}

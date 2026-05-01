@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Home, Megaphone, ClipboardList, Settings as SettingsIcon, Eye, EyeOff, Lock, Loader2, AlertCircle, CheckCircle, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -15,6 +15,27 @@ const THEME = {
   secondary: '#03396c',
   accent: '#f6ce11',
   bg: '#F5F7FA',
+};
+
+const VALID_TABS = new Set(['home', 'new-request', 'my-requests', 'request-detail', 'settings']);
+
+const getInitialRoute = () => {
+  const rawPath = window.location.pathname.replace(/^\/+/g, '').replace(/\/+$/g, '');
+  if (!rawPath || rawPath === 'home') {
+    return { tab: 'home', requestType: null, requestId: null };
+  }
+  if (rawPath.startsWith('new-request')) {
+    const [, type] = rawPath.split('/');
+    return { tab: 'new-request', requestType: type ? decodeURIComponent(type) : null, requestId: null };
+  }
+  if (rawPath.startsWith('request-detail')) {
+    const [, id] = rawPath.split('/');
+    return { tab: 'request-detail', requestType: null, requestId: id || null };
+  }
+  if (rawPath === 'my-requests' || rawPath === 'settings') {
+    return { tab: rawPath, requestType: null, requestId: null };
+  }
+  return { tab: 'home', requestType: null, requestId: null };
 };
 
 // ---------------------------------------------------------------------------
@@ -190,22 +211,41 @@ const NAV = [
 ];
 
 const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
-  const [activeTab, setActiveTab]           = useState('home');
-  const [detailRequestId, setDetailRequestId] = useState(null);
-  const [settingsPanel, setSettingsPanel]   = useState('profile');
-  const [settingsNavKey, setSettingsNavKey] = useState(0);
+  const initialRoute = getInitialRoute();
+  const [activeTab, setActiveTab]             = useState(initialRoute.tab);
+  const [detailRequestId, setDetailRequestId] = useState(initialRoute.requestId);
+  const [settingsPanel, setSettingsPanel]     = useState('profile');
+  const [settingsNavKey, setSettingsNavKey]   = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [requestTypeParam, setRequestTypeParam] = useState(null);
+  const [requestTypeParam, setRequestTypeParam] = useState(initialRoute.requestType);
+
+  const getUrlForTab = () => {
+    if (activeTab === 'home') return '/home';
+    if (activeTab === 'new-request') {
+      return requestTypeParam ? `/new-request/${encodeURIComponent(requestTypeParam)}` : '/new-request';
+    }
+    if (activeTab === 'my-requests') return '/my-requests';
+    if (activeTab === 'request-detail') {
+      return detailRequestId ? `/request-detail/${detailRequestId}` : '/request-detail';
+    }
+    if (activeTab === 'settings') return '/settings';
+    return '/home';
+  };
+
+  const navigateTo = (tab, routeOptions = {}) => {
+    setActiveTab(tab);
+    setDetailRequestId(tab === 'request-detail' ? routeOptions.requestId || null : null);
+    setRequestTypeParam(tab === 'new-request' ? routeOptions.requestType || null : null);
+  };
 
   const handleViewDetail = (id) => {
-    setDetailRequestId(id);
-    setActiveTab('request-detail');
+    navigateTo('request-detail', { requestId: id });
   };
 
   const navigateToSettings = (panel) => {
     setSettingsPanel(panel);
-    setSettingsNavKey(k => k + 1);
-    setActiveTab('settings');
+    setSettingsNavKey((k) => k + 1);
+    navigateTo('settings');
   };
 
   if (mustChangePassword) {
@@ -213,10 +253,50 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
   }
 
   const handleNavigate = (tab, requestType) => {
-    setActiveTab(tab);
-    setRequestTypeParam(requestType);
+    navigateTo(tab, { requestType });
     setIsOpen(false);
   };
+
+  useEffect(() => {
+    const targetUrl = getUrlForTab();
+    if (window.location.pathname !== targetUrl) {
+      if (window.location.pathname === '/home' && activeTab === 'home') {
+        window.history.replaceState({ tab: activeTab }, document.title, targetUrl);
+      } else {
+        window.history.pushState({ tab: activeTab }, document.title, targetUrl);
+      }
+    } else {
+      window.history.replaceState({ tab: activeTab }, document.title, targetUrl);
+    }
+  }, [activeTab, detailRequestId, requestTypeParam]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const rawPath = window.location.pathname.replace(/^\/+/g, '').replace(/\/+$/g, '');
+      if (!rawPath || rawPath === 'home') {
+        navigateTo('home', { requestId: null, requestType: null });
+        return;
+      }
+      if (rawPath.startsWith('new-request')) {
+        const [, type] = rawPath.split('/');
+        navigateTo('new-request', { requestType: type ? decodeURIComponent(type) : null, requestId: null });
+        return;
+      }
+      if (rawPath.startsWith('request-detail')) {
+        const [, id] = rawPath.split('/');
+        navigateTo('request-detail', { requestId: id || null, requestType: null });
+        return;
+      }
+      if (rawPath === 'my-requests' || rawPath === 'settings') {
+        navigateTo(rawPath, { requestId: null, requestType: null });
+        return;
+      }
+      navigateTo('home', { requestId: null, requestType: null });
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -226,7 +306,7 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
       case 'request-detail': return (
         <RequestDetail
           requestId={detailRequestId}
-          onBack={() => setActiveTab('my-requests')}
+          onBack={() => navigateTo('my-requests')}
           canManage={false}
         />
       );
@@ -237,7 +317,7 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] font-sans text-gray-900 selection:bg-[#1072b3]/10 selection:text-[#1072b3]">
-      <Header onLogout={onLogout} onNavigate={setActiveTab} onNavigateToSettings={navigateToSettings} setIsOpen={setIsOpen} />
+      <Header onLogout={onLogout} onNavigate={navigateTo} onNavigateToSettings={navigateToSettings} setIsOpen={setIsOpen} />
 
       <div className="flex pt-15">
         {isOpen && (
@@ -259,7 +339,7 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
               return (
                 <button
                   key={id}
-                  onClick={() => { setActiveTab(id); setIsOpen(false); }}
+                  onClick={() => { navigateTo(id); setIsOpen(false); }}
                   className={cn(
                     'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group outline-none',
                     isActive
