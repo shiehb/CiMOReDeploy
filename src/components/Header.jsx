@@ -136,7 +136,7 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen }) => {
   };
 
   return (
-    <header className="h-15 bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 pr-2 shadow-md">
+    <header className="h-15 bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-100 flex items-center justify-between px-4 pr-2 shadow-md">
       <div className="flex items-center gap-4">
         <button
           onClick={() => setIsOpen(v => !v)}
@@ -169,7 +169,7 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen }) => {
                 initial={{ opacity: 0, y: 8, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50"
+                className="absolute right-0 mt-4 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50"
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                   <div className="flex items-center gap-2">
