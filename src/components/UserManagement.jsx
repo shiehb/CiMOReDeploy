@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { API } from '../config/api';
 
 const UserManagement = () => {
   const [showModal, setShowModal] = useState(false);
@@ -97,7 +98,7 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       setError(null);
-      const response = await fetch('http://localhost:8000/api/users/', { headers: authHeaders() });
+      const response = await fetch(`${API}/api/users/`, { headers: authHeaders() });
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       const data = await response.json();
       setUsers(data);
@@ -138,7 +139,7 @@ const UserManagement = () => {
         role: formData.role,
         is_active: true
       };
-      const response = await fetch('http://localhost:8000/api/users/', {
+      const response = await fetch(`${API}/api/users/`, {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify(userData)
@@ -177,7 +178,7 @@ const UserManagement = () => {
         username: formData.email.trim(),
         role: formData.role,
       };
-      const response = await fetch(`http://localhost:8000/api/users/${editingUser.id}/`, {
+      const response = await fetch(`${API}/api/users/${editingUser.id}/`, {
         method: 'PUT',
         headers: authHeaders(),
         body: JSON.stringify(userData)
@@ -206,7 +207,7 @@ const UserManagement = () => {
     setIsSubmitting(true);
     try {
       setError(null);
-      const response = await fetch(`http://localhost:8000/api/users/${userId}/`, {
+      const response = await fetch(`${API}/api/users/${userId}/`, {
         method: 'DELETE',
         headers: authHeaders()
       });
@@ -230,7 +231,7 @@ const UserManagement = () => {
     setIsSubmitting(true);
     try {
       setError(null);
-      const response = await fetch(`http://localhost:8000/api/users/${userId}/`, {
+      const response = await fetch(`${API}/api/users/${userId}/`, {
         method: 'PUT',
         headers: authHeaders(),
         body: JSON.stringify({ is_active: true })
