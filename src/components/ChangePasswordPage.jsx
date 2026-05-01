@@ -128,7 +128,7 @@ const ChangePasswordPage = ({ onBack }) => {
         className="w-full max-w-md sm:bg-white shadow border border-slate-100 p-6 sm:p-10 transition-all duration-300 relative z-10 rounded-lg"
       >
         {/* Logo at top of card */}
-        <div className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center">
           <img src={logo} alt="Logo" className="h-20 w-auto object-contain" />
         </div>
 

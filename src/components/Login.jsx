@@ -120,15 +120,19 @@ const Login = ({ onLogin, onRegister, onForgotPassword }) => {
         className="w-full max-w-md sm:bg-white shadow border border-slate-100 p-6 sm:p-10 transition-all duration-300 relative z-10 rounded-lg"
       >
         {/* Logo at the top of the card */}
-        <div className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center">
           <img src={logo} alt="Logo" className="h-20 w-auto object-contain" />
         </div>
+              <div className="text-center mb-8">
+                <h2 className="text-xl font-bold text-secondary uppercase">Login to Your Account</h2>
+                <p className="text-slate-500 text-sm mt-1">Enter your credentials to access your account.</p>
+              </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email */}
           <div>
             <label className="block text-xs font-bold text-slate-700 tracking-wider uppercase mb-2">
-              Email Address <span className="text-red-500">*</span>
+              Email <span className="text-red-500">*</span>
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1072b3] transition-colors">
@@ -142,7 +146,7 @@ const Login = ({ onLogin, onRegister, onForgotPassword }) => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="yourname@slc-sflu.edu.ph"
+                placeholder=""
                 className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#1072b3] focus:ring-4 focus:ring-blue-50 transition-all duration-200"
               />
             </div>
@@ -174,7 +178,7 @@ const Login = ({ onLogin, onRegister, onForgotPassword }) => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder=""
                 className={`w-full pl-12 pr-12 py-3.5 bg-slate-50 border rounded-lg text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white transition-all duration-200 ${
                   toast
                     ? 'border-red-300 bg-red-50 ring-4 ring-red-100 focus:ring-red-200'

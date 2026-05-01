@@ -74,7 +74,7 @@ const ForgotPassword = ({ onBack }) => {
         className="w-full max-w-md sm:bg-white shadow border border-slate-100 p-6 sm:p-10 transition-all duration-300 relative z-10 rounded-lg"
       >
         {/* Card Header with Logo */}
-        <div className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center">
           <img src={logo} alt="Logo" className="h-20 w-auto object-contain" />
         </div>
 
@@ -131,7 +131,7 @@ const ForgotPassword = ({ onBack }) => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder={`yourname${DOMAIN}`}
+                      placeholder={`user${DOMAIN}`}
                       className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#1072b3] focus:ring-4 focus:ring-blue-50 transition-all duration-200"
                     />
                   </div>

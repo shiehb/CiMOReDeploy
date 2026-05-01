@@ -127,7 +127,7 @@ const ResetPassword = ({ token, onBack }) => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md sm:bg-white shadow border border-slate-100 p-6 sm:p-10 transition-all duration-300 relative z-10 rounded-lg"
       >
-        <div className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center">
           <img src={logo} alt="Logo" className="h-20 w-auto object-contain" />
         </div>
 
@@ -144,7 +144,7 @@ const ResetPassword = ({ token, onBack }) => {
                   <CheckCircle2 className="w-8 h-8 text-green-500" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Password reset!</h3>
+                  <h3 className="text-lg font-bold text-secondary uppercase">Password reset!</h3>
                   <p className="text-sm text-slate-500 mt-2 leading-relaxed">
                     Your password has been changed successfully. You can now log in with your new credentials.
                   </p>
@@ -167,7 +167,7 @@ const ResetPassword = ({ token, onBack }) => {
                 className="space-y-5"
               >
                 <div className="text-center mb-6">
-                  <h2 className="text-xl font-bold text-secondary">Set New Password</h2>
+                  <h2 className="text-xl font-bold text-secondary uppercase">Set New Password</h2>
                   <p className="text-slate-500 text-sm mt-1">Choose a strong password for your account.</p>
                 </div>
 

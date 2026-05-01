@@ -148,7 +148,7 @@ const Register = ({ onBack }) => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md sm:bg-white shadow border border-slate-100 p-6 sm:p-10 transition-all duration-300 relative z-10 rounded-lg"
       >
-        <div className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center">
           <img src={logo} alt="Logo" className="h-20 w-auto object-contain" />
         </div>
 
@@ -163,7 +163,7 @@ const Register = ({ onBack }) => {
               <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-8 h-8 text-green-500" />
               </div>
-              <h2 className="text-xl font-bold text-slate-800">Account Created!</h2>
+              <h2 className="text-xl font-bold text-secondary uppercase">Account Created!</h2>
               <p className="text-sm text-slate-500 mt-3 leading-relaxed">
                 A temporary password has been sent to:<br />
                 <span className="font-bold text-slate-700">{`${form.email}${DOMAIN}`}</span>
@@ -181,6 +181,7 @@ const Register = ({ onBack }) => {
             <motion.div key="form-container">
               <div className="text-center mb-8">
                 <h2 className="text-xl font-bold text-secondary uppercase">Create Account</h2>
+                <p className="text-slate-500 text-sm mt-1">Fill in the details below to create your account.</p>
               </div>
 
               <form onSubmit={handleSubmit} noValidate className="space-y-5">
@@ -238,7 +239,7 @@ const Register = ({ onBack }) => {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 tracking-wider uppercase mb-2 ml-1">
-                    Email Address <span className="text-red-500">*</span>
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1072b3] transition-colors">
@@ -251,7 +252,7 @@ const Register = ({ onBack }) => {
                       type="text"
                       value={form.email}
                       onChange={set('email')}
-                      placeholder="yourname"
+                      placeholder=""
                       className={`w-full pl-12 pr-32 py-3.5 bg-slate-50 border rounded-lg text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white transition-all duration-200 ${
                         fieldErrors.email 
                           ? 'border-red-300 bg-red-50 focus:ring-4 focus:ring-red-50' 
