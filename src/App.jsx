@@ -19,9 +19,17 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
+// SLC Corporate Theme Mapping
+const THEME = {
+  primary: '#1072b3',   // SLC Corporate Blue
+  secondary: '#03396c', // SLC Deep Navy
+  light: '#bdd4e5',     // Soft Sky Blue
+  accent: '#f6ce11',    // SLC Gold
+  bg: '#F5F7FA',
+};
+
 export default function App() {
   const [view, setView] = useState(() => {
-    // If URL contains a reset token, go straight to reset-password
     const params = new URLSearchParams(window.location.search);
     if (params.get('token')) return 'reset-password';
     const token = localStorage.getItem('authToken');
@@ -37,7 +45,7 @@ export default function App() {
   const [detailRequestId, setDetailRequestId] = useState(null);
   const [settingsPanel, setSettingsPanel]     = useState('profile');
   const [settingsNavKey, setSettingsNavKey]   = useState(0);
-  const [isOpen, setIsOpen] = useState(false); // For mobile sidebar
+  const [isOpen, setIsOpen] = useState(false); 
 
   const handleViewDetail = (id) => {
     setDetailRequestId(id);
@@ -61,12 +69,7 @@ export default function App() {
     setUserRole('');
     setMustChangePassword(false);
     setActiveTab('dashboard');
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userFullName');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userAvatarUrl');
-    localStorage.removeItem('cimore_auth');
+    localStorage.clear(); // Comprehensive clear
   }, []);
 
   const handleLogin = (data) => {
@@ -75,7 +78,6 @@ export default function App() {
     setView('app');
   };
 
-  // 30-minute idle session expiry
   useEffect(() => {
     if (view !== 'app') return;
     let timer = setTimeout(handleLogout, IDLE_TIMEOUT_MS);
@@ -107,7 +109,6 @@ export default function App() {
     return <Login onLogin={handleLogin} onRegister={() => setView('register')} onForgotPassword={() => setView('forgot-password')} />;
   }
 
-  // Collaborators get a restricted dashboard with only their own pages
   if (userRole === 'Collaborator') {
     return (
       <UserDashboard
@@ -118,7 +119,6 @@ export default function App() {
     );
   }
 
-  // Admin / Staff — full dashboard
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':        return <Dashboard onNavigate={setActiveTab} />;
@@ -141,16 +141,29 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-bg font-sans text-gray-900 selection:bg-primary/10 selection:text-primary">
-      <Header onLogout={handleLogout} onNavigate={navigateTo} onNavigateToSettings={navigateToSettings} setIsOpen={setIsOpen} />
+    <div 
+      className="min-h-screen font-sans text-slate-900 selection:bg-[#1072b3]/10 selection:text-[#1072b3]"
+      style={{ backgroundColor: THEME.bg }}
+    >
+      <Header 
+        onLogout={handleLogout} 
+        onNavigate={navigateTo} 
+        onNavigateToSettings={navigateToSettings} 
+        setIsOpen={setIsOpen} 
+      />
+      
       <div className="flex pt-15">
-        {/* Backdrop for mobile */}
-        {isOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden" 
-            onClick={() => setIsOpen(false)} 
-          />
-        )}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden" 
+              onClick={() => setIsOpen(false)} 
+            />
+          )}
+        </AnimatePresence>
 
         <Sidebar
           activeTab={activeTab}
@@ -160,16 +173,17 @@ export default function App() {
           isOpen={isOpen}
           setIsOpen={setIsOpen}
         />
+
         <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
-          <div className="flex-1 px-4">
-            <div className="py-2 w-full">
+          <div className="flex-1 px-4 lg:px-8">
+            <div className="py-6 w-full max-w-7xl mx-auto">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
                 >
                   {renderContent()}
                 </motion.div>

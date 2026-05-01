@@ -3,6 +3,15 @@ import { Home, Clock, ChevronRight, FileText, Image as ImageIcon, ArrowRight, Ex
 import { cn } from '../lib/utils';
 import { API, authHeaders } from '../config/api';
 
+// SLC Corporate Theme Mapping
+const THEME = {
+  primary: '#1072b3',   // SLC Corporate Blue
+  secondary: '#03396c', // SLC Deep Navy
+  light: '#bdd4e5',     // Soft Sky Blue
+  accent: '#f6ce11',    // SLC Gold
+  bg: '#F5F7FA',
+};
+
 const STATUS_STYLES = {
   Pending: 'bg-amber-50 text-amber-600 border-amber-200',
   Approved: 'bg-green-50 text-green-600 border-green-200',
@@ -40,7 +49,7 @@ const CollaboratorHome = ({ onNavigate }) => {
       desc: "Submit official articles and announcements for Social Media and Website publication (250-500 words).",
       icon: <FileText className="w-6 h-6" />,
       action: "Submit Content",
-      accent: "border-primary",
+      accent: "border-[#1072b3]",
       image: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070" 
     },
     {
@@ -49,7 +58,7 @@ const CollaboratorHome = ({ onNavigate }) => {
       desc: "Official request for Social Cards, Videos, Photography, and Graphic Design for institutional events.",
       icon: <ImageIcon className="w-6 h-6" />,
       action: "Start Production",
-      accent: "border-secondary",
+      accent: "border-[#03396c]",
       image: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=2070" 
     }
   ];
@@ -80,11 +89,10 @@ const CollaboratorHome = ({ onNavigate }) => {
     fetchRequests();
   }, []);
 
-  // Shared component for the Information Bureau to keep code clean
   const InformationBureauContent = () => (
-    <div className="border border-gray-200 p-8 space-y-8 bg-white shadow-sm">
-      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2 border-b border-gray-50 pb-2">
-        <HelpCircle className="w-4 h-4 text-primary" /> Information Bureau
+    <div className="border border-slate-200/80 p-8 space-y-8 bg-white shadow rounded-lg">
+      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2 border-b border-slate-50 pb-2">
+        <HelpCircle className="w-4 h-4" style={{ color: THEME.primary }} /> Information Bureau
       </h3>
       <nav className="space-y-4">
         {[
@@ -92,91 +100,93 @@ const CollaboratorHome = ({ onNavigate }) => {
           { title: 'Headline Standards', desc: 'Active voice, 10 words limit' },
           { title: 'Identity Guidelines', desc: 'Official Media & Branding specs' }
         ].map((item, idx) => (
-          <a key={idx} href="#" className="block group border-b border-gray-50 pb-4 last:border-0 hover:translate-x-1 transition-transform">
-            <span className="flex items-center justify-between text-sm font-black text-gray-900 group-hover:text-yellow-500 transition-colors uppercase tracking-tight">
-              {item.title} <ExternalLink className="w-3 h-3 text-light" />
+          <a key={idx} href="#" className="block group border-b border-slate-50 pb-4 last:border-0 hover:translate-x-1 transition-transform outline-none">
+            <span className="flex items-center justify-between text-sm font-black text-slate-900 group-hover:text-[#1072b3] transition-colors uppercase tracking-tight">
+              {item.title} <ExternalLink className="w-3 h-3 opacity-50" />
             </span>
-            <span className="text-[11px] text-gray-500 font-medium">{item.desc}</span>
+            <span className="text-[11px] text-slate-500 font-medium">{item.desc}</span>
           </a>
         ))}
       </nav>
-      <button className="w-full py-4 bg-white border-2 border-primary text-primary font-black text-[10px] uppercase tracking-[0.2em] hover:bg-yellow-400 hover:border-yellow-400 hover:text-gray-900 transition-all active:scale-95">
+      {/* EFFECT: Reverse Ghost (White/Blue to Yellow/Black) */}
+      <button 
+        style={{ color: THEME.primary, borderColor: THEME.primary }}
+        className="w-full py-4 bg-white border-2 font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 hover:bg-[#f6ce11] hover:border-[#f6ce11] hover:text-black active:scale-95 outline-none rounded-lg"
+      >
         Contact CIMO Helpdesk
       </button>
     </div>
   );
 
   return (
-    <div className="max-w-8xl mx-auto px-2 sm:px-2 lg:px-4 py-2 space-y-4 animate-in fade-in duration-700 bg-bg min-h-screen">
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 animate-in fade-in duration-700 min-h-screen" style={{ backgroundColor: THEME.bg }}>
       
-      {/* 1. Header */}
-      <div className="border-b-2 border-primary pb-2">
-        <div className="flex items-center gap-2 text-primary mb-2 uppercase tracking-widest text-[10px] font-black">
-          <Home className="w-3 h-3" />
-          <span>College Information and Marketing Office</span>
+      {/* Branding Header */}
+      <div className="border-b-2 pb-3" style={{ borderColor: THEME.primary }}>
+        <div className="flex items-center gap-2 mb-1 uppercase tracking-widest text-[11px] font-black" style={{ color: THEME.primary }}>
+          <Home className="w-3.5 h-3.5" />
+          <span>Saint Louis College • CiMORe</span>
         </div>
       </div>
 
-      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-4">
+      <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
         
-        {/* MOBILE ANNOUNCEMENTS (Hidden on Desktop) */}
-        {announcements.length > 0 && (
-          <div className="block lg:hidden space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
-              <Megaphone className="w-4 h-4 text-amber-500" /> Announcements
-            </h3>
-            {announcements.map((ann) => (
-              <div key={ann.id} className="relative bg-white border border-gray-200 p-6 shadow-sm overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400" />
-                <div className="flex items-center justify-between mb-3">
-                  <span className="bg-amber-100 text-amber-700 text-[9px] font-black uppercase px-2 py-0.5 rounded">{ann.tag}</span>
-                  <span className="text-[10px] font-bold text-gray-400">{ann.date}</span>
-                </div>
-                <h3 className="text-sm font-black text-gray-900 uppercase mb-2 tracking-tight">{ann.title}</h3>
-                <p className="text-xs text-gray-500 font-medium leading-relaxed mb-4">{ann.body}</p>
-                <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
-                  Read Details <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* LEFT COLUMN (Desktop: Main Content) */}
-        <div className="lg:col-span-8 flex flex-col gap-4">
+        {/* LEFT COLUMN */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
           
-          {/* CAROUSEL */}
+          {/* CAROUSEL SECTION */}
           <div 
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
-            className="bg-white border border-gray-200 shadow-sm relative overflow-hidden h-[340px] md:h-[300px]"
+            className="bg-white border border-slate-200/80 shadow relative overflow-hidden h-[400px] md:h-[350px] rounded-lg"
           >
             {services.map((service, idx) => {
               const isActive = activeService === idx;
               return (
                 <div key={idx} className={cn(
-                    "absolute inset-0 w-full h-full p-8 border-l-[6px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-center",
+                    "absolute inset-0 w-full h-full p-8 md:p-12 border-l-[8px] transition-all duration-1000 ease-[cubic-bezier(0.4,0,0.2,1)] flex flex-col justify-center",
                     service.accent,
                     isActive ? "translate-x-0 opacity-100 z-10" : "-translate-x-full opacity-0 z-0"
                 )}>
-                  <div className="absolute inset-0 z-0 opacity-[0.20] bg-cover bg-center grayscale pointer-events-none mix-blend-multiply bg-yellow-100"
-                    style={{ backgroundImage: `url(${service.image})` }} />
+                  <div className="absolute inset-0 z-0 opacity-[0.15] bg-cover bg-center pointer-events-none grayscale mix-blend-overlay"
+                    style={{ backgroundImage: `url(${service.image})`, backgroundColor: THEME.light }} />
+                  
                   <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="p-3 bg-primary text-white shadow-lg">{service.icon}</div>
-                      <div className="flex gap-2">
+                    <div className="flex justify-between items-start mb-8">
+                      <div 
+                        style={{ backgroundColor: THEME.primary }}
+                        className="p-4 text-white shadow rounded-lg"
+                      >
+                        {service.icon}
+                      </div>
+                      <div className="flex gap-2 bg-slate-100/50 p-2 backdrop-blur-sm rounded-lg">
                         {services.map((_, i) => (
-                          <div key={i} className="relative h-1.5 overflow-hidden rounded-full bg-gray-100" style={{ width: activeService === i ? '40px' : '16px' }}>
-                            {activeService === i && <div className={cn("absolute inset-0 bg-primary origin-left animate-[progress_10s_linear_forwards]", isPaused && "pause")} />}
+                          <div 
+                            key={i} 
+                            className="relative h-1.5 overflow-hidden bg-slate-200 rounded-lg" 
+                            style={{ width: activeService === i ? '40px' : '12px' }}
+                          >
+                            {activeService === i && (
+                              <div 
+                                style={{ backgroundColor: THEME.primary }}
+                                className={cn("absolute inset-0 origin-left animate-[progress_10s_linear_forwards]", isPaused && "pause")} 
+                              />
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
+
                     <div className={cn("transition-all duration-1000 delay-300", isActive ? "translate-x-0 opacity-100" : "-translate-x-12 opacity-0")}>
-                      <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight mb-1">{service.title}</h2>
-                      <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-4 opacity-80">{service.type}</p>
-                      <p className="text-gray-600 text-sm font-medium mb-8 max-w-lg">{service.desc}</p>
-                      <button onClick={() => onNavigate?.('new-request', service.title)} className="flex items-center gap-3 bg-primary text-white px-8 py-4 text-xs font-black uppercase tracking-[0.2em] hover:bg-yellow-400 hover:text-gray-900 transition-all active:scale-95 group">
+                      <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-1">{service.title}</h2>
+                      <p className="text-xs font-black uppercase tracking-widest mb-4 opacity-70" style={{ color: THEME.secondary }}>{service.type}</p>
+                      <p className="text-slate-600 text-sm font-medium mb-8 max-w-lg leading-relaxed">{service.desc}</p>
+                      
+                      {/* EFFECT: Blue (White text) to Yellow (Black text) */}
+                      <button 
+                        onClick={() => onNavigate?.('new-request', service.title)} 
+                        className="flex items-center gap-3 px-10 py-4 text-xs font-black uppercase tracking-[0.2em] transition-all duration-300 bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black hover:shadow-lg active:scale-[0.99] group outline-none select-none rounded-lg"
+                      >
                         {service.action} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </button>
                     </div>
@@ -186,29 +196,29 @@ const CollaboratorHome = ({ onNavigate }) => {
             })}
           </div>
 
-          {/* SUBMISSION LOG */}
-          <div className="border border-gray-200 shadow-sm overflow-hidden bg-white">
-            <div className="bg-primary text-white px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xs font-black uppercase tracking-[0.2em]">Submission Log</h3>
-              <span className="text-[10px] font-bold opacity-80">{requests.length} RECORDS FOUND</span>
+          {/* SUBMISSION LOG SECTION */}
+          <div className="border border-slate-200/80 shadow overflow-hidden bg-white rounded-lg">
+            <div className="text-white px-8 py-5 flex items-center justify-between" style={{ backgroundColor: THEME.primary }}>
+              <h3 className="text-xs font-black uppercase tracking-[0.2em]">Live Submission Log</h3>
+              <span className="text-[10px] font-bold opacity-80 bg-white/20 px-3 py-1 rounded-lg">{requests.length} RECORDS</span>
             </div>
-            <div className="divide-y divide-gray-100 min-h-[200px]">
+            <div className="divide-y divide-slate-100">
               {loading ? (
-                <div className="p-12 text-center text-xs font-bold text-gray-300 animate-pulse">Syncing Portal Data...</div>
+                <div className="p-16 text-center text-xs font-bold text-slate-300 animate-pulse tracking-widest uppercase">Fetching Portal Data...</div>
               ) : requests.length === 0 ? (
-                <div className="p-16 text-center text-gray-400 text-sm italic">No active records found.</div>
+                <div className="p-20 text-center text-slate-400 text-sm italic">No active requests found in your history.</div>
               ) : (
                 requests.slice(0, 5).map((req) => (
-                  <div key={req.id} className="p-6 hover:bg-bg transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer">
+                  <div key={req.id} className="p-8 hover:bg-slate-50 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer">
                     <div className="space-y-1">
-                      <h4 className="text-lg font-bold text-gray-900 uppercase group-hover:text-primary transition-colors">{req.title || req.type}</h4>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                        <Clock className="w-3 h-3" /> Submitted: {new Date(req.created_at).toLocaleDateString()} • REF: #{req.id}
+                      <h4 className="text-lg font-bold text-slate-900 uppercase group-hover:text-[#1072b3] transition-colors">{req.title || req.type}</h4>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5" /> Filed: {new Date(req.created_at).toLocaleDateString()} • ID: #{req.id}
                       </p>
                     </div>
-                    <span className={cn('px-3 py-1 rounded-full text-[10px] font-black uppercase border-l-4 shadow-sm', STATUS_STYLES[req.status] || 'bg-gray-100 text-gray-500 border-gray-300')}>
-                      <span className={cn('w-1.5 h-1.5 rounded-full', STATUS_DOT[req.status] || 'bg-gray-400')} /> {req.status}
-                    </span>
+                    <div className={cn('px-4 py-1.5 text-[10px] font-black uppercase border-l-4 shadow-sm flex items-center gap-2 rounded-lg', STATUS_STYLES[req.status] || 'bg-slate-100 text-slate-500 border-slate-300')}>
+                      <span className={cn('w-2 h-2 rounded-full animate-pulse', STATUS_DOT[req.status] || 'bg-slate-400')} /> {req.status}
+                    </div>
                   </div>
                 ))
               )}
@@ -216,39 +226,34 @@ const CollaboratorHome = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN (Desktop: Sidebar) */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
-          {/* DESKTOP ANNOUNCEMENTS (Hidden on Mobile) */}
+        {/* RIGHT COLUMN */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
           {announcements.length > 0 && (
-            <div className="hidden lg:block space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2 ml-2">
                 <Megaphone className="w-4 h-4 text-amber-500" /> Announcements
               </h3>
               {announcements.map((ann) => (
-                <div key={ann.id} className="relative bg-white border border-gray-200 p-6 shadow-sm overflow-hidden group">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400" />
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="bg-amber-100 text-amber-700 text-[9px] font-black uppercase px-2 py-0.5 rounded">{ann.tag}</span>
-                    <span className="text-[10px] font-bold text-gray-400">{ann.date}</span>
+                <div key={ann.id} className="relative bg-white border border-slate-200/80 p-7 shadow overflow-hidden group rounded-lg">
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-400" />
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="bg-amber-100 text-amber-700 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg">{ann.tag}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">{ann.date}</span>
                   </div>
-                  <h3 className="text-sm font-black text-gray-900 uppercase mb-2 tracking-tight">{ann.title}</h3>
-                  <p className="text-xs text-gray-500 font-medium leading-relaxed mb-4">{ann.body}</p>
-                  <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:text-yellow-500 transition-colors">
-                    Read Details <ChevronRight className="w-3 h-3" />
+                  <h3 className="text-md font-black text-slate-900 uppercase mb-2 tracking-tight">{ann.title}</h3>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed mb-5">{ann.body}</p>
+                  
+                  {/* EFFECT: Text Blue to Yellow on hover */}
+                  <button 
+                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 text-[#1072b3] hover:text-[#f6ce11] outline-none"
+                  >
+                    View Announcement <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))}
             </div>
           )}
 
-          {/* DESKTOP BUREAU (Hidden on Mobile) */}
-          <div className="hidden lg:block">
-            <InformationBureauContent />
-          </div>
-        </div>
-
-        {/* MOBILE BUREAU (Visible only on Mobile, at the very bottom) */}
-        <div className="block lg:hidden">
           <InformationBureauContent />
         </div>
 

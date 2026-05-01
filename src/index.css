@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #2f80de;
-  --color-secondary: #2F80ED;
-  --color-light: #56CCF2;
-  --color-accent: #FFD600;
+  --color-primary: #1072b3;
+  --color-secondary: #03396c;
+  --color-light: #bdd4e5;
+  --color-accent: #f6ce11;
   --color-bg: #F5F7FA;
 
   --animate-progress: progress 10s linear forwards;

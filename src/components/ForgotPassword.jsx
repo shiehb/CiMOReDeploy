@@ -2,38 +2,17 @@ import React, { useState } from 'react';
 import { Mail, ArrowLeft, Send, CheckCircle2, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { API } from '../config/api';
+import logo from '../assets/logo.png';
 
 const DOMAIN = '@slc-sflu.edu.ph';
 
-// Exact Color Theme Mapping
+// Exact Color Theme Mapping to match Login
 const THEME = {
-  primary: '#2f80de',
-  secondary: '#2F80ED',
-  light: '#56CCF2',
-  accent: '#FFD600',
+  primary: '#1072b3',
+  secondary: '#03396c',
+  light: '#bdd4e5',
+  accent: '#f6ce11',
   bg: '#F5F7FA',
-};
-
-// Top Header: Logo and Title only (no profile or notification icons)
-const AuthHeader = () => {
-  return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 sm:px-6 flex items-center justify-between z-50">
-      <div className="flex items-center gap-3">
-        <div 
-          style={{ background: `linear-gradient(135deg, ${THEME.primary}, ${THEME.light})` }}
-          className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md shadow-blue-100"
-        >
-          <span className="text-white font-bold text-lg">C</span>
-        </div>
-        <div>
-          <h1 className="text-base font-bold text-slate-800 leading-none tracking-tight">CiMORe</h1>
-          <p className="text-[10px] font-semibold text-slate-400 mt-0.5 tracking-wider uppercase">
-            Institutional Intelligence Hub
-          </p>
-        </div>
-      </div>
-    </header>
-  );
 };
 
 const ForgotPassword = ({ onBack }) => {
@@ -58,6 +37,7 @@ const ForgotPassword = ({ onBack }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
+      
       if (res.ok) {
         setSent(true);
       } else {
@@ -73,12 +53,10 @@ const ForgotPassword = ({ onBack }) => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 font-sans relative pt-24"
+      className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 font-sans"
       style={{ backgroundColor: THEME.bg }}
     >
-      <AuthHeader />
-
-      {/* Subtle background blur blobs */}
+      {/* Subtle background blur blobs for depth */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
         <div 
           style={{ backgroundColor: THEME.primary, opacity: 0.05 }} 
@@ -90,23 +68,14 @@ const ForgotPassword = ({ onBack }) => {
         />
       </div>
 
-      {/* Password Recovery Card Container
-        - Mobile: Seamless background (no shadow/card border)
-        - Tablet/Desktop: Centered white card with rounded corners and soft shadow
-      */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md sm:bg-white sm:rounded-3xl sm:shadow-xl sm:shadow-slate-100 sm:border sm:border-slate-100 p-2 sm:p-10 transition-all duration-300 relative z-10"
+        className="w-full max-w-md sm:bg-white shadow border border-slate-100 p-6 sm:p-10 transition-all duration-300 relative z-10 rounded-lg"
       >
-        {/* Descriptive form header instead of internal banner */}
-        <div className="mb-8">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
-            Password Recovery
-          </h2>
-          <p className="text-slate-400 text-sm mt-2">
-            Enter your school email and we'll send you a reset link.
-          </p>
+        {/* Card Header with Logo */}
+        <div className="flex flex-col items-center mb-10">
+          <img src={logo} alt="Logo" className="h-20 w-auto object-contain" />
         </div>
 
         <div className="space-y-6">
@@ -123,12 +92,12 @@ const ForgotPassword = ({ onBack }) => {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">Check your email</h3>
-                  <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-                    If <span className="font-semibold text-gray-700">{email}</span> is registered in our system,
-                    you'll receive a password reset link shortly. The link expires in <strong>2 hours</strong>.
+                  <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+                    If <span className="font-semibold text-gray-700">{email}</span> is registered,
+                    you'll receive a password reset link shortly.
                   </p>
                 </div>
-                <p className="text-xs text-gray-400">Didn't receive it? Check your spam folder.</p>
+                <p className="text-xs text-gray-400">Be sure to check your spam folder.</p>
               </motion.div>
             ) : (
               <motion.form
@@ -138,13 +107,20 @@ const ForgotPassword = ({ onBack }) => {
                 onSubmit={handleSubmit}
                 className="space-y-6"
               >
-                {/* Email input field */}
+                <div className="text-center mb-2">
+                  <h2 className="text-xl font-bold text-slate-800">Password Recovery</h2>
+                  <p className="text-slate-500 text-sm mt-1">
+                    Enter your email to receive a reset link.
+                  </p>
+                </div>
+
+                {/* Email Input */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 tracking-wider uppercase mb-2 ml-1">
-                    School Email <span className="text-red-500">*</span>
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#2f80de] transition-colors">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1072b3] transition-colors">
                       <Mail 
                         className="w-5 h-5" 
                         style={{ color: email ? THEME.primary : undefined }}
@@ -156,32 +132,28 @@ const ForgotPassword = ({ onBack }) => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={`yourname${DOMAIN}`}
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#2f80de] focus:ring-4 focus:ring-blue-50 transition-all duration-200"
+                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-[#1072b3] focus:ring-4 focus:ring-blue-50 transition-all duration-200"
                     />
                   </div>
                 </div>
 
-                {/* Toast-like localized error message */}
+                {/* Error Message */}
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3"
+                    className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-start gap-3"
                   >
                     <Info className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                     <p className="text-xs text-red-600 font-medium leading-relaxed">{error}</p>
                   </motion.div>
                 )}
 
-                {/* Primary action button */}
+                {/* Submit Button with Blue-to-Yellow Effect */}
                 <button
                   type="submit"
                   disabled={isLoading}
-                  style={{ 
-                    backgroundColor: THEME.primary,
-                    boxShadow: `0 10px 15px -3px rgba(47, 128, 237, 0.25)` 
-                  }}
-                  className="w-full py-4 px-6 text-white font-bold rounded-2xl hover:brightness-110 active:scale-[0.99] flex items-center justify-center gap-2 group transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="w-full py-4 px-6 font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 border-2 border-transparent rounded-lg bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black hover:shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed outline-none"
                 >
                   {isLoading ? (
                     <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -196,15 +168,16 @@ const ForgotPassword = ({ onBack }) => {
             )}
           </AnimatePresence>
 
-          {/* Secondary back action */}
-          <button
-            onClick={onBack}
-            style={{ borderColor: `${THEME.primary}33`, color: THEME.primary }}
-            className="w-full py-3.5 bg-white border-2 hover:bg-slate-50 text-sm font-bold rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 outline-none"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Login</span>
-          </button>
+          {/* Navigation Back with Blue-to-Yellow Text Transition */}
+          <div className="pt-2 text-center">
+            <button
+              onClick={onBack}
+              className="font-black text-xs uppercase tracking-widest transition-all duration-300 outline-none text-[#1072b3] hover:text-[#f6ce11] flex items-center justify-center gap-2 mx-auto"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Login</span>
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>

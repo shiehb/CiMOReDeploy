@@ -23,31 +23,33 @@ const Sidebar = ({ activeTab, setActiveTab, userRole, isOpen, setIsOpen }) => {
 
   return (
     <aside className={`
-      fixed top-0 left-0 h-full z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
+      fixed top-0 left-0 h-full z-50 w-64 bg-white shadow-sm border-r border-slate-100 transform transition-transform duration-300 ease-in-out
       ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       md:translate-x-0 md:fixed md:top-15 md:h-[calc(100vh-3.75rem)] md:block
     `}>
-      <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (
             <button
               key={item.id}
-              onClick={() => { setActiveTab(item.id); setIsOpen(false); }} // Close on mobile after click
+              onClick={() => { setActiveTab(item.id); setIsOpen(false); }}
               className={cn(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group',
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group outline-none',
                 isActive
-                  ? 'bg-accent text-primary font-semibold shadow-lg scale-[1.02]'
-                  : 'hover:bg-primary text-gray-800 hover:text-white'
+                  ? 'bg-[#f6ce11] text-[#1072b3] font-bold shadow-sm'
+                  : 'hover:bg-[#1072b3] text-slate-600 hover:text-white'
               )}
             >
               <Icon className={cn(
-                'w-5 h-5 transition-transform duration-300 group-hover:scale-110',
-                isActive ? 'text-primary' : 'text-gray-400'
+                'w-5 h-5 transition-transform duration-200 group-hover:scale-105',
+                isActive ? 'text-[#1072b3]' : 'text-slate-400 group-hover:text-white'
               )} />
-              <span className="text-sm">{item.label}</span>
-              {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+              <span className="text-sm tracking-tight">{item.label}</span>
+              {isActive && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#1072b3]" />
+              )}
             </button>
           );
         })}
