@@ -957,7 +957,7 @@ const Settings = ({ initialPanel = 'profile' }) => {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-black text-secondary uppercase tracking-tight">System Settings</h2>
-        <p className="text-slate-500 text-sm mt-1 font-medium">Configure and manage your CIMORe experience.</p>
+        <p className="text-slate-500 text-sm mt-1 font-medium">Configure and manage your CiMORe experience.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

@@ -54,6 +54,18 @@ const UserManagement = () => {
   const capitalize = (str) =>
     str ? str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : '';
 
+  const formatTimestamp = (value) => {
+    if (!value) return 'Never';
+    return new Date(value).toLocaleString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   const showSuccess = (message) => {
     setSuccessMessage(message);
     setTimeout(() => setSuccessMessage(null), 3500);
@@ -509,9 +521,7 @@ const UserManagement = () => {
                         </td>
                       )}
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {user.last_login
-                          ? new Date(user.last_login).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-                          : 'Never'}
+                        {formatTimestamp(user.last_login)}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -712,7 +722,7 @@ const UserManagement = () => {
                   <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Last Activity</p>
                     <p className="text-[10px] font-black text-slate-800 uppercase">
-                      {viewingUser.last_login ? new Date(viewingUser.last_login).toLocaleDateString() : 'N/A'}
+                      {viewingUser.last_login ? formatTimestamp(viewingUser.last_login) : 'N/A'}
                     </p>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">

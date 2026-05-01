@@ -9,6 +9,7 @@ from django.utils import timezone
 class User(AbstractUser):
     role = models.CharField(max_length=20, default='Staff')
     is_active = models.BooleanField(default=True)
+    is_archived = models.BooleanField(default=False)
     must_change_password = models.BooleanField(default=False)
     temp_password_expires_at = models.DateTimeField(null=True, blank=True)
     email_delivered = models.BooleanField(default=True)

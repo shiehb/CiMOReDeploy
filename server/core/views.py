@@ -305,7 +305,8 @@ def profile_api(request):
 @permission_classes([IsAdmin])
 def users_api(request):
     if request.method == 'GET':
-        users = User.objects.all().order_by('last_name', 'first_name')
+        show_archived = request.query_params.get('archived', 'false').lower() == 'true'
+        users = User.objects.filter(is_archived=show_archived).order_by('last_name', 'first_name')
         serializer = UserSerializer(users, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -379,13 +380,20 @@ def user_detail_api(request, user_id):
                 user.set_password(request.data['password'])
                 user.save()
             serializer.save()
+            if 'is_archived' in serializer.validated_data:
+                if serializer.validated_data['is_archived']:
+                    user.is_active = False
+                else:
+                    user.is_active = True
+                user.save(update_fields=['is_active'])
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # DELETE — soft deactivate instead of hard delete to preserve history
+    # DELETE — archive user instead of hard delete and deactivate their account
+    user.is_archived = True
     user.is_active = False
-    user.save(update_fields=['is_active'])
-    return Response({"message": "User deactivated."}, status=status.HTTP_200_OK)
+    user.save(update_fields=['is_archived', 'is_active'])
+    return Response({"message": "User archived."}, status=status.HTTP_200_OK)
 
 
 # ---------------------------------------------------------------------------
