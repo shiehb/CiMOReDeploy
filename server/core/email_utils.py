@@ -83,7 +83,7 @@ def send_welcome_email(user_email, full_name, username, temp_password, max_retri
 
     message = (
         f"Dear {full_name},\n\n"
-        f"Welcome to CIMOre! An administrator has created an account for you.\n\n"
+        f"Welcome to CiMORe! An administrator has created an account for you.\n\n"
         f"Your login credentials:\n"
         f"  Username / Email : {username}\n"
         f"  Temporary Password: {temp_password}\n\n"
@@ -94,7 +94,7 @@ def send_welcome_email(user_email, full_name, username, temp_password, max_retri
         f"Need help? Contact us at {support_email}\n\n"
         f"This is an automated message — please do not reply.\n\n"
         f"Best regards,\n"
-        f"CIMOre System"
+        f"College Information and Marketing Office (CIMO)"
     )
 
     for attempt in range(1, max_retries + 1):
@@ -135,11 +135,12 @@ def send_notification_email(user_email, full_name, title, body, max_retries=3):
     message = (
         f"Dear {full_name},\n\n"
         f"{body}\n\n"
-        f"Log in to CIMOre to view the full notification:\n"
+        f"Log in to CiMORe to view the full notification:\n"
         f"{login_url}\n\n"
         f"For questions, contact {support_email}\n\n"
         f"This is an automated message — please do not reply.\n\n"
-        f"Best regards,\nCiMORe System"
+        f"Best regards,\n"
+        f"College Information and Marketing Office (CIMO)"
     )
 
     for attempt in range(1, max_retries + 1):
@@ -169,7 +170,7 @@ def send_password_reset_email(user_email, full_name, reset_token, max_retries=3)
 
     message = (
         f"Dear {full_name},\n\n"
-        f"We received a request to reset your CIMOre account password.\n\n"
+        f"We received a request to reset your CiMORe account password.\n\n"
         f"Click the link below to set a new password. This link is valid for 2 hours "
         f"and can only be used once.\n\n"
         f"  {reset_url}\n\n"
@@ -178,7 +179,7 @@ def send_password_reset_email(user_email, full_name, reset_token, max_retries=3)
         f"For assistance, contact us at {support_email}\n\n"
         f"This is an automated message — please do not reply.\n\n"
         f"Best regards,\n"
-        f"CiMORe System"
+        f"College Information and Marketing Office (CIMO)"
     )
 
     for attempt in range(1, max_retries + 1):

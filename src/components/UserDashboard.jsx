@@ -83,9 +83,6 @@ const FirstLoginChangePage = ({ onChanged }) => {
         <div className="p-10 bg-primary text-white text-center relative overflow-hidden">
           <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
           <div className="relative z-10">
-            <div className="w-20 h-20 bg-accent rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-accent/20">
-              <ShieldCheck className="w-10 h-10 text-primary" />
-            </div>
             <h1 className="text-2xl font-bold">Change Your Password</h1>
             <p className="text-white/60 text-xs mt-2 leading-relaxed">
               You logged in with a temporary password.<br />

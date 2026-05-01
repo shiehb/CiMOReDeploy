@@ -21,6 +21,17 @@ const Login = ({ onLogin, onRegister, onForgotPassword }) => {
     return () => clearTimeout(t);
   }, [toast]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get('email') || '';
+    const passwordParam = params.get('password') || '';
+    if (emailParam || passwordParam) {
+      setEmail(emailParam);
+      setPassword(passwordParam);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   const showError = (msg) => {
     setToast(msg);
     setPassword('');
