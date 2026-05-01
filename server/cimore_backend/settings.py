@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'gmailapi_backend',  # Required for Gmail API support
     'core',
 ]
 
@@ -45,7 +46,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',           # Must be first
+    'corsheaders.middleware.CorsMiddleware',           
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',      
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -71,7 +72,7 @@ DATABASES = {
 }
 
 # ---------------------------------------------------------------------------
-# CORS & CSRF Settings (Fixes "Cannot Connect")
+# CORS & CSRF Settings
 # ---------------------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
@@ -81,14 +82,13 @@ CORS_ALLOWED_ORIGINS = config(
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Required for Django 4.0+ when frontend is on a different domain
 CSRF_TRUSTED_ORIGINS = [
     "https://cimore.vercel.app",
     "https://cimoredeploy.onrender.com",
 ]
 
 # ---------------------------------------------------------------------------
-# Production Security (Required for Render/Vercel)
+# Production Security (Required for Render)
 # ---------------------------------------------------------------------------
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -97,21 +97,20 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    # Tells Django it's behind a proxy (Render) so it trusts HTTPS headers
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # ---------------------------------------------------------------------------
-# Email Configuration (Fixes "Failed to Notify")
+# Email Configuration (Gmail API - Bypasses Render Port Blocks)
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_TIMEOUT = 10  # Prevents the request from hanging if SMTP is slow
+EMAIL_BACKEND = 'gmailapi_backend.mail.GmailBackend'
 
-# Ensure these match your .env variable names exactly
+# Values from your Google Cloud Console and OAuth Playground
+GMAIL_API_CLIENT_ID = config('GMAIL_API_CLIENT_ID')
+GMAIL_API_CLIENT_SECRET = config('GMAIL_API_CLIENT_SECRET')
+GMAIL_API_REFRESH_TOKEN = config('GMAIL_API_REFRESH_TOKEN')
+
+# Sender details
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD') 
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=f"CiMORe <{EMAIL_HOST_USER}>")
 
 # ---------------------------------------------------------------------------
