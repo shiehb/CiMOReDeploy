@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, X, CheckCircle, AlertCircle, Loader2, Info, ChevronDown } from 'lucide-react';
+import { Send, X, CheckCircle, AlertCircle, Loader2, Info, ChevronDown, Paperclip } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { API, authHeaders } from '../config/api';
 
@@ -21,6 +21,7 @@ const EMPTY_PRODUCTION = {
   eventVenue:        '',
   eventDate:         '',
   materialsEndorsed: MATERIALS_OPTIONS[0],
+  attachments:       [],
 };
 
 const EMPTY_DISSEMINATION = {
@@ -31,6 +32,7 @@ const EMPTY_DISSEMINATION = {
   writers:     '',
   content:     '',
   keywords:    '',
+  attachments: [],
 };
 
 const FieldError = ({ error }) =>
@@ -66,6 +68,17 @@ const NewRequest = () => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
   }, [form]);
 
+  // Auto-dismiss alerts after 5 seconds
+  useEffect(() => {
+    if (success || apiError) {
+      const timer = setTimeout(() => {
+        setSuccess(false);
+        setApiError('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, apiError]);
+
   const switchType = (type) => {
     if (!type) {
       setForm({ requestType: '' });
@@ -78,6 +91,15 @@ const NewRequest = () => {
   const set = (field) => (e) => {
     setForm((f) => ({ ...f, [field]: e.target.value }));
     if (fieldErrors[field]) setFieldErrors((fe) => ({ ...fe, [field]: '' }));
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setForm((f) => ({ ...f, attachments: [...f.attachments, ...files] }));
+  };
+
+  const removeFile = (index) => {
+    setForm((f) => ({ ...f, attachments: f.attachments.filter((_, i) => i !== index) }));
   };
 
   const wordCount =
@@ -128,6 +150,30 @@ const NewRequest = () => {
     return Object.keys(errs).length === 0;
   };
 
+  const isFormValid = () => {
+    if (!form.requestType) return false;
+    if (!form.dateNeeded) return false;
+
+    if (form.requestType === 'Production') {
+      if (!form.requestingUnit.trim()) return false;
+      if (!form.expectedContents.trim()) return false;
+      if (!form.eventDescription.trim()) return false;
+      if (!form.eventObjectives.trim()) return false;
+      if (!form.audience.trim()) return false;
+      if (!form.eventVenue.trim()) return false;
+      if (!form.eventDate) return false;
+    } else {
+      if (!form.headline.trim()) return false;
+      if (headlineWords > 10) return false;
+      if (!form.writers.trim()) return false;
+      if (!form.content.trim()) return false;
+      if (wordCount < 250 || wordCount > 500) return false;
+      if (!form.keywords.trim()) return false;
+    }
+
+    return true;
+  };
+
   const handleSubmitClick = (e) => {
     e.preventDefault();
     setApiError('');
@@ -139,38 +185,41 @@ const NewRequest = () => {
     setShowConfirm(false);
     setIsSubmitting(true);
     try {
-      const body =
-        form.requestType === 'Production'
-          ? {
-              request_type:      'Production',
-              title:             `${form.requestingUnit} – ${form.expectedMedium}`,
-              type:              form.expectedMedium,
-              preferred_date:    form.dateNeeded,
-              requesting_unit:   form.requestingUnit,
-              expected_medium:   form.expectedMedium,
-              description:       form.expectedContents,
-              event_description: form.eventDescription,
-              event_objectives:  form.eventObjectives,
-              audience:          form.audience,
-              event_venue:       form.eventVenue,
-              event_date:        form.eventDate,
-              materials_endorsed: form.materialsEndorsed,
-            }
-          : {
-              request_type:   'Information Dissemination',
-              title:          form.headline,
-              type:           form.platform,
-              preferred_date: form.dateNeeded,
-              platform:       form.platform,
-              writers:        form.writers,
-              description:    form.content,
-              keywords:       form.keywords,
-            };
+      const formData = new FormData();
+
+      if (form.requestType === 'Production') {
+        formData.append('request_type', 'Production');
+        formData.append('title', `${form.requestingUnit} – ${form.expectedMedium}`);
+        formData.append('type', form.expectedMedium);
+        formData.append('preferred_date', form.dateNeeded);
+        formData.append('requesting_unit', form.requestingUnit);
+        formData.append('expected_medium', form.expectedMedium);
+        formData.append('description', form.expectedContents);
+        formData.append('event_description', form.eventDescription);
+        formData.append('event_objectives', form.eventObjectives);
+        formData.append('audience', form.audience);
+        formData.append('event_venue', form.eventVenue);
+        formData.append('event_date', form.eventDate);
+        formData.append('materials_endorsed', form.materialsEndorsed);
+      } else {
+        formData.append('request_type', 'Information Dissemination');
+        formData.append('title', form.headline);
+        formData.append('type', form.platform);
+        formData.append('preferred_date', form.dateNeeded);
+        formData.append('platform', form.platform);
+        formData.append('writers', form.writers);
+        formData.append('description', form.content);
+        formData.append('keywords', form.keywords);
+      }
+
+      form.attachments.forEach((file, index) => {
+        formData.append(`attachments[${index}]`, file);
+      });
 
       const res = await fetch(`${API}/api/marketing/`, {
         method: 'POST',
-        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        headers: authHeaders(), // No Content-Type for FormData
+        body: formData,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.detail || `HTTP ${res.status}`);
@@ -202,7 +251,45 @@ const NewRequest = () => {
   const hasType         = isProduction || isDissemination;
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24 md:pb-0">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-32 md:pb-0">
+
+      {/* ── Floating Toast Notifications ── */}
+      <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] pointer-events-none max-w-md w-[calc(100%-2rem)]">
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="pointer-events-auto p-5 bg-white shadow-2xl border border-green-200 rounded-2xl flex items-start gap-4"
+            >
+              <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-green-800">Request submitted successfully!</p>
+                <p className="text-xs text-green-700 mt-1">
+                  A confirmation has been sent to your school email. Await confirmation from CIMO
+                  within 2 working days. Track it under My Requests.
+                </p>
+              </div>
+              <button onClick={() => setSuccess(false)} className="ml-auto text-green-600 hover:text-green-700">
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )}
+          {apiError && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              className="pointer-events-auto p-5 bg-white shadow-2xl border border-red-200 rounded-2xl flex items-start gap-4"
+            >
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm font-medium text-red-700">{apiError}</p>
+              <button onClick={() => setApiError('')} className="ml-auto text-red-600 hover:text-red-700">
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* ── Page Header ── */}
       <div className="flex items-start justify-between">
@@ -213,42 +300,6 @@ const NewRequest = () => {
           </p>
         </div>
       </div>
-
-      {/* ── Alerts ── */}
-      <AnimatePresence>
-        {success && (
-          <motion.div
-            key="success"
-            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="p-5 bg-green-50 border border-green-200 rounded-2xl flex items-start gap-4"
-          >
-            <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-bold text-green-800">Request submitted successfully!</p>
-              <p className="text-xs text-green-700 mt-1">
-                A confirmation has been sent to your school email. Await confirmation from CIMO
-                within 2 working days. Track it under My Requests.
-              </p>
-            </div>
-            <button onClick={() => setSuccess(false)} className="ml-auto text-green-600 hover:text-green-700">
-              <X className="w-4 h-4" />
-            </button>
-          </motion.div>
-        )}
-        {apiError && (
-          <motion.div
-            key="error"
-            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="p-5 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-4"
-          >
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm font-medium text-red-700">{apiError}</p>
-            <button onClick={() => setApiError('')} className="ml-auto text-red-600 hover:text-red-700">
-              <X className="w-4 h-4" />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ── The actual form (always mounted so the header Submit button always works) ── */}
       <form id="cimoRequestForm" onSubmit={handleSubmitClick} noValidate className="space-y-4">
@@ -454,6 +505,43 @@ const NewRequest = () => {
                       <span className="font-medium text-gray-500">cimc@slc-sflu.edu.ph</span>
                     </p>
                   </div>
+
+                  {/* File Attachments */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                      Attachments (Optional)
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-primary/50 transition-colors">
+                      <input
+                        type="file"
+                        multiple
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="file-upload"
+                      />
+                      <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                        <Paperclip className="w-8 h-8 text-gray-400" />
+                        <p className="text-sm text-gray-600">Click to upload files or drag and drop</p>
+                        <p className="text-xs text-gray-400">Multiple files supported</p>
+                      </label>
+                    </div>
+                    {form.attachments?.length > 0 && (
+                      <div className="space-y-2">
+                        {form.attachments.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 rounded-xl p-3">
+                            <span className="text-sm text-gray-700 truncate">{file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeFile(index)}
+                              className="text-red-500 hover:text-red-700 ml-2"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
@@ -588,13 +676,13 @@ const NewRequest = () => {
         </AnimatePresence>
       </form>
 
-            <div className="md:flex md:items-start md:justify-between">
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur z-10 md:static md:p-0 md:bg-transparent md:backdrop-blur-none md:flex md:items-start md:justify-between">
               <div></div>
         <button
           type="submit"
           form="cimoRequestForm"
-          disabled={isSubmitting}
-          className="md:relative fixed bottom-4 left-4 right-4 w-full md:w-auto flex items-center justify-center gap-2 px-4 md:px-6 py-4 md:py-3 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed z-10"
+          disabled={isSubmitting || !isFormValid()}
+          className="w-full flex items-center justify-center gap-2 px-4 py-4 bg-primary text-white rounded-2xl text-sm font-bold hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed md:relative md:w-auto md:px-6 md:py-3"
         >
           {isSubmitting
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
