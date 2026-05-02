@@ -12,11 +12,10 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.utils import timezone
 from PIL import Image, ImageOps
-from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -31,16 +30,46 @@ from .email_utils import (
 from .models import (
     School, MarketingRequest, RequestAttachment, CommunicationLog,
     Document, User, Notification, NotificationPreference, PasswordResetToken,
-    Announcement,
+    Announcement, SecureToken, AuditLog,
 )
 from .serializers import (
     SchoolSerializer, MarketingRequestSerializer, RequestAttachmentSerializer,
     CommunicationLogSerializer, DocumentSerializer, UserSerializer,
-    AnnouncementSerializer,
+    AnnouncementSerializer, AuditLogSerializer,
 )
 from .permissions import IsAdmin, IsAdminOrStaff
 
 logger = logging.getLogger(__name__)
+
+
+def get_client_ip(request):
+    x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded:
+        return x_forwarded.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', '')
+
+
+def create_audit_log(*, user=None, action, resource='', details='', ip_address='', metadata=None):
+    """Record an audit event. Never raises — a failure here must not abort the main request."""
+    try:
+        user_name = ''
+        email = ''
+        if user:
+            user_name = f"{user.first_name} {user.last_name}".strip() or user.username
+            email = user.email or ''
+        AuditLog.objects.create(
+            user=user,
+            user_name=user_name,
+            email=email,
+            action=action,
+            resource=resource,
+            ip_address=ip_address,
+            details=details,
+            metadata=metadata,
+        )
+    except Exception:
+        logger.exception('Failed to write audit log: action=%s', action)
+
 
 MAX_AVATAR_FILE_SIZE = 5 * 1024 * 1024
 AVATAR_MAX_DIMENSION = 512
@@ -142,12 +171,20 @@ def login_api(request):
         update_fields += ['must_change_password', 'temp_password_expires_at']
     user.save(update_fields=update_fields)
 
-    token, _ = Token.objects.get_or_create(user=user)
+    raw_token = SecureToken.create_for_user(user)
     user_data = UserSerializer(user, context={'request': request}).data
+
+    create_audit_log(
+        user=user,
+        action='USER_LOGIN',
+        resource='Authentication',
+        details=f"User '{user.username}' logged in.",
+        ip_address=get_client_ip(request),
+    )
 
     return Response({
         "message": "Login successful",
-        "token": token.key,
+        "token": raw_token,
         "role": user.role,
         "fullName": f"{user.first_name} {user.last_name}".strip() or user.username,
         "username": user.username,
@@ -161,7 +198,14 @@ def login_api(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_api(request):
-    request.user.auth_token.delete()
+    create_audit_log(
+        user=request.user,
+        action='USER_LOGOUT',
+        resource='Authentication',
+        details=f"User '{request.user.username}' logged out.",
+        ip_address=get_client_ip(request),
+    )
+    SecureToken.objects.filter(user=request.user).delete()
     return Response({"message": "Logged out successfully."})
 
 
@@ -292,12 +336,43 @@ def profile_api(request):
 
     response_data = UserSerializer(user, context={'request': request}).data
     if new_password:
-        Token.objects.filter(user=user).delete()
-        new_token = Token.objects.create(user=user)
-        response_data['token'] = new_token.key
+        new_raw = SecureToken.create_for_user(user)
+        response_data['token'] = new_raw
         logger.info("Password changed for user_id=%s", user.id)
+        create_audit_log(
+            user=user,
+            action='PASSWORD_CHANGED',
+            resource='Profile',
+            details=f"User '{user.username}' changed their password.",
+            ip_address=get_client_ip(request),
+        )
 
     return Response(response_data)
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def force_change_password_api(request):
+    """First-login forced password change — no current_password required."""
+    new_password = (request.data.get('password') or '').strip()
+    if not new_password:
+        return Response({'error': 'Password is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    if len(new_password) < 8:
+        return Response({'error': 'Password must be at least 8 characters.'}, status=status.HTTP_400_BAD_REQUEST)
+    user = request.user
+    user.set_password(new_password)
+    user.must_change_password = False
+    user.save(update_fields=['password', 'must_change_password'])
+    new_raw = SecureToken.create_for_user(user)
+    logger.info('Forced password change completed for user_id=%s', user.id)
+    create_audit_log(
+        user=user,
+        action='PASSWORD_CHANGED',
+        resource='Authentication',
+        details=f"User '{user.username}' completed forced first-login password change.",
+        ip_address=get_client_ip(request),
+    )
+    return Response({'message': 'Password updated successfully.', 'token': new_raw})
 
 
 # ---------------------------------------------------------------------------
@@ -352,12 +427,21 @@ def users_api(request):
         user.email_delivered = delivered
         user.save(update_fields=['email_delivered'])
 
+        create_audit_log(
+            user=request.user,
+            action='USER_CREATED',
+            resource='User Management',
+            details=f"Admin created new user '{user.username}' with role '{user.role}'.",
+            ip_address=get_client_ip(request),
+        )
+
         # Notify all admins that a new user was created
         _notify_role(
             ['Admin'],
             'New User Account Created',
             f"{full_name} ({user.role}) has been added to the system by {request.user.get_full_name() or request.user.username}.",
             notif_type='user',
+            link='/users',
             exclude_user=request.user,
         )
 
@@ -383,6 +467,14 @@ def user_detail_api(request, user_id):
                 user.set_password(request.data['password'])
                 user.save()
             serializer.save()
+            audit_action = 'USER_ARCHIVED' if serializer.validated_data.get('is_archived') else 'USER_UPDATED'
+            create_audit_log(
+                user=request.user,
+                action=audit_action,
+                resource='User Management',
+                details=f"User '{user.username}' (id={user.id}) was {audit_action.replace('_', ' ').lower()} by admin.",
+                ip_address=get_client_ip(request),
+            )
             if 'is_archived' in serializer.validated_data:
                 if serializer.validated_data['is_archived']:
                     user.is_active = False
@@ -396,6 +488,13 @@ def user_detail_api(request, user_id):
     user.is_archived = True
     user.is_active = False
     user.save(update_fields=['is_archived', 'is_active'])
+    create_audit_log(
+        user=request.user,
+        action='USER_ARCHIVED',
+        resource='User Management',
+        details=f"User '{user.username}' (id={user.id}) was archived by admin.",
+        ip_address=get_client_ip(request),
+    )
     return Response({"message": "User archived."}, status=status.HTTP_200_OK)
 
 
@@ -434,6 +533,13 @@ def marketing_requests_api(request):
             request_type=instance.type,
             preferred_date=pref,
         )
+        create_audit_log(
+            user=user,
+            action='REQUEST_CREATED',
+            resource='Marketing Requests',
+            details=f"Request '{instance.title or instance.type}' (id={instance.id}) submitted.",
+            ip_address=get_client_ip(request),
+        )
         # Notify staff and admins about the new request
         req_label = instance.title or instance.type
         _notify_role(
@@ -441,6 +547,7 @@ def marketing_requests_api(request):
             'New Marketing Request Submitted',
             f"{full_name} submitted a new request: \"{req_label}\" (#{instance.id}).",
             notif_type='request',
+            link=f'/request-detail/{instance.id}',
             exclude_user=user,
         )
         return Response(MarketingRequestSerializer(instance).data, status=status.HTTP_201_CREATED)
@@ -494,8 +601,21 @@ def marketing_request_detail_api(request, request_id):
             prev_status = mr.status
             updated = serializer.save()
             new_status = updated.status
+            status_changed = new_status != prev_status
+            create_audit_log(
+                user=user,
+                action='REQUEST_UPDATED',
+                resource='Marketing Requests',
+                details=(
+                    f"Request '{updated.title or updated.type}' (id={updated.id}) status changed: {prev_status} → {new_status}."
+                    if status_changed else
+                    f"Request '{updated.title or updated.type}' (id={updated.id}) updated."
+                ),
+                ip_address=get_client_ip(request),
+                metadata={'before': {'status': prev_status}, 'after': {'status': new_status}} if status_changed else None,
+            )
             # Notify the requester if status changed to a terminal state
-            if is_staff_or_admin and new_status != prev_status and new_status in ('Approved', 'Rejected', 'Cancelled'):
+            if is_staff_or_admin and status_changed and new_status in ('Approved', 'Rejected', 'Cancelled'):
                 req_label = updated.title or updated.type
                 reviewer_name = request.user.get_full_name() or request.user.username
                 _notify(
@@ -503,6 +623,7 @@ def marketing_request_detail_api(request, request_id):
                     f'Your Request Has Been {new_status}',
                     f"Your request \"{req_label}\" (#{updated.id}) was {new_status.lower()} by {reviewer_name}.",
                     notif_type='request',
+                    link=f'/request-detail/{updated.id}',
                 )
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -510,7 +631,15 @@ def marketing_request_detail_api(request, request_id):
     # DELETE — Staff/Admin only hard-delete; collaborator cannot delete
     if not is_staff_or_admin:
         return Response({"error": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+    req_label, req_id = mr.title or mr.type, mr.id
     mr.delete()
+    create_audit_log(
+        user=user,
+        action='REQUEST_DELETED',
+        resource='Marketing Requests',
+        details=f"Request '{req_label}' (id={req_id}) was deleted.",
+        ip_address=get_client_ip(request),
+    )
     return Response({"message": "Request deleted."}, status=status.HTTP_204_NO_CONTENT)
 
 
@@ -581,38 +710,76 @@ def communication_logs_api(request):
                 status=status.HTTP_200_OK,
             )
 
+    # Validate uploaded file before touching the serializer so we return 400, not 500
+    uploaded_file = request.FILES.get('file')
+    if uploaded_file:
+        MAX_CHAT_FILE_BYTES = 10 * 1024 * 1024
+        ALLOWED_CHAT_TYPES = {
+            'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'video/mp4', 'video/quicktime',
+        }
+        if uploaded_file.size == 0:
+            return Response(
+                {'error': 'The uploaded file is empty. Please select a valid file.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if uploaded_file.size > MAX_CHAT_FILE_BYTES:
+            return Response(
+                {'error': 'File exceeds the 10 MB limit.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        ct = getattr(uploaded_file, 'content_type', '') or ''
+        if ct and ct not in ALLOWED_CHAT_TYPES:
+            return Response(
+                {'error': f'File type "{ct}" is not supported. Upload images, PDF, Word, or video files.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
     serializer = CommunicationLogSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
-        instance = serializer.save()
-        related_req = instance.related_request
-        if related_req:
-            link = f'/request-detail/{related_req.id}?chat=true'
-            sender = user.get_full_name() or user.username
-            title_str = related_req.title or f'Request #{related_req.id}'
-            if instance.message:
-                preview = (instance.message[:80] + '…') if len(instance.message) > 80 else instance.message
-                body = f'Re: "{title_str}" — {preview}'
-            elif instance.file_name:
-                body = f'Re: "{title_str}" — [attachment: {instance.file_name}]'
-            else:
-                body = f'Re: "{title_str}"'
-            if user == related_req.requester:
-                _notify_role(
-                    ['Admin', 'Staff'],
-                    f'New message from {sender}',
-                    body,
-                    notif_type='message',
-                    link=link,
-                    exclude_user=user,
-                )
-            else:
-                _notify(
-                    related_req.requester,
-                    f'New message from {sender}',
-                    body,
-                    notif_type='message',
-                    link=link,
-                )
+        try:
+            instance = serializer.save()
+        except Exception:
+            logger.exception('Failed to save communication log for user_id=%s', user.id)
+            return Response(
+                {'error': 'Failed to save message. Please try again.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        try:
+            related_req = instance.related_request
+            if related_req:
+                link = f'/request-detail/{related_req.id}?chat=true'
+                sender = user.get_full_name() or user.username
+                title_str = related_req.title or f'Request #{related_req.id}'
+                if instance.message:
+                    preview = (instance.message[:80] + '…') if len(instance.message) > 80 else instance.message
+                    body = f'Re: "{title_str}" — {preview}'
+                elif instance.file_name:
+                    body = f'Re: "{title_str}" — [attachment: {instance.file_name}]'
+                else:
+                    body = f'Re: "{title_str}"'
+                if user == related_req.requester:
+                    _notify_role(
+                        ['Admin', 'Staff'],
+                        f'New message from {sender}',
+                        body,
+                        notif_type='message',
+                        link=link,
+                        exclude_user=user,
+                    )
+                else:
+                    _notify(
+                        related_req.requester,
+                        f'New message from {sender}',
+                        body,
+                        notif_type='message',
+                        link=link,
+                    )
+        except Exception:
+            logger.exception('Post-save notification failed for communication log id=%s', instance.id)
         return Response(
             CommunicationLogSerializer(instance, context={'request': request}).data,
             status=status.HTTP_201_CREATED,
@@ -657,6 +824,13 @@ def schools_api(request):
     serializer = SchoolSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
+        create_audit_log(
+            user=request.user,
+            action='SCHOOL_CREATED',
+            resource='School Intelligence',
+            details=f"School '{serializer.data['school_name']}' (id={serializer.data['id']}) added.",
+            ip_address=get_client_ip(request),
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -676,12 +850,26 @@ def school_detail_api(request, school_id):
         serializer = SchoolSerializer(school, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            create_audit_log(
+                user=request.user,
+                action='SCHOOL_UPDATED',
+                resource='School Intelligence',
+                details=f"School '{school.school_name}' (id={school.id}) updated.",
+                ip_address=get_client_ip(request),
+            )
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # DELETE — archive instead of hard delete
     school.is_archived = True
     school.save(update_fields=['is_archived'])
+    create_audit_log(
+        user=request.user,
+        action='SCHOOL_ARCHIVED',
+        resource='School Intelligence',
+        details=f"School '{school.school_name}' (id={school.id}) archived.",
+        ip_address=get_client_ip(request),
+    )
     return Response({"message": "School archived."}, status=status.HTTP_200_OK)
 
 
@@ -999,6 +1187,13 @@ def documents_api(request):
     serializer = DocumentSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
+        create_audit_log(
+            user=request.user,
+            action='DOCUMENT_CREATED',
+            resource='Documents & Reports',
+            details=f"Document '{serializer.data['title']}' (id={serializer.data['id']}) created.",
+            ip_address=get_client_ip(request),
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1018,13 +1213,28 @@ def document_detail_api(request, doc_id):
         serializer = DocumentSerializer(doc, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            create_audit_log(
+                user=request.user,
+                action='DOCUMENT_UPDATED',
+                resource='Documents & Reports',
+                details=f"Document '{doc.title}' (id={doc.id}) updated.",
+                ip_address=get_client_ip(request),
+            )
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # DELETE — only Admin can hard-delete documents
     if request.user.role != 'Admin':
         return Response({"error": "Only Admins can delete documents."}, status=status.HTTP_403_FORBIDDEN)
+    doc_title, doc_id = doc.title, doc.id
     doc.delete()
+    create_audit_log(
+        user=request.user,
+        action='DOCUMENT_DELETED',
+        resource='Documents & Reports',
+        details=f"Document '{doc_title}' (id={doc_id}) deleted.",
+        ip_address=get_client_ip(request),
+    )
     return Response({"message": "Document deleted."}, status=status.HTTP_204_NO_CONTENT)
 
 
@@ -1098,6 +1308,13 @@ def backup_api(request):
 
     buf = _build_zip(selected)
     logger.info('Backup ZIP generated: models=%s by user_id=%s', selected, request.user.id)
+    create_audit_log(
+        user=request.user,
+        action='BACKUP_CREATED',
+        resource='Backup & Restore',
+        details=f"System backup created with models: {', '.join(selected)}.",
+        ip_address=get_client_ip(request),
+    )
 
     response = HttpResponse(buf.read(), content_type='application/zip')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -1224,6 +1441,13 @@ def restore_api(request):
         results['files'] = f'{files_restored} media file(s) restored'
 
     logger.info('Restore completed by user_id=%s: %s', request.user.id, results)
+    create_audit_log(
+        user=request.user,
+        action='RESTORE_COMPLETED',
+        resource='Backup & Restore',
+        details=f"System restore completed. Results: {results}.",
+        ip_address=get_client_ip(request),
+    )
     return Response({'message': 'Restore completed successfully.', 'results': results})
 
 
@@ -1360,6 +1584,13 @@ def announcements_api(request):
     )
 
     logger.info('Admin user_id=%s created announcement id=%s (target=%s)', request.user.id, ann.id, target)
+    create_audit_log(
+        user=request.user,
+        action='ANNOUNCEMENT_CREATED',
+        resource='Announcements',
+        details=f"Announcement '{title}' created targeting '{target}'.",
+        ip_address=get_client_ip(request),
+    )
     return Response(AnnouncementSerializer(ann).data, status=status.HTTP_201_CREATED)
 
 
@@ -1415,6 +1646,56 @@ def notification_test_email_api(request):
     if ok:
         return Response({'message': f'Test email sent to {user.email}.'})
     return Response({'error': 'Email delivery failed. Check server email settings.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ---------------------------------------------------------------------------
+# AUDIT LOGS  (Admin only)
+# ---------------------------------------------------------------------------
+
+@api_view(['GET'])
+@permission_classes([IsAdmin])
+def audit_logs_api(request):
+    from math import ceil
+
+    qs = AuditLog.objects.all()
+
+    start_date = request.query_params.get('start_date', '').strip()
+    end_date   = request.query_params.get('end_date', '').strip()
+    search     = request.query_params.get('search', '').strip()
+    action     = request.query_params.get('action', '').strip()
+
+    if start_date:
+        qs = qs.filter(timestamp__date__gte=start_date)
+    if end_date:
+        qs = qs.filter(timestamp__date__lte=end_date)
+    if search:
+        qs = qs.filter(Q(user_name__icontains=search) | Q(email__icontains=search))
+    if action and action != 'ALL':
+        qs = qs.filter(action=action)
+
+    total = qs.count()
+
+    try:
+        page = max(1, int(request.query_params.get('page', 1)))
+    except (ValueError, TypeError):
+        page = 1
+    try:
+        page_size = int(request.query_params.get('page_size', 25))
+        if page_size not in (10, 25, 50):
+            page_size = 25
+    except (ValueError, TypeError):
+        page_size = 25
+
+    offset  = (page - 1) * page_size
+    records = qs[offset:offset + page_size]
+
+    return Response({
+        'count':       total,
+        'page':        page,
+        'page_size':   page_size,
+        'total_pages': ceil(total / page_size) if total else 1,
+        'results':     AuditLogSerializer(records, many=True).data,
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -1483,6 +1764,14 @@ def reset_password_api(request):
     token_obj.save()
 
     # Invalidate all auth tokens so old sessions are logged out
-    Token.objects.filter(user=user).delete()
+    SecureToken.objects.filter(user=user).delete()
+
+    create_audit_log(
+        user=user,
+        action='PASSWORD_RESET',
+        resource='Authentication',
+        details=f"Password reset completed for user '{user.username}'.",
+        ip_address=get_client_ip(request),
+    )
 
     return Response({'message': 'Password reset successful. You can now log in with your new password.'})

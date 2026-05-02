@@ -1,6 +1,8 @@
+import hashlib
 import secrets
 from datetime import timedelta
 
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
@@ -33,6 +35,50 @@ class PasswordResetToken(models.Model):
 
     def is_valid(self):
         return not self.used and timezone.now() < self.expires_at
+
+
+class SecureToken(models.Model):
+    """
+    Stores a SHA-256 hash of the bearer token — the raw value is never persisted.
+    Tokens expire automatically after TOKEN_LIFETIME (24 hours).
+    """
+    TOKEN_LIFETIME = timedelta(hours=24)
+
+    user       = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='secure_token',
+    )
+    token_hash = models.CharField(max_length=64, unique=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    # ------------------------------------------------------------------ helpers
+
+    @staticmethod
+    def _hash(raw: str) -> str:
+        return hashlib.sha256(raw.encode()).hexdigest()
+
+    @classmethod
+    def create_for_user(cls, user) -> str:
+        """
+        Revoke any existing token, mint a new one, and return the raw value.
+        The raw value is returned ONCE and never stored.
+        """
+        cls.objects.filter(user=user).delete()
+        raw = secrets.token_urlsafe(32)
+        cls.objects.create(
+            user=user,
+            token_hash=cls._hash(raw),
+            expires_at=timezone.now() + cls.TOKEN_LIFETIME,
+        )
+        return raw
+
+    def is_valid(self) -> bool:
+        return timezone.now() < self.expires_at
+
+    def __str__(self):
+        return f"SecureToken(user={self.user_id}, expires={self.expires_at:%Y-%m-%d %H:%M UTC})"
 
 
 class School(models.Model):
@@ -162,6 +208,23 @@ class Announcement(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class AuditLog(models.Model):
+    timestamp  = models.DateTimeField(auto_now_add=True, db_index=True)
+    user       = models.ForeignKey(
+        'User', on_delete=models.SET_NULL, null=True, blank=True, related_name='audit_logs',
+    )
+    user_name  = models.CharField(max_length=255, blank=True, default='')
+    email      = models.CharField(max_length=255, blank=True, default='')
+    action     = models.CharField(max_length=100, db_index=True)
+    resource   = models.CharField(max_length=255, blank=True, default='')
+    ip_address = models.CharField(max_length=45, blank=True, default='')
+    details    = models.TextField(blank=True, default='')
+    metadata   = models.JSONField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-timestamp']
 
 
 class Document(models.Model):

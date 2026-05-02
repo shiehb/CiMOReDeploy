@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Home, Megaphone, ClipboardList, Settings as SettingsIcon, Eye, EyeOff, Lock, Loader2, AlertCircle, CheckCircle, ShieldCheck } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { Home, Megaphone, ClipboardList, Settings as SettingsIcon, Eye, EyeOff, Lock, Loader2, AlertCircle, X, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence, useAnimationControls } from 'motion/react';
 import { cn } from '../lib/utils';
-import { API, authHeaders } from '../config/api';
+import { API } from '../config/api';
+import logo from '../assets/logo.png';
 import Header from './Header';
 import ChatSheet from './ChatSheet';
 import CollaboratorHome from './CollaboratorHome';
@@ -52,33 +53,49 @@ const checkComplexity = (pw) => ({
 const isStrong = (pw) => Object.values(checkComplexity(pw)).every(Boolean);
 
 // ---------------------------------------------------------------------------
-// First-login forced password change
+// First-login forced password change (Styled exactly like the Login card)
 // ---------------------------------------------------------------------------
 const FirstLoginChangePage = ({ onChanged }) => {
   const [password, setPassword] = useState('');
-  const [confirm,  setConfirm]  = useState('');
-  const [showPw,   setShowPw]   = useState(false);
+  const [confirm, setConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error,    setError]    = useState('');
+  const [toast, setToast] = useState('');
 
+  const passwordShake = useAnimationControls();
   const complexity = checkComplexity(password);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(''), 4000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const showError = (msg) => {
+    setToast(msg);
+    setPassword('');
+    setConfirm('');
+    passwordShake.start({
+      x: [0, -10, 10, -10, 10, -6, 6, 0],
+      transition: { duration: 0.45, ease: 'easeOut' },
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-
+    
     if (!isStrong(password)) {
-      setError('Password does not meet the requirements below.');
+      showError('Password does not meet the requirements.');
       return;
     }
     if (password !== confirm) {
-      setError('Passwords do not match.');
+      showError('Passwords do not match.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const res = await fetch(`${API}/api/profile/`, {
+      const res = await fetch(`${API}/api/profile/set-password/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -90,67 +107,118 @@ const FirstLoginChangePage = ({ onChanged }) => {
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
       localStorage.setItem('authToken', data.token);
+      
+      // Clean up persistence flags upon success
+      localStorage.removeItem('mustChangePassword');
+      
       onChanged();
     } catch (err) {
-      setError(err.message || 'Failed to change password. Please try again.');
+      showError(err.message || 'Failed to change password. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] flex items-center justify-center p-4 font-sans">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#1072b3]/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#03396c]/5 rounded-full blur-3xl" />
-      </div>
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 font-sans"
+      style={{ backgroundColor: THEME.bg }}
+    >
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key="password-toast"
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="fixed top-6 right-4 left-4 sm:left-auto sm:w-96 bg-white border-l-4 border-red-500 shadow p-4 flex items-start gap-3 z-50 rounded-lg"
+          >
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm text-slate-600 font-medium">{toast}</p>
+            </div>
+            <button 
+              onClick={() => setToast('')} 
+              className="text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white rounded-lg shadow border border-gray-100 overflow-hidden relative z-10"
+        className="w-full max-w-md sm:bg-white shadow border border-slate-100 p-6 sm:p-10 transition-all duration-300 relative z-10 rounded-lg"
       >
-        <div className="p-10 bg-[#1072b3] text-white text-center relative overflow-hidden">
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full" />
-          <div className="relative z-10">
-            <h1 className="text-2xl font-bold">Change Your Password</h1>
-            <p className="text-white/60 text-xs mt-2 leading-relaxed">
-              You logged in with a temporary password.<br />
-              Set a new one to continue — you cannot skip this step.
-            </p>
-          </div>
+        {/* Logo at the top of the card */}
+        <div className="flex flex-col items-center">
+          <img src={logo} alt="Logo" className="h-20 w-auto object-contain" />
         </div>
 
-        <form onSubmit={handleSubmit} className="p-10 space-y-5">
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">New Password</label>
-            <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#1072b3] transition-colors" />
-              <input
-                type={showPw ? 'text' : 'password'} required
-                value={password} onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min. 8 characters"
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg py-4 pl-11 pr-11 text-sm focus:ring-4 focus:ring-[#1072b3]/5 focus:border-[#1072b3] outline-none transition-all"
-              />
-              <button type="button" onClick={() => setShowPw(!showPw)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#1072b3] transition-colors">
-                {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-bold text-[#03396c] uppercase">Change Your Password</h2>
+          <p className="text-slate-500 text-sm mt-1 leading-relaxed">
+            You logged in with a temporary password.<br />
+            Set a new one to continue — you cannot skip this step.
+          </p>
+        </div>
 
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* New Password */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 tracking-wider uppercase mb-2">
+              New Password <span className="text-red-500">*</span>
+            </label>
+            <motion.div animate={passwordShake} className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1072b3] transition-colors">
+                <Lock 
+                  className="w-5 h-5"
+                  style={{ color: password ? THEME.primary : undefined }}
+                />
+              </div>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min. 8 characters"
+                className={`w-full pl-12 pr-12 py-3.5 bg-slate-50 border rounded-lg text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white transition-all duration-200 ${
+                  toast
+                    ? 'border-red-300 bg-red-50 ring-4 ring-red-100 focus:ring-red-200'
+                    : 'border-slate-200 focus:border-[#1072b3] focus:ring-4 focus:ring-blue-50'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(p => !p)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </motion.div>
+
+            {/* Password Validation Checklist */}
             {password.length > 0 && (
-              <div className="grid grid-cols-2 gap-1.5 pt-1">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-3 px-1">
                 {[
-                  { key: 'length',  label: 'At least 8 characters' },
-                  { key: 'letter',  label: 'Contains a letter' },
-                  { key: 'number',  label: 'Contains a number' },
-                  { key: 'special', label: 'Contains a special character' },
+                  { key: 'length',  label: '8+ characters' },
+                  { key: 'letter',  label: 'Contains letter' },
+                  { key: 'number',  label: 'Contains number' },
+                  { key: 'special', label: 'Special character' },
                 ].map(({ key, label }) => (
-                  <div key={key} className={cn(
-                    'flex items-center gap-1.5 text-[10px] font-semibold',
-                    complexity[key] ? 'text-green-600' : 'text-gray-400'
-                  )}>
-                    <CheckCircle className={cn('w-3 h-3', complexity[key] ? 'text-green-500' : 'text-gray-200')} />
+                  <div 
+                    key={key} 
+                    className={`flex items-center gap-1.5 text-[11px] font-bold tracking-wide transition-colors duration-200 ${
+                      complexity[key] ? 'text-green-600' : 'text-slate-400'
+                    }`}
+                  >
+                    <div className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
+                      complexity[key] ? 'bg-green-500' : 'bg-slate-300'
+                    }`} />
                     {label}
                   </div>
                 ))}
@@ -158,42 +226,49 @@ const FirstLoginChangePage = ({ onChanged }) => {
             )}
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Confirm Password</label>
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 tracking-wider uppercase mb-2">
+              Confirm Password <span className="text-red-500">*</span>
+            </label>
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#1072b3] transition-colors" />
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1072b3] transition-colors">
+                <Lock 
+                  className="w-5 h-5"
+                  style={{ color: confirm ? THEME.primary : undefined }}
+                />
+              </div>
               <input
-                type={showPw ? 'text' : 'password'} required
-                value={confirm} onChange={(e) => setConfirm(e.target.value)}
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
                 placeholder="Re-enter your new password"
-                className={cn(
-                  'w-full bg-gray-50 border rounded-lg py-4 pl-11 pr-4 text-sm focus:ring-4 focus:ring-[#1072b3]/5 outline-none transition-all',
-                  confirm.length > 0 && confirm !== password ? 'border-red-300 bg-red-50 focus:border-red-300' : 'border-gray-200 focus:border-[#1072b3]'
-                )}
+                className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border rounded-lg text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:bg-white transition-all duration-200 ${
+                  confirm.length > 0 && confirm !== password
+                    ? 'border-red-300 bg-red-50 focus:ring-red-200'
+                    : 'border-slate-200 focus:border-[#1072b3] focus:ring-4 focus:ring-blue-50'
+                }`}
               />
             </div>
             {confirm.length > 0 && confirm !== password && (
-              <p className="text-xs text-red-500 ml-1">Passwords do not match.</p>
+              <p className="text-xs font-semibold text-red-500 mt-1.5 ml-1">
+                Passwords do not match.
+              </p>
             )}
           </div>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2"
-            >
-              <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-              <p className="text-xs text-red-600 font-medium">{error}</p>
-            </motion.div>
-          )}
-
+          {/* Submit Button */}
           <button
-            type="submit" disabled={isLoading}
-            className="w-full py-4 bg-[#1072b3] text-white rounded-lg text-sm font-bold hover:brightness-110 transition-all shadow flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-4 px-6 font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 border-2 border-transparent rounded-lg bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black hover:shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed outline-none"
           >
-            {isLoading
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
-              : 'Set Password & Continue'}
+            {isLoading ? (
+              <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              'Set Password & Continue'
+            )}
           </button>
         </form>
       </motion.div>
@@ -222,6 +297,20 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatRequestId, setChatRequestId] = useState(null);
   const [chatRequestTitle, setChatRequestTitle] = useState('');
+  
+  // Track forced password state across refreshes
+  const [isForcedChange, setIsForcedChange] = useState(
+    mustChangePassword || localStorage.getItem('mustChangePassword') === 'true'
+  );
+
+  // Sync forced change state from parent props
+  useEffect(() => {
+    if (mustChangePassword) {
+      localStorage.setItem('mustChangePassword', 'true');
+      setIsForcedChange(true);
+    }
+  }, [mustChangePassword]);
+
   const openChat = useCallback((requestId, title = '') => {
     setChatRequestId(requestId);
     setChatRequestTitle(title);
@@ -257,8 +346,18 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
     navigateTo('settings');
   };
 
-  if (mustChangePassword) {
-    return <FirstLoginChangePage onChanged={onPasswordChanged} />;
+  // ---------------------------------------------------------------------------
+  // INTERCEPTOR: If true, enforce screen and lock all tabs and URLs
+  // ---------------------------------------------------------------------------
+  if (isForcedChange) {
+    return (
+      <FirstLoginChangePage 
+        onChanged={() => {
+          setIsForcedChange(false);
+          onPasswordChanged();
+        }} 
+      />
+    );
   }
 
   const handleNavigate = (tab, requestType) => {

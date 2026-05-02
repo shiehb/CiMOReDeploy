@@ -73,6 +73,12 @@ const Login = ({ onLogin, onRegister, onForgotPassword }) => {
         localStorage.setItem('userId', String(data.user_id));
         localStorage.setItem('userAvatarUrl', data.avatar_url || '');
         localStorage.setItem('cimore_auth', 'true');
+
+        // Check if the user is required to change their password
+        if (data.must_change_password || data.mustChangePassword) {
+          localStorage.setItem('mustChangePassword', 'true');
+        }
+
         onLogin(data);
       } else {
         showError(data.error || 'Invalid credentials. Please try again.');
@@ -123,10 +129,11 @@ const Login = ({ onLogin, onRegister, onForgotPassword }) => {
         <div className="flex flex-col items-center">
           <img src={logo} alt="Logo" className="h-20 w-auto object-contain" />
         </div>
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-secondary uppercase">Login to Your Account</h2>
-                <p className="text-slate-500 text-sm mt-1">Enter your credentials to access your account.</p>
-              </div>
+        
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-bold text-[#03396c] uppercase">Login to Your Account</h2>
+          <p className="text-slate-500 text-sm mt-1">Enter your credentials to access your account.</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email */}

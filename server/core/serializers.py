@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import School, MarketingRequest, RequestAttachment, CommunicationLog, Document, User, Announcement
+from .models import School, MarketingRequest, RequestAttachment, CommunicationLog, Document, User, Announcement, AuditLog
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -91,7 +91,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'username', 'first_name', 'last_name', 'email',
             'role', 'is_active', 'is_archived', 'last_login', 'date_joined', 'password',
             'must_change_password', 'temp_password_expires_at', 'email_delivered',
-            'department', 'id_number', 'avatar_url',
+            'avatar_url',
         ]
         extra_kwargs = {
             'password': {'write_only': True},
@@ -121,3 +121,9 @@ class AnnouncementSerializer(serializers.ModelSerializer):
             return None
         full_name = f"{obj.created_by.first_name} {obj.created_by.last_name}".strip()
         return full_name if full_name else obj.created_by.username
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditLog
+        fields = ['id', 'timestamp', 'user', 'user_name', 'email', 'action', 'resource', 'ip_address', 'details', 'metadata']

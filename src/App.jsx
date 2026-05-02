@@ -17,6 +17,7 @@ import ProfilePage from './components/ProfilePage';
 import ChangePasswordPage from './components/ChangePasswordPage';
 import { motion, AnimatePresence } from 'motion/react';
 import ChatSheet from './components/ChatSheet';
+import AuditTrail from './components/AuditTrail';
 
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -27,6 +28,7 @@ const VALID_TABS = new Set([
   'request-detail',
   'intelligence',
   'documents',
+  'audit-trail',
   'settings',
   'profile',
   'change-password',
@@ -269,6 +271,10 @@ export default function App() {
     return <Login onLogin={handleLogin} onRegister={() => setView('register')} onForgotPassword={() => setView('forgot-password')} />;
   }
 
+  if (mustChangePassword && (userRole === 'Admin' || userRole === 'Staff')) {
+    return <ChangePasswordPage onBack={() => setMustChangePassword(false)} />;
+  }
+
   if (userRole === 'Collaborator') {
     return (
       <UserDashboard
@@ -294,6 +300,7 @@ export default function App() {
       );
       case 'intelligence':     return <SchoolIntelligence />;
       case 'documents':        return <DocumentsReports />;
+      case 'audit-trail':      return <AuditTrail />;
       case 'settings':         return <Settings key={settingsNavKey} initialPanel={settingsPanel} />;
       case 'profile':          return <ProfilePage onBack={() => navigateTo(previousTab)} />;
       case 'change-password':  return <ChangePasswordPage onBack={() => navigateTo(previousTab)} />;

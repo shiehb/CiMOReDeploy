@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  User, Bell, Shield, Globe, Database, Cloud,
+  User, Bell, Shield, Database,
   ChevronRight, Eye, EyeOff, RefreshCw,
-  UploadCloud, CheckCircle, Copy, Key,
-  HardDrive, Wifi, Mail, Smartphone, Megaphone,
+  UploadCloud, CheckCircle,
+  Mail, Smartphone, Megaphone,
   Lock, Loader2, AlertCircle, Calendar, ShieldCheck, X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -55,7 +55,6 @@ function ProfilePanel() {
   const [avatarError, setAvatarError] = useState('');
   const [avatarSuccess, setAvatarSuccess] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [prefs, setPrefs] = useState({ emailNotif: true, realtime: true, publicProfile: false });
 
   useEffect(() => {
     (async () => {
@@ -194,25 +193,6 @@ function ProfilePanel() {
         </div>
       </div>
 
-      {/* Preferences */}
-      <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-4">
-        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Preferences</h4>
-        <div className="space-y-3">
-          {[
-            { key: 'emailNotif',    label: 'Email Notifications', desc: 'Receive daily summary reports via email.' },
-            { key: 'realtime',      label: 'Real-time Alerts',    desc: 'Get instant notifications for new marketing requests.' },
-            { key: 'publicProfile', label: 'Public Profile',      desc: 'Allow other staff members to view your profile.' },
-          ].map(({ key, label, desc }) => (
-            <div key={key} className="flex items-center justify-between p-4 bg-slate-50/60 rounded-lg border border-slate-100">
-              <div>
-                <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{label}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">{desc}</p>
-              </div>
-              <Toggle on={prefs[key]} onChange={v => setPrefs(p => ({ ...p, [key]: v }))} />
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
@@ -418,6 +398,7 @@ function NotificationsPanel() {
   const [prefsLoading, setPrefsLoading] = useState(true);
   const [saving, setSaving]           = useState(false);
   const [saveMsg, setSaveMsg]         = useState(null);
+  const [displayPrefs, setDisplayPrefs] = useState({ emailNotif: true, realtime: true, publicProfile: false });
   const [bc, setBc]                   = useState({ title: '', body: '', target: 'all', send_email: true });
   const [bcLoading, setBcLoading]     = useState(false);
   const [bcMsg, setBcMsg]             = useState(null);
@@ -524,6 +505,29 @@ function NotificationsPanel() {
         )}
       </div>
 
+      {/* Preferences (moved from Profile) */}
+      <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-4">
+        <div>
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Preferences</h3>
+          <p className="text-sm font-black text-slate-800 mt-1 uppercase tracking-tight">Manage your display and activity settings.</p>
+        </div>
+        <div className="space-y-3">
+          {[
+            { key: 'emailNotif',    label: 'Email Notifications', desc: 'Receive daily summary reports via email.' },
+            { key: 'realtime',      label: 'Real-time Alerts',    desc: 'Get instant notifications for new marketing requests.' },
+            { key: 'publicProfile', label: 'Public Profile',      desc: 'Allow other staff members to view your profile.' },
+          ].map(({ key, label, desc }) => (
+            <div key={key} className="flex items-center justify-between p-4 bg-slate-50/60 rounded-lg border border-slate-100">
+              <div>
+                <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{label}</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">{desc}</p>
+              </div>
+              <Toggle on={displayPrefs[key]} onChange={v => setDisplayPrefs(p => ({ ...p, [key]: v }))} />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {isAdmin && (
         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-5">
           <div>
@@ -580,43 +584,6 @@ function NotificationsPanel() {
   );
 }
 
-function SystemPanel() {
-  const [settings, setSettings] = useState({
-    maintenanceMode: false, debugLogs: false, autoBackup: true, twoFactor: false,
-  });
-
-  const items = [
-    { key: 'maintenanceMode', icon: Wifi,      label: 'Maintenance Mode',   desc: 'Temporarily disable access for non-admins.' },
-    { key: 'debugLogs',       icon: HardDrive, label: 'Debug Logging',      desc: 'Enable verbose system logs for troubleshooting.' },
-    { key: 'autoBackup',      icon: RefreshCw, label: 'Automatic Backups',  desc: 'Schedule daily automated database snapshots.' },
-    { key: 'twoFactor',       icon: Shield,    label: 'Require 2FA',        desc: 'Enforce two-factor authentication for all users.' },
-  ];
-
-  return (
-    <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-5">
-      <div>
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">System Configuration</h3>
-        <p className="text-sm font-black text-slate-800 mt-1 uppercase tracking-tight">Adjust global system settings.</p>
-      </div>
-      <div className="space-y-3">
-        {items.map(({ key, icon: Icon, label, desc }) => (
-          <div key={key} className="flex items-center justify-between p-4 bg-slate-50/60 rounded-lg border border-slate-100">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[#1072b3]/10 flex items-center justify-center text-[#1072b3]">
-                <Icon className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{label}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">{desc}</p>
-              </div>
-            </div>
-            <Toggle on={settings[key]} onChange={v => setSettings(s => ({ ...s, [key]: v }))} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 const MODEL_OPTIONS = [
   { key: 'users',              label: 'Users',               desc: 'All user accounts and roles' },
@@ -878,72 +845,21 @@ function DatabasePanel() {
   );
 }
 
-function ApiPanel() {
-  const [keys] = useState([
-    { name: 'Google Analytics', key: 'GA-XXXXXXXX-1', active: true },
-    { name: 'SMTP Mailer',       key: 'smtp-key-9f3a2...', active: true },
-    { name: 'SMS Gateway',       key: 'sms-prod-token-7b...', active: false },
-  ]);
-  const [copied, setCopied] = useState(null);
-
-  const copyKey = (name) => { setCopied(name); setTimeout(() => setCopied(null), 1500); };
-
-  return (
-    <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-5">
-      <div>
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">API & Integrations</h3>
-        <p className="text-sm font-black text-slate-800 mt-1 uppercase tracking-tight">Manage third-party connections.</p>
-      </div>
-      <div className="space-y-3">
-        {keys.map(({ name, key, active }) => (
-          <div key={name} className="flex items-center justify-between p-4 bg-slate-50/60 rounded-lg border border-slate-100 gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-lg bg-[#1072b3]/10 flex items-center justify-center text-[#1072b3] flex-shrink-0">
-                <Key className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{name}</p>
-                <p className="text-[10px] text-slate-400 font-mono truncate mt-0.5">{key}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className={cn('text-[9px] font-black px-2.5 py-1 rounded uppercase tracking-widest',
-                active ? 'bg-green-50 text-green-600' : 'bg-slate-100 text-slate-400')}>
-                {active ? 'Active' : 'Inactive'}
-              </span>
-              <button onClick={() => copyKey(name)}
-                className="p-2 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors outline-none" title="Copy key">
-                {copied === name ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <button className="flex items-center gap-2 px-6 py-3 bg-[#1072b3] text-white rounded-lg text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#f6ce11] hover:text-black transition-all duration-300 shadow-lg shadow-[#1072b3]/20 outline-none">
-        <Cloud className="w-4 h-4" /> Connect New Integration
-      </button>
-    </div>
-  );
-}
 
 // ─── main component ──────────────────────────────────────────────────────────
 
 const ALL_SECTIONS = [
-  { id: 'profile',       label: 'Profile Settings',    icon: User,     desc: 'Manage your personal info and preferences.',    roles: ['Admin', 'Staff', 'Collaborator'] },
-  { id: 'notifications', label: 'Notifications',        icon: Bell,     desc: 'Configure how you receive alerts and updates.', roles: ['Admin', 'Staff', 'Collaborator'] },
-  { id: 'security',      label: 'Security & Privacy',   icon: Shield,   desc: 'Update your password and account security.',    roles: ['Admin', 'Staff', 'Collaborator'] },
-  { id: 'system',        label: 'System Configuration', icon: Globe,    desc: 'Adjust global system settings and defaults.',   roles: ['Admin', 'Staff'] },
-  { id: 'database',      label: 'Database Management',  icon: Database, desc: 'Backup, restore, and manage system data.',      roles: ['Admin'] },
-  { id: 'api',           label: 'API & Integrations',   icon: Cloud,    desc: 'Manage third-party connections and API keys.',  roles: ['Admin'] },
+  { id: 'profile',       label: 'Profile Settings', icon: User,     desc: 'Manage your personal info and photo.',          roles: ['Admin', 'Staff', 'Collaborator'] },
+  { id: 'notifications', label: 'Notifications',    icon: Bell,     desc: 'Configure alerts, updates, and preferences.',   roles: ['Admin', 'Staff', 'Collaborator'] },
+  { id: 'security',      label: 'Password',         icon: Shield,   desc: 'Change your account password.',                 roles: ['Admin', 'Staff', 'Collaborator'] },
+  { id: 'database',      label: 'Database Management', icon: Database, desc: 'Backup, restore, and manage system data.',   roles: ['Admin'] },
 ];
 
 const PANELS = {
   profile:       ProfilePanel,
   notifications: NotificationsPanel,
   security:      SecurityPanel,
-  system:        SystemPanel,
   database:      DatabasePanel,
-  api:           ApiPanel,
 };
 
 const Settings = ({ initialPanel = 'profile' }) => {

@@ -64,9 +64,19 @@ const formatTs = (msg) => {
   if (s === 'queued')  return 'Queued — will send when online';
   if (s === 'failed')  return 'Failed · tap ! to retry';
   try {
-    return new Date(msg.created_at).toLocaleString('en-US', {
-      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-    });
+    const diff = Math.floor((Date.now() - new Date(msg.created_at)) / 1000);
+    if (diff < 30)    return 'Just now';
+    if (diff < 90)    return '1 min ago';
+    const mins = Math.floor(diff / 60);
+    if (diff < 3600)  return `${mins} mins ago`;
+    const hrs = Math.floor(diff / 3600);
+    if (diff < 7200)  return '1 hr ago';
+    if (diff < 86400) return `${hrs} hrs ago`;
+    const d = new Date(msg.created_at);
+    const yest = new Date(); yest.setDate(yest.getDate() - 1);
+    const t = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit' });
+    if (d.toDateString() === yest.toDateString()) return `Yesterday at ${t}`;
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric' }) + ` at ${t}`;
   } catch { return ''; }
 };
 
@@ -160,7 +170,7 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isOnline,     setIsOnline]     = useState(navigator.onLine);
   const [syncing,      setSyncing]      = useState(false);
-  const [expandedId,   setExpandedId]   = useState(null); // click-to-reveal timestamp
+  const [expandedId,   setExpandedId]   = useState(null); 
 
   const bottomRef    = useRef(null);
   const pollRef      = useRef(null);
@@ -188,7 +198,6 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
         _showSep: !!prev && new Date(m.created_at) - new Date(prev.created_at) >= GROUP_WINDOW_MS,
       };
     });
-    // Mark last own message so the blue ✓ renders only there
     for (let i = result.length - 1; i >= 0; i--) {
       if (result[i].sender_name === myName) {
         result[i] = { ...result[i], _isLastOwn: true };
@@ -198,7 +207,15 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
     return result;
   }, [messages, myName]);
 
-  // ── Fetch from server, merge with local optimistic messages ────────────────
+  // Derive the other participant from message history for the header
+  const otherParty = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].sender_name && messages[i].sender_name !== myName)
+        return messages[i].sender_name;
+    }
+    return null;
+  }, [messages, myName]);
+
   const fetchMessages = useCallback(async () => {
     if (!requestId) return;
     const token = localStorage.getItem('authToken');
@@ -218,7 +235,6 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
     } catch { /* silent — optimistic messages stay visible */ }
   }, [requestId, key]);
 
-  // ── Open / close lifecycle ─────────────────────────────────────────────────
   useEffect(() => {
     if (!open || !requestId) {
       setMessages([]);
@@ -237,19 +253,16 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
     fetchMessages().finally(() => setLoading(false));
     pollRef.current = setInterval(fetchMessages, 30_000);
     return () => clearInterval(pollRef.current);
-  }, [open, requestId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, requestId]);
 
-  // ── Auto-scroll ────────────────────────────────────────────────────────────
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // ── Focus textarea on open ─────────────────────────────────────────────────
   useEffect(() => {
     if (open) setTimeout(() => textareaRef.current?.focus(), 350);
   }, [open]);
 
-  // ── Send a single message object to the server ─────────────────────────────
   const sendToServer = useCallback(async (msg) => {
     const token = localStorage.getItem('authToken');
     const fd = new FormData();
@@ -293,7 +306,6 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
     }
   }, [requestId, key]);
 
-  // ── Flush all localStorage pending in order ────────────────────────────────
   const flushPending = useCallback(async () => {
     if (!key || !navigator.onLine) return;
     const queue = readPending(key);
@@ -311,7 +323,6 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
 
   useEffect(() => { flushRef.current = flushPending; }, [flushPending]);
 
-  // ── Online / offline listeners — registered once ───────────────────────────
   useEffect(() => {
     const handleOnline  = () => { setIsOnline(true);  flushRef.current?.(); };
     const handleOffline = () => setIsOnline(false);
@@ -323,7 +334,6 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
     };
   }, []);
 
-  // ── Handle send ────────────────────────────────────────────────────────────
   const handleSend = (e) => {
     e.preventDefault();
     if (sendGuard.current) return;
@@ -376,7 +386,6 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
     sendToServer({ ...optimistic, _file: capturedFile });
   };
 
-  // ── Retry a failed message ─────────────────────────────────────────────────
   const retryMessage = useCallback((msg) => {
     setMessages(prev => prev.map(m =>
       m.client_temp_id === msg.client_temp_id ? { ...m, _localStatus: 'sending' } : m
@@ -393,7 +402,6 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
     sendToServer(msg);
   }, [key, sendToServer]);
 
-  // ── File input ─────────────────────────────────────────────────────────────
   const handleFileChange = (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -412,7 +420,6 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
 
   const canSend = !!(text.trim() || selectedFile);
 
-  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <AnimatePresence>
       {open && (
@@ -431,55 +438,54 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
             transition={{ type: 'spring', damping: 30, stiffness: 280 }}
             className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white z-[999] shadow-2xl flex flex-col"
           >
-            {/* ── Header ── */}
-            <div className="flex items-start justify-between px-5 py-4 border-b border-slate-100 bg-white shrink-0">
+            {/* ── Messenger Chat Header ── */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-white shrink-0">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-[#1072b3]/10 flex items-center justify-center shrink-0">
-                  <MessageCircle className="w-4 h-4 text-[#1072b3]" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-[13px] font-bold text-slate-800 leading-none">
-                      Chat
-                    </h2>
-                    {syncing && (
-                      <span className="flex items-center gap-1 text-[9px] font-bold text-[#1072b3] uppercase tracking-widest">
-                        <RefreshCw className="w-2.5 h-2.5 animate-spin" /> Syncing
-                      </span>
-                    )}
-                    {!isOnline && !syncing && (
-                      <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-widest">
-                        <WifiOff className="w-2.5 h-2.5" /> Offline
-                      </span>
-                    )}
+                {/* Avatar with live status dot */}
+                <div className="relative shrink-0 select-none">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm"
+                    style={{ backgroundColor: avatarColor(otherParty || requestTitle || 'Chat') }}>
+                    {initials(otherParty || requestTitle || 'Chat')}
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5 leading-snug line-clamp-1 truncate">
-                    {requestTitle || `Request #${requestId}`}
+                  <span
+                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white transition-colors ${
+                      isOnline ? 'bg-green-400' : 'bg-slate-300'
+                    }`}
+                  />
+                </div>
+
+                {/* Name, status line, request subtitle */}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <h2 className="text-[14px] font-bold text-slate-900 leading-tight truncate">
+                      {otherParty || requestTitle || `Request #${requestId}`}
+                    </h2>
+                    {syncing && <RefreshCw className="w-3 h-3 animate-spin text-[#1072b3] shrink-0" />}
+                  </div>
+                  <p className={`text-[11px] font-medium leading-tight flex items-center gap-1 ${
+                    isOnline ? 'text-green-500' : 'text-amber-500'
+                  }`}>
+                    {isOnline
+                      ? 'Active now'
+                      : <><WifiOff className="w-2.5 h-2.5 shrink-0" /> Offline — messages queued</>
+                    }
                   </p>
+                  {otherParty && (
+                    <p className="text-[10px] text-slate-400 leading-tight truncate mt-0.5">
+                      {requestTitle || `Request #${requestId}`}
+                    </p>
+                  )}
                 </div>
               </div>
+
+              {/* Close Button */}
               <button onClick={onClose}
-                className="cursor-pointer p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors outline-none ml-3 shrink-0">
-                <X className="w-4 h-4" />
+                className="cursor-pointer p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all outline-none shrink-0"
+                title="Close Chat"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
-
-            {/* ── Offline banner ── */}
-            <AnimatePresence>
-              {!isOnline && (
-                <motion.div key="offline-bar"
-                  initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="bg-amber-50 border-b border-amber-100 overflow-hidden shrink-0">
-                  <div className="flex items-center gap-2 px-5 py-2">
-                    <WifiOff className="w-3 h-3 text-amber-500 shrink-0" />
-                    <p className="text-[10px] font-semibold text-amber-600">
-                      You're offline — messages will send when connection returns
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* ── Message list ── */}
             <div className="flex-1 overflow-y-auto px-3 py-4 bg-white">
@@ -512,12 +518,10 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
                       <React.Fragment key={msgId}>
                         {msg._showSep && <TimeSep iso={msg.created_at} />}
 
-                        {/* Message row */}
                         <div className={`flex items-end gap-1.5 ${isMine ? 'justify-end' : 'justify-start'} ${
                           msg._isLast ? 'mb-3' : 'mb-[3px]'
                         }`}>
 
-                          {/* Received: avatar column (32px) */}
                           {!isMine && (
                             <div className="w-8 h-8 shrink-0 self-end mb-0.5">
                               {msg._isLast && (
@@ -530,16 +534,13 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
                             </div>
                           )}
 
-                          {/* Bubble column */}
                           <div className={`flex flex-col max-w-[72%] ${isMine ? 'items-end' : 'items-start'}`}>
-                            {/* Sender name — first of received group */}
                             {!isMine && msg._isFirst && (
                               <span className="text-[11px] font-semibold text-slate-500 px-2 mb-1 leading-none">
                                 {msg.sender_name}
                               </span>
                             )}
 
-                            {/* Bubble */}
                             <div
                               onClick={() => setExpandedId(isExpanded ? null : msgId)}
                               className={`px-4 py-2.5 text-sm leading-relaxed select-text cursor-pointer active:opacity-80 transition-opacity ${radius} ${
@@ -559,7 +560,6 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
                               )}
                             </div>
 
-                            {/* Click-to-reveal timestamp */}
                             <AnimatePresence>
                               {isExpanded && (
                                 <motion.div key="ts"
@@ -577,7 +577,6 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
                               )}
                             </AnimatePresence>
 
-                            {/* Status icon — own messages only */}
                             {isMine && showStatus && (
                               <div className="flex items-center justify-end h-4 mt-0.5 pr-0.5">
                                 <StatusDot
@@ -642,7 +641,7 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle }) => {
                 </button>
               </form>
 
-              <p className="text-[9px] text-slate-300 mt-1.5 text-center font-medium">
+              <p className="text-[9px] text-slate-300 mt-1.5 text-center font-medium select-none">
                 Shift + Enter for new line · Max {MAX_FILE_MB} MB per file
               </p>
             </div>

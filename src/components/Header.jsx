@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Bell,
   ChevronDown,
@@ -11,7 +11,6 @@ import {
   UserPlus,
   FileText,
   Settings,
-  Check,
   Menu,
   MessageCircle,
 } from 'lucide-react';
@@ -35,10 +34,16 @@ const NOTIF_ICONS = {
 
 function timeAgo(iso) {
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
-  if (diff < 60)   return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400)return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 30)    return 'Just now';
+  if (diff < 90)    return '1 min ago';
+  if (diff < 3600)  return `${Math.floor(diff / 60)} mins ago`;
+  if (diff < 7200)  return '1 hr ago';
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hrs ago`;
+  const d = new Date(iso);
+  const yest = new Date(); yest.setDate(yest.getDate() - 1);
+  const t = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === yest.toDateString()) return `Yesterday at ${t}`;
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric' }) + ` at ${t}`;
 }
 
 const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenChat }) => {
@@ -86,6 +91,32 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenC
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [showNotifs]);
+
+  // Collapse consecutive same-sender message notifications into one grouped entry
+  const groupedNotifications = useMemo(() => {
+    const result = [];
+    let i = 0;
+    while (i < notifications.length) {
+      const n = notifications[i];
+      if (n.type !== 'message') { result.push(n); i++; continue; }
+      let j = i + 1;
+      while (j < notifications.length && notifications[j].type === 'message' && notifications[j].title === n.title) j++;
+      if (j - i > 1) {
+        const count = j - i;
+        const sender = n.title.replace(/^New message from /, '');
+        result.push({
+          ...n,
+          title: `${sender} sent ${count} new messages`,
+          is_read: notifications.slice(i, j).every(x => x.is_read),
+          _groupIds: notifications.slice(i, j).map(x => x.id),
+        });
+      } else {
+        result.push(n);
+      }
+      i = j;
+    }
+    return result;
+  }, [notifications]);
 
   const markRead = async (id) => {
     const token = localStorage.getItem('authToken');
@@ -138,15 +169,18 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenC
     setTimeout(() => setShowLogoutNotification(false), 3000);
   };
 
-  const parseMessageLink = (link) => {
+  const parseNotifLink = (link) => {
+    if (!link) return null;
     try {
-      const url = new URL(link, window.location.origin);
-      const parts = url.pathname.replace(/^\//, '').split('/');
+      const url   = new URL(link, window.location.origin);
+      const parts = url.pathname.replace(/^\//, '').split('/').filter(Boolean);
+      if (!parts.length) return null;
       if (parts[0] === 'request-detail' && parts[1]) {
-        return { requestId: parts[1] };
+        return { type: 'request-detail', requestId: parts[1] };
       }
-    } catch { /* ignore */ }
-    return null;
+      // Generic single-segment tab links e.g. /users, /marketing, /documents
+      return { type: 'tab', tab: parts[0] };
+    } catch { return null; }
   };
 
   return (
@@ -197,32 +231,48 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenC
                   )}
                 </div>
                 <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
-                  {notifications.length === 0 ? (
+                  {groupedNotifications.length === 0 ? (
                     <div className="py-10 text-center text-gray-400 text-[10px] font-black uppercase tracking-widest">No notifications</div>
                   ) : (
-                    notifications.map(n => {
+                    groupedNotifications.map(n => {
                       const Icon = NOTIF_ICONS[n.type] || Bell;
                       return (
                         <button
-                          key={n.id}
+                          key={n._groupIds ? `grp-${n.id}` : n.id}
                           onClick={() => {
-                            if (!n.is_read) markRead(n.id);
+                            if (n._groupIds) {
+                              n._groupIds.forEach(id => markRead(id));
+                            } else if (!n.is_read) {
+                              markRead(n.id);
+                            }
                             setShowNotifs(false);
 
                             if (n.type === 'message') {
-                              const parsed = n.link ? parseMessageLink(n.link) : null;
+                              const parsed = parseNotifLink(n.link);
                               if (parsed?.requestId && onOpenChat) {
-                                onOpenChat(parsed.requestId, n.body || '');
+                                onOpenChat(parsed.requestId, `Request #${parsed.requestId}`);
                               }
                               return;
                             }
 
                             if (n.type === 'request') {
-                              const parsed = n.link ? parseMessageLink(n.link) : null;
-                              if (parsed?.requestId) {
+                              const parsed = parseNotifLink(n.link);
+                              if (parsed?.type === 'request-detail' && parsed.requestId) {
                                 onNavigate?.('request-detail', { requestId: parsed.requestId });
-                              } else if (n.link) {
-                                onNavigate?.(n.link.replace(/^\//, '').split('/')[0]);
+                              } else if (parsed?.type === 'tab') {
+                                onNavigate?.(parsed.tab);
+                              } else {
+                                onNavigate?.('marketing');
+                              }
+                              return;
+                            }
+
+                            if (n.type === 'user') {
+                              const parsed = parseNotifLink(n.link);
+                              if (parsed?.type === 'tab') {
+                                onNavigate?.(parsed.tab);
+                              } else {
+                                onNavigate?.('users');
                               }
                               return;
                             }
@@ -235,8 +285,9 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenC
                             <Icon className="w-4 h-4" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-xs font-bold leading-tight uppercase ${!n.is_read ? 'text-gray-900' : 'text-gray-600'}`}>{n.title}</p>
-                            <p className="text-[10px] text-gray-500 mt-1 line-clamp-2 leading-snug">{n.body}</p>
+                            <p className={`text-xs font-bold leading-tight ${!n.is_read ? 'text-gray-900' : 'text-gray-600'}`}>{n.title}</p>
+                            {n.body && <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2 leading-snug">{n.body}</p>}
+                            <p className="text-[10px] text-gray-400 mt-1">{timeAgo(n.created_at)}</p>
                           </div>
                         </button>
                       );

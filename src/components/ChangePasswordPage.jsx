@@ -63,7 +63,7 @@ const ChangePasswordPage = ({ onBack }) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch(`${API}/api/profile/change-password/`, {
+      const res = await fetch(`${API}/api/profile/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

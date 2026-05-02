@@ -8,6 +8,7 @@ from core.views import (
     logout_api,
     register_api,
     profile_api,
+    force_change_password_api,
     forgot_password_api,
     reset_password_api,
     # dashboard
@@ -42,6 +43,8 @@ from core.views import (
     notification_send_api,
     notification_test_email_api,
     announcements_api,
+    # audit logs (Admin only)
+    audit_logs_api,
 )
 
 urlpatterns = [
@@ -54,6 +57,7 @@ urlpatterns = [
 
     # Own profile / password change
     path('api/profile/', profile_api),
+    path('api/profile/set-password/', force_change_password_api),
 
     # Password reset (unauthenticated)
     path('api/forgot-password/', forgot_password_api),
@@ -89,6 +93,9 @@ urlpatterns = [
     # Backup & Restore
     path('api/backup/', backup_api),
     path('api/restore/', restore_api),
+
+    # Audit Logs
+    path('api/audit-logs/', audit_logs_api),
 
     # Announcements
     path('api/announcements/', announcements_api),
