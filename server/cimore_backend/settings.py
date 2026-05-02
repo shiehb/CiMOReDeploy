@@ -2,22 +2,45 @@ import os
 from pathlib import Path
 from decouple import config, Csv
 import dj_database_url
-from corsheaders.defaults import default_headers
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ---------------------------------------------------------------------------
-# Security
+# Security & Debug Configuration
 # ---------------------------------------------------------------------------
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config(
-    'ALLOWED_HOSTS',
-    default='localhost,127.0.0.1,cimoredeploy.onrender.com,cimore.vercel.app',
-    cast=Csv(),
-)
+if DEBUG:
+    # Local/Offline Network Settings
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+    
+    CORS_ALLOWED_ORIGINS = [
+        'http://localhost:3000',
+    ]
+    
+    CSRF_TRUSTED_ORIGINS = [
+        'http://localhost:3000',
+    ]
+else:
+    # Online/Production Settings
+    ALLOWED_HOSTS = config(
+        'ALLOWED_HOSTS',
+        default='cimoredeploy.onrender.com,cimore.vercel.app',
+        cast=Csv(),
+    )
+    
+    CORS_ALLOWED_ORIGINS = config(
+        'CORS_ALLOWED_ORIGINS',
+        default='https://cimore.vercel.app,https://cimoredeploy.onrender.com',
+        cast=Csv(),
+    )
+    
+    CSRF_TRUSTED_ORIGINS = [
+        "https://cimore.vercel.app",
+        "https://cimoredeploy.onrender.com",
+    ]
 
 # ---------------------------------------------------------------------------
 # Application definition
@@ -90,21 +113,8 @@ DATABASES = {
     )
 }
 
-# ---------------------------------------------------------------------------
-# CORS & CSRF Settings
-# ---------------------------------------------------------------------------
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,https://cimore.vercel.app,https://cimoredeploy.onrender.com',
-    cast=Csv(),
-)
-
+# CORS & CSRF Extra Tweaks
 CORS_ALLOW_CREDENTIALS = True
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://cimore.vercel.app",
-    "https://cimoredeploy.onrender.com",
-]
 
 # ---------------------------------------------------------------------------
 # Production Security (Required for Render)

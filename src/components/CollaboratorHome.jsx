@@ -247,28 +247,29 @@ const CollaboratorHome = ({ onNavigate }) => {
         {/* RIGHT COLUMN */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           {announcements.length > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2 ml-2">
                 <Megaphone className="w-4 h-4 text-amber-500" /> Announcements
               </h3>
-              {announcements.map((ann) => (
-                <div key={ann.id} className="relative bg-white border border-slate-200/80 p-7 shadow overflow-hidden group rounded-lg">
-                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-400" />
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="bg-amber-100 text-amber-700 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg">{ann.tag}</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">{ann.date}</span>
-                  </div>
-                  <h3 className="text-md font-black text-slate-900 uppercase mb-2 tracking-tight">{ann.title}</h3>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed mb-5">{ann.body}</p>
-                  
+              <div className="max-h-[400px] overflow-y-auto space-y-2 [&::-webkit-scrollbar]:hidden">
+                {announcements.map((ann) => (
                   <button
+                    key={ann.id}
                     onClick={() => setSelectedAnn(ann)}
-                    className="cursor-pointer flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 text-[#1072b3] hover:text-[#f6ce11] outline-none"
+                    className="cursor-pointer w-full relative bg-white border border-slate-200/80 rounded-lg shadow-sm overflow-hidden flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 hover:bg-amber-50 hover:border-amber-200"
                   >
-                    View Announcement <ChevronRight className="w-3.5 h-3.5" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400" />
+                    <div className="pl-2 flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1 gap-2">
+                        <span className="bg-amber-100 text-amber-700 text-[8px] font-black uppercase px-2 py-0.5 rounded shrink-0">{ann.tag}</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase shrink-0">{ann.date}</span>
+                      </div>
+                      <p className="text-xs font-black text-slate-900 uppercase tracking-tight leading-tight truncate">{ann.title}</p>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
                   </button>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
@@ -276,6 +277,78 @@ const CollaboratorHome = ({ onNavigate }) => {
         </div>
 
       </div>
+
+      {/* ── Announcement Detail Modal ── */}
+      <AnimatePresence>
+        {selectedAnn && (
+          <motion.div
+            key="ann-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setSelectedAnn(null)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4"
+          >
+            <motion.div
+              key="ann-modal"
+              initial={{ opacity: 0, scale: 0.96, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 16 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden"
+            >
+              {/* Amber accent bar */}
+              <div className="h-1.5 w-full bg-amber-400" />
+
+              {/* Header */}
+              <div className="flex items-start justify-between px-8 pt-7 pb-5 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                    <Megaphone className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Announcement</p>
+                    <p className="text-[10px] font-bold text-slate-400 mt-0.5">{selectedAnn.date}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedAnn(null)}
+                  className="cursor-pointer p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors outline-none shrink-0 ml-4"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="px-8 py-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="bg-amber-100 text-amber-700 text-[9px] font-black uppercase px-2.5 py-1 rounded-lg">
+                    {selectedAnn.tag}
+                  </span>
+                </div>
+                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">
+                  {selectedAnn.title}
+                </h2>
+                <p className="text-sm text-slate-600 font-medium leading-relaxed whitespace-pre-line">
+                  {selectedAnn.body}
+                </p>
+              </div>
+
+              {/* Footer */}
+              <div className="px-8 pb-7 pt-2">
+                <button
+                  onClick={() => setSelectedAnn(null)}
+                  className="cursor-pointer w-full py-3 font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-300 bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black rounded-lg shadow-md outline-none"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

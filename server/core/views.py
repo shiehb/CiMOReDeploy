@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import zipfile
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from io import BytesIO
 from uuid import uuid4
 
@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import transaction
+from django.db.models import Count
 from django.http import HttpResponse
 from django.utils import timezone
 from PIL import Image, ImageOps
@@ -532,6 +533,10 @@ def request_attachments_api(request, request_id):
     if not file:
         return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
 
+    MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024  # 10 MB
+    if file.size > MAX_ATTACHMENT_BYTES:
+        return Response({"error": "File exceeds the 10 MB limit."}, status=status.HTTP_400_BAD_REQUEST)
+
     attachment = RequestAttachment.objects.create(
         request=mr,
         file=file,
@@ -553,18 +558,65 @@ def communication_logs_api(request):
 
     if request.method == 'GET':
         if user.role == 'Collaborator':
-            # Only logs related to their own requests
-            qs = CommunicationLog.objects.filter(
-                related_request__requester=user
-            ).order_by('-created_at')
+            qs = CommunicationLog.objects.filter(related_request__requester=user)
         else:
-            qs = CommunicationLog.objects.select_related('related_request').order_by('-created_at')
-        return Response(CommunicationLogSerializer(qs, many=True).data)
+            qs = CommunicationLog.objects.select_related('related_request')
+        rid = request.query_params.get('request_id')
+        if rid:
+            try:
+                qs = qs.filter(related_request_id=int(rid))
+            except (ValueError, TypeError):
+                pass
+        return Response(CommunicationLogSerializer(
+            qs.order_by('created_at'), many=True, context={'request': request}
+        ).data)
 
-    serializer = CommunicationLogSerializer(data=request.data)
+    # Deduplication: if this client_temp_id was already saved, return the existing record
+    client_temp_id = request.data.get('client_temp_id', '').strip()
+    if client_temp_id:
+        existing = CommunicationLog.objects.filter(client_temp_id=client_temp_id).first()
+        if existing:
+            return Response(
+                CommunicationLogSerializer(existing, context={'request': request}).data,
+                status=status.HTTP_200_OK,
+            )
+
+    serializer = CommunicationLogSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        instance = serializer.save()
+        related_req = instance.related_request
+        if related_req:
+            link = f'/request-detail/{related_req.id}?chat=true'
+            sender = user.get_full_name() or user.username
+            title_str = related_req.title or f'Request #{related_req.id}'
+            if instance.message:
+                preview = (instance.message[:80] + '…') if len(instance.message) > 80 else instance.message
+                body = f'Re: "{title_str}" — {preview}'
+            elif instance.file_name:
+                body = f'Re: "{title_str}" — [attachment: {instance.file_name}]'
+            else:
+                body = f'Re: "{title_str}"'
+            if user == related_req.requester:
+                _notify_role(
+                    ['Admin', 'Staff'],
+                    f'New message from {sender}',
+                    body,
+                    notif_type='message',
+                    link=link,
+                    exclude_user=user,
+                )
+            else:
+                _notify(
+                    related_req.requester,
+                    f'New message from {sender}',
+                    body,
+                    notif_type='message',
+                    link=link,
+                )
+        return Response(
+            CommunicationLogSerializer(instance, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -730,6 +782,205 @@ def dashboard_api(request):
         'recent_requests': recent_requests,
         'recent_activity': activity[:5],
     })
+
+
+# ---------------------------------------------------------------------------
+# DASHBOARD — MARKETING  (server-side filtered)
+# ---------------------------------------------------------------------------
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_marketing_api(request):
+    status_param = request.query_params.get('status', 'ALL STATUSES')
+    start_date   = request.query_params.get('startDate', '')
+    end_date     = request.query_params.get('endDate', '')
+
+    qs = MarketingRequest.objects.select_related('requester')
+
+    valid_statuses = {'Approved', 'Pending', 'Rejected', 'Cancelled'}
+
+    if status_param and status_param != 'ALL STATUSES':
+        statuses = [s.strip() for s in status_param.split(',') if s.strip() in valid_statuses]
+        if statuses:
+            qs = qs.filter(status__in=statuses)
+
+    if start_date:
+        qs = qs.filter(created_at__date__gte=start_date)
+    if end_date:
+        qs = qs.filter(created_at__date__lte=end_date)
+
+    breakdown = {'Approved': 0, 'Pending': 0, 'Rejected': 0, 'Cancelled': 0}
+    for item in qs.values('status').annotate(count=Count('id')):
+        if item['status'] in breakdown:
+            breakdown[item['status']] = item['count']
+
+    requests = []
+    for r in qs.order_by('-created_at')[:10]:
+        full_name = f"{r.requester.first_name} {r.requester.last_name}".strip() or r.requester.username
+        requests.append({
+            'id':          r.id,
+            'requestType': r.type,
+            'submittedBy': full_name,
+            'status':      r.status,
+            'date':        r.created_at.strftime('%Y-%m-%d'),
+        })
+
+    return Response({'success': True, 'breakdown': breakdown, 'requests': requests})
+
+
+# ---------------------------------------------------------------------------
+# DASHBOARD — TRAILBLAZING  (server-side filtered)
+# ---------------------------------------------------------------------------
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_trailblazing_api(request):
+    import calendar as _cal
+
+    filter_type    = request.query_params.get('filterType', 'MONTHLY').upper()
+    start_date_str = request.query_params.get('startDate', '')
+    end_date_str   = request.query_params.get('endDate', '')
+
+    today = timezone.localdate()
+
+    def _visits_by_month(start, end):
+        qs = School.objects.filter(
+            is_archived=False,
+            last_visited__isnull=False,
+            last_visited__gte=start,
+            last_visited__lte=end,
+        ).values_list('last_visited', flat=True)
+        vm = {}
+        for d in qs:
+            key = f"{d.year}-{d.month:02d}"
+            vm[key] = vm.get(key, 0) + 1
+        return vm
+
+    if filter_type == 'YEARLY':
+        start = today.replace(month=1, day=1)
+        end   = today.replace(month=12, day=31)
+        vm = _visits_by_month(start, end)
+        chart_data = [
+            {'label': date(today.year, m, 1).strftime('%b'),
+             'visits': vm.get(f"{today.year}-{m:02d}", 0)}
+            for m in range(1, 13)
+        ]
+
+    elif filter_type == 'SEMESTRAL':
+        months_list = []
+        for i in range(5, -1, -1):
+            offset    = today.month - i - 1
+            month_num = offset % 12 + 1
+            year      = today.year + offset // 12
+            months_list.append(date(year, month_num, 1))
+        start    = months_list[0]
+        last_day = _cal.monthrange(today.year, today.month)[1]
+        end      = today.replace(day=last_day)
+        vm = _visits_by_month(start, end)
+        chart_data = [
+            {'label': m.strftime('%b'), 'visits': vm.get(f"{m.year}-{m.month:02d}", 0)}
+            for m in months_list
+        ]
+
+    elif filter_type == 'MONTHLY':
+        start    = today.replace(day=1)
+        last_day = _cal.monthrange(today.year, today.month)[1]
+        end      = today.replace(day=last_day)
+        visits_list = list(
+            School.objects.filter(
+                is_archived=False,
+                last_visited__isnull=False,
+                last_visited__gte=start,
+                last_visited__lte=end,
+            ).values_list('last_visited', flat=True)
+        )
+        chart_data = []
+        for w in range(4):
+            w_start = start + timedelta(days=w * 7)
+            w_end   = min(w_start + timedelta(days=6), end)
+            count   = sum(1 for d in visits_list if w_start <= d <= w_end)
+            chart_data.append({'label': f"Wk {w + 1}", 'visits': count})
+
+    elif filter_type == 'CUSTOM':
+        if not start_date_str or not end_date_str:
+            return Response(
+                {'success': False, 'error': 'startDate and endDate are required for CUSTOM filter.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            range_start = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            range_end   = datetime.strptime(end_date_str,   '%Y-%m-%d').date()
+        except ValueError:
+            return Response(
+                {'success': False, 'error': 'Invalid date format. Use YYYY-MM-DD.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        vm  = _visits_by_month(range_start, range_end)
+        cur = range_start.replace(day=1)
+        ordered = {}
+        while cur <= range_end:
+            key = f"{cur.year}-{cur.month:02d}"
+            ordered[key] = {'label': cur.strftime('%b %Y'), 'visits': vm.get(key, 0)}
+            next_month = cur.month + 1
+            if next_month > 12:
+                cur = cur.replace(year=cur.year + 1, month=1)
+            else:
+                cur = cur.replace(month=next_month)
+        chart_data = list(ordered.values()) or [{'label': range_start.strftime('%b %Y'), 'visits': 0}]
+
+    else:
+        return Response({'success': False, 'error': 'Invalid filterType.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({'success': True, 'chartData': chart_data})
+
+
+# ---------------------------------------------------------------------------
+# DASHBOARD — RECENT ACTIVITY  (server-side filtered)
+# ---------------------------------------------------------------------------
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_recent_activity_api(request):
+    category = request.query_params.get('category', 'ALL ACTIVITY')
+    selected = {c.strip() for c in category.split(',') if c.strip()}
+    include_all = not selected or 'ALL ACTIVITY' in selected
+
+    activities = []
+
+    if include_all or 'Request' in selected:
+        for mr in MarketingRequest.objects.select_related('requester').order_by('-created_at')[:5]:
+            full_name = f"{mr.requester.first_name} {mr.requester.last_name}".strip() or mr.requester.username
+            activities.append({
+                'id':          mr.id,
+                'type':        'request',
+                'title':       'New Marketing Request',
+                'description': f"{mr.type} by {full_name}",
+                'timestamp':   mr.created_at.isoformat(),
+            })
+
+    if include_all or 'Visit' in selected:
+        for school in School.objects.filter(last_visited__isnull=False).order_by('-last_visited')[:5]:
+            activities.append({
+                'id':          school.id,
+                'type':        'school',
+                'title':       'School Visit Completed',
+                'description': school.school_name,
+                'timestamp':   school.last_visited.isoformat(),
+            })
+
+    if include_all or 'User' in selected:
+        for user in User.objects.order_by('-date_joined')[:5]:
+            full_name = f"{user.first_name} {user.last_name}".strip() or user.username
+            activities.append({
+                'id':          user.id,
+                'type':        'user',
+                'title':       'New User Registered',
+                'description': f"{user.role} — {full_name}",
+                'timestamp':   user.date_joined.isoformat(),
+            })
+
+    activities.sort(key=lambda x: x['timestamp'], reverse=True)
+    return Response({'success': True, 'activities': activities[:10]})
 
 
 # ---------------------------------------------------------------------------

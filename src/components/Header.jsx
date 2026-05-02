@@ -13,6 +13,7 @@ import {
   Settings,
   Check,
   Menu,
+  MessageCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import logo from '../assets/logo.png';
@@ -29,6 +30,7 @@ const NOTIF_ICONS = {
   user:         UserPlus,
   announcement: Megaphone,
   system:       Settings,
+  message:      MessageCircle,
 };
 
 function timeAgo(iso) {
@@ -39,7 +41,7 @@ function timeAgo(iso) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen }) => {
+const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenChat }) => {
   const [showProfile, setShowProfile] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showLogoutNotification, setShowLogoutNotification] = useState(false);
@@ -49,6 +51,7 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen }) => {
   const [showNotifs, setShowNotifs] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unread, setUnread] = useState(0);
+  const [selectedNotif, setSelectedNotif] = useState(null);
   const notifRef = useRef(null);
 
   const fullName = localStorage.getItem('userFullName') || 'Admin User';
@@ -135,6 +138,17 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen }) => {
     setTimeout(() => setShowLogoutNotification(false), 3000);
   };
 
+  const parseMessageLink = (link) => {
+    try {
+      const url = new URL(link, window.location.origin);
+      const parts = url.pathname.replace(/^\//, '').split('/');
+      if (parts[0] === 'request-detail' && parts[1]) {
+        return { requestId: parts[1] };
+      }
+    } catch { /* ignore */ }
+    return null;
+  };
+
   return (
     <header className="h-15 bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-100 flex items-center justify-between px-4 pr-2 shadow-md">
       <div className="flex items-center gap-4">
@@ -191,8 +205,31 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen }) => {
                       return (
                         <button
                           key={n.id}
-                          onClick={() => { if (!n.is_read) markRead(n.id); }}
-                          className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${!n.is_read ? 'bg-[#1072b3]/[0.03]' : ''}`}
+                          onClick={() => {
+                            if (!n.is_read) markRead(n.id);
+                            setShowNotifs(false);
+
+                            if (n.type === 'message') {
+                              const parsed = n.link ? parseMessageLink(n.link) : null;
+                              if (parsed?.requestId && onOpenChat) {
+                                onOpenChat(parsed.requestId, n.body || '');
+                              }
+                              return;
+                            }
+
+                            if (n.type === 'request') {
+                              const parsed = n.link ? parseMessageLink(n.link) : null;
+                              if (parsed?.requestId) {
+                                onNavigate?.('request-detail', { requestId: parsed.requestId });
+                              } else if (n.link) {
+                                onNavigate?.(n.link.replace(/^\//, '').split('/')[0]);
+                              }
+                              return;
+                            }
+
+                            setSelectedNotif(n);
+                          }}
+                          className={`cursor-pointer w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${!n.is_read ? 'bg-[#1072b3]/[0.03]' : ''}`}
                         >
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${!n.is_read ? 'bg-[#1072b3]/10 text-[#1072b3]' : 'bg-gray-100 text-gray-400'}`}>
                             <Icon className="w-4 h-4" />
@@ -294,6 +331,102 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen }) => {
                   className="flex-1 px-6 py-3.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black rounded-lg shadow-lg"
                 >
                   Logout
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Notification Detail Modal ── */}
+      <AnimatePresence>
+        {selectedNotif && (
+          <motion.div
+            key="notif-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setSelectedNotif(null)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4"
+          >
+            <motion.div
+              key="notif-modal"
+              initial={{ opacity: 0, scale: 0.96, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 16 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden"
+            >
+              {/* Top accent bar — colour by type */}
+              <div className={`h-1.5 w-full ${
+                selectedNotif.type === 'announcement' ? 'bg-amber-400' :
+                selectedNotif.type === 'request'      ? 'bg-[#1072b3]' :
+                selectedNotif.type === 'user'         ? 'bg-orange-400' :
+                'bg-slate-300'
+              }`} />
+
+              {/* Header */}
+              <div className="flex items-start justify-between px-8 pt-7 pb-5 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  {(() => {
+                    const Icon = NOTIF_ICONS[selectedNotif.type] || Bell;
+                    return (
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                        selectedNotif.type === 'announcement' ? 'bg-amber-50 text-amber-500' :
+                        selectedNotif.type === 'request'      ? 'bg-[#1072b3]/10 text-[#1072b3]' :
+                        selectedNotif.type === 'user'         ? 'bg-orange-50 text-orange-500' :
+                        'bg-slate-100 text-slate-500'
+                      }`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                    );
+                  })()}
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      {selectedNotif.type === 'announcement' ? 'Announcement' :
+                       selectedNotif.type === 'request'      ? 'Request Update' :
+                       selectedNotif.type === 'user'         ? 'User Activity' :
+                       'System'}
+                    </p>
+                    <p className="text-[10px] font-bold text-slate-400 mt-0.5">
+                      {new Date(selectedNotif.created_at).toLocaleString('en-US', {
+                        month: 'short', day: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedNotif(null)}
+                  className="cursor-pointer p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors outline-none shrink-0 ml-4"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="px-8 py-6 space-y-3">
+                <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-tight">
+                  {selectedNotif.title}
+                </h2>
+                {selectedNotif.body ? (
+                  <p className="text-sm text-slate-600 font-medium leading-relaxed whitespace-pre-line">
+                    {selectedNotif.body}
+                  </p>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">No additional details.</p>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-8 pb-7 pt-2">
+                <button
+                  onClick={() => setSelectedNotif(null)}
+                  className="cursor-pointer w-full py-3 font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-300 bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black rounded-lg shadow-md outline-none"
+                >
+                  Close
                 </button>
               </div>
             </motion.div>

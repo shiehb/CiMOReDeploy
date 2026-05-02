@@ -109,12 +109,15 @@ class CommunicationLog(models.Model):
         ('Completed', 'Completed'),
     ]
     sender_name = models.CharField(max_length=255)
-    recipient_name = models.CharField(max_length=255)
-    message = models.TextField()
+    recipient_name = models.CharField(max_length=255, blank=True, default='')
+    message = models.TextField(blank=True, default='')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     related_request = models.ForeignKey(
         MarketingRequest, on_delete=models.SET_NULL, null=True, blank=True, related_name='communications'
     )
+    file = models.FileField(upload_to='chat/%Y/%m/', null=True, blank=True)
+    file_name = models.CharField(max_length=255, blank=True, default='')
+    client_temp_id = models.CharField(max_length=100, null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -131,6 +134,7 @@ class Notification(models.Model):
         ('user',         'User'),
         ('system',       'System'),
         ('announcement', 'Announcement'),
+        ('message',      'Message'),
     ]
     recipient  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     title      = models.CharField(max_length=255)

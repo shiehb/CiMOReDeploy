@@ -16,6 +16,7 @@ import UserDashboard from './components/UserDashboard';
 import ProfilePage from './components/ProfilePage';
 import ChangePasswordPage from './components/ChangePasswordPage';
 import { motion, AnimatePresence } from 'motion/react';
+import ChatSheet from './components/ChatSheet';
 
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -98,7 +99,15 @@ export default function App() {
   const [detailRequestId, setDetailRequestId] = useState(initialRoute.requestId);
   const [settingsPanel, setSettingsPanel]     = useState('profile');
   const [settingsNavKey, setSettingsNavKey]   = useState(0);
-  const [isOpen, setIsOpen] = useState(false); 
+  const [isOpen, setIsOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatRequestId, setChatRequestId] = useState(null);
+  const [chatRequestTitle, setChatRequestTitle] = useState('');
+  const openChat = useCallback((requestId, title = '') => {
+    setChatRequestId(requestId);
+    setChatRequestTitle(title);
+    setChatOpen(true);
+  }, []);
 
   const handleViewDetail = (id) => {
     setDetailRequestId(id);
@@ -274,12 +283,13 @@ export default function App() {
     switch (activeTab) {
       case 'dashboard':        return <Dashboard onNavigate={navigateTo} />;
       case 'users':            return <UserManagement />;
-      case 'marketing':        return <MarketingRequests onViewDetail={handleViewDetail} />;
+      case 'marketing':        return <MarketingRequests onViewDetail={handleViewDetail} onOpenChat={openChat} />;
       case 'request-detail':   return (
         <RequestDetail
           requestId={detailRequestId}
           onBack={() => navigateTo(previousTab)}
           canManage={true}
+          onOpenChat={openChat}
         />
       );
       case 'intelligence':     return <SchoolIntelligence />;
@@ -296,11 +306,12 @@ export default function App() {
       className="min-h-[calc(100vh-200px)] font-sans text-slate-900 selection:bg-[#1072b3]/10 selection:text-[#1072b3]"
       style={{ backgroundColor: THEME.bg }}
     >
-      <Header 
-        onLogout={handleLogout} 
-        onNavigate={navigateTo} 
-        onNavigateToSettings={navigateToSettings} 
-        setIsOpen={setIsOpen} 
+      <Header
+        onLogout={handleLogout}
+        onNavigate={navigateTo}
+        onNavigateToSettings={navigateToSettings}
+        setIsOpen={setIsOpen}
+        onOpenChat={openChat}
       />
       
       <div className="flex pt-15">
@@ -343,6 +354,13 @@ export default function App() {
           </div>
         </main>
       </div>
+
+      <ChatSheet
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        requestId={chatRequestId}
+        requestTitle={chatRequestTitle}
+      />
     </div>
   );
 }

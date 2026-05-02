@@ -70,12 +70,6 @@ function getPresetRange(preset) {
   };
 }
 
-function getStatusCounts(requests) {
-  const counts = { Approved: 0, Pending: 0, Rejected: 0, Cancelled: 0 };
-  requests.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
-  return Object.entries(counts).map(([name, value]) => ({ name, value }));
-}
-
 const ALL_STATUSES = ['Approved', 'Pending', 'Rejected', 'Cancelled'];
 
 // ---------------------------------------------------------------------------
@@ -135,9 +129,17 @@ const Sheet = ({ open, onClose, title, description, children }) => (
 // Dashboard
 // ---------------------------------------------------------------------------
 const Dashboard = ({ onNavigate }) => {
-  const [data, setData]       = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
+  const [error, setError] = useState(null);
+
+  const [marketingData, setMarketingData] = useState({
+    breakdown: { Approved: 0, Pending: 0, Rejected: 0, Cancelled: 0 },
+    requests:  [],
+  });
+  const [trailChartData,  setTrailChartData]  = useState([]);
+  const [activityData,    setActivityData]    = useState([]);
+  const [marketingLoading, setMarketingLoading] = useState(true);
+  const [trailLoading,     setTrailLoading]     = useState(true);
+  const [activityLoading,  setActivityLoading]  = useState(true);
 
   const fullName  = localStorage.getItem('userFullName') || 'Admin';
   const firstName = fullName.split(' ')[0];
@@ -164,8 +166,8 @@ const Dashboard = ({ onNavigate }) => {
   const [reqFilterStatuses, setReqFilterStatuses]   = useState(new Set());
   const [showReqStatusPanel, setShowReqStatusPanel] = useState(false);
   const [reqDatePreset, setReqDatePreset]           = useState('Monthly');
-  const [reqDateFrom, setReqDateFrom]               = useState('');
-  const [reqDateTo, setReqDateTo]                   = useState('');
+  const [reqDateFrom, setReqDateFrom] = useState(() => getPresetRange('Monthly').from);
+  const [reqDateTo,   setReqDateTo]   = useState(() => getPresetRange('Monthly').to);
 
   // Row 3 Left — Trailblazing filter
   const [trailPreset, setTrailPreset]     = useState('Monthly');
@@ -179,30 +181,76 @@ const Dashboard = ({ onNavigate }) => {
   const reqFilterRef      = useRef(null);
   const activityFilterRef = useRef(null);
 
-  // Fetch dashboard data
+  // Marketing requests + breakdown — refetch on every filter change
   useEffect(() => {
-    const fetchDashboard = async () => {
+    const fetchMarketing = async () => {
+      setMarketingLoading(true);
       try {
-        const res = await fetch(`${API}/api/dashboard/`, {
+        const params = new URLSearchParams();
+        const statusList = [...reqFilterStatuses];
+        params.set('status', statusList.length === 0 ? 'ALL STATUSES' : statusList.join(','));
+        if (reqDateFrom) params.set('startDate', reqDateFrom);
+        if (reqDateTo)   params.set('endDate',   reqDateTo);
+        const res = await fetch(`${API}/api/dashboard/marketing/?${params}`, {
           headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
         });
-        if (!res.ok) throw new Error('Failed to load dashboard data.');
-        setData(await res.json());
+        if (!res.ok) throw new Error('Failed to load marketing data.');
+        setMarketingData(await res.json());
       } catch (err) {
         setError(err.message);
       } finally {
-        setLoading(false);
+        setMarketingLoading(false);
       }
     };
-    fetchDashboard();
-  }, []);
+    fetchMarketing();
+  }, [reqFilterStatuses, reqDateFrom, reqDateTo]);
 
-  // Initialise Row 2 date range from Monthly preset
+  // Trailblazing chart — refetch when preset or custom dates change
   useEffect(() => {
-    const range = getPresetRange('Monthly');
-    setReqDateFrom(range.from);
-    setReqDateTo(range.to);
-  }, []);
+    const fetchTrail = async () => {
+      setTrailLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.set('filterType', trailPreset.toUpperCase());
+        if (trailPreset === 'Custom' && trailDateFrom) params.set('startDate', trailDateFrom);
+        if (trailPreset === 'Custom' && trailDateTo)   params.set('endDate',   trailDateTo);
+        const res = await fetch(`${API}/api/dashboard/trailblazing/?${params}`, {
+          headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
+        });
+        if (!res.ok) throw new Error('Failed to load trailblazing data.');
+        const json = await res.json();
+        setTrailChartData(json.chartData || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setTrailLoading(false);
+      }
+    };
+    fetchTrail();
+  }, [trailPreset, trailDateFrom, trailDateTo]);
+
+  // Recent activity — refetch when category filter changes
+  useEffect(() => {
+    const fetchActivity = async () => {
+      setActivityLoading(true);
+      try {
+        const params = new URLSearchParams();
+        const catList = [...activityCategories];
+        params.set('category', catList.length === 0 ? 'ALL ACTIVITY' : catList.join(','));
+        const res = await fetch(`${API}/api/dashboard/recent-activity/?${params}`, {
+          headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
+        });
+        if (!res.ok) throw new Error('Failed to load activity.');
+        const json = await res.json();
+        setActivityData(json.activities || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setActivityLoading(false);
+      }
+    };
+    fetchActivity();
+  }, [activityCategories]);
 
   // Click-outside: request status panel
   useEffect(() => {
@@ -224,29 +272,9 @@ const Dashboard = ({ onNavigate }) => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const chartData      = data?.chart_data     || [];
-  const recentRequests = data?.recent_requests || [];
-  const recentActivity = data?.recent_activity || [];
-
-  // Filtered requests (Row 2)
-  const filteredReqRequests = recentRequests.filter(r => {
-    const statusOk = reqFilterStatuses.size === 0 || reqFilterStatuses.has(r.status);
-    if (!statusOk) return false;
-    if (reqDateFrom && reqDateTo) {
-      const d = r.date ? r.date.slice(0, 10) : '';
-      if (d && (d < reqDateFrom || d > reqDateTo)) return false;
-    }
-    return true;
-  });
-
-  const statusCountData = getStatusCounts(filteredReqRequests);
-
-  // Filtered activity (Row 3 right)
-  const filteredActivity = recentActivity.filter(item =>
-    activityCategories.size === 0 ||
-    (activityCategories.has('Users')    && item.type === 'user') ||
-    (activityCategories.has('Requests') && item.type === 'request')
-  );
+  // Breakdown data derived from server response (no local filtering)
+  const statusCountData = Object.entries(marketingData.breakdown || {})
+    .map(([name, value]) => ({ name, value }));
 
   // --- Handlers ---
 
@@ -459,7 +487,7 @@ const Dashboard = ({ onNavigate }) => {
             <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">By Request Status</p>
           </div>
           <div style={{ height: 250 }}>
-            {loading ? (
+            {marketingLoading ? (
               <div className="h-full w-full bg-slate-50 rounded-lg animate-pulse" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
@@ -527,7 +555,7 @@ const Dashboard = ({ onNavigate }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {loading ? (
+                {marketingLoading ? (
                   Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i}>
                       <td colSpan={5} className="px-8 py-5">
@@ -535,22 +563,22 @@ const Dashboard = ({ onNavigate }) => {
                       </td>
                     </tr>
                   ))
-                ) : filteredReqRequests.length === 0 ? (
+                ) : marketingData.requests.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-8 py-10 text-center text-[11px] font-black text-slate-400 uppercase tracking-widest">
                       No requests match the selected filters.
                     </td>
                   </tr>
                 ) : (
-                  filteredReqRequests.map((row) => (
+                  marketingData.requests.map((row) => (
                     <tr key={row.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-8 py-5 text-xs font-black text-slate-800 uppercase tracking-tight">{row.type}</td>
+                      <td className="px-8 py-5 text-xs font-black text-slate-800 uppercase tracking-tight">{row.requestType}</td>
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-[#03396c] flex items-center justify-center text-[10px] font-black text-white uppercase">
-                            {row.requester.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2)}
+                            {row.submittedBy.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2)}
                           </div>
-                          <p className="text-xs font-bold text-slate-600">{row.requester}</p>
+                          <p className="text-xs font-bold text-slate-600">{row.submittedBy}</p>
                         </div>
                       </td>
                       <td className="px-8 py-5">
@@ -638,11 +666,11 @@ const Dashboard = ({ onNavigate }) => {
           </div>
 
           <div className="h-[350px] w-full">
-            {loading ? (
+            {trailLoading ? (
               <div className="h-full w-full bg-slate-50 rounded-lg animate-pulse" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
+                <AreaChart data={trailChartData}>
                   <defs>
                     <linearGradient id="colorVisits" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#1072b3" stopOpacity={0.1} />
@@ -650,7 +678,7 @@ const Dashboard = ({ onNavigate }) => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 10, fontWeight: 700 }} dy={10} />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 10, fontWeight: 700 }} dy={10} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 10, fontWeight: 700 }} allowDecimals={false} />
                   <Tooltip
                     contentStyle={{ borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase' }}
@@ -690,7 +718,7 @@ const Dashboard = ({ onNavigate }) => {
                   exit={{ opacity: 0, y: -6 }}
                   className="absolute left-0 top-full mt-2 z-30 bg-white border border-slate-200 rounded-lg shadow-xl w-full p-2"
                 >
-                  {['Users', 'Requests'].map(cat => (
+                  {['User', 'Request', 'Visit'].map(cat => (
                     <label
                       key={cat}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-slate-50 cursor-pointer select-none"
@@ -718,7 +746,7 @@ const Dashboard = ({ onNavigate }) => {
           </div>
 
           <div className="space-y-6">
-            {loading ? (
+            {activityLoading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="flex gap-4">
                   <div className="w-10 h-10 rounded-lg bg-slate-50 animate-pulse flex-shrink-0" />
@@ -728,12 +756,12 @@ const Dashboard = ({ onNavigate }) => {
                   </div>
                 </div>
               ))
-            ) : filteredActivity.length === 0 ? (
+            ) : activityData.length === 0 ? (
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center py-6">
                 No activity matches the selected filter.
               </p>
             ) : (
-              filteredActivity.map((item, idx) => {
+              activityData.map((item, idx) => {
                 const meta = NOTIFICATION_META[item.type] || NOTIFICATION_META.request;
                 const Icon = meta.icon;
                 return (
@@ -743,8 +771,8 @@ const Dashboard = ({ onNavigate }) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-black text-slate-800 uppercase tracking-tight truncate">{item.title}</p>
-                      <p className="text-[11px] text-slate-500 truncate mt-0.5 font-medium">{item.desc}</p>
-                      <p className="text-[9px] text-slate-400 mt-1 uppercase font-black tracking-widest">{timeAgo(item.time)}</p>
+                      <p className="text-[11px] text-slate-500 truncate mt-0.5 font-medium">{item.description}</p>
+                      <p className="text-[9px] text-slate-400 mt-1 uppercase font-black tracking-widest">{timeAgo(item.timestamp)}</p>
                     </div>
                   </div>
                 );

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Home, Megaphone, ClipboardList, Settings as SettingsIcon, Eye, EyeOff, Lock, Loader2, AlertCircle, CheckCircle, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { API, authHeaders } from '../config/api';
 import Header from './Header';
+import ChatSheet from './ChatSheet';
 import CollaboratorHome from './CollaboratorHome';
 import NewRequest from './NewRequest';
 import MyRequests from './MyRequests';
@@ -218,6 +219,14 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
   const [settingsNavKey, setSettingsNavKey]   = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [requestTypeParam, setRequestTypeParam] = useState(initialRoute.requestType);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatRequestId, setChatRequestId] = useState(null);
+  const [chatRequestTitle, setChatRequestTitle] = useState('');
+  const openChat = useCallback((requestId, title = '') => {
+    setChatRequestId(requestId);
+    setChatRequestTitle(title);
+    setChatOpen(true);
+  }, []);
 
   const getUrlForTab = () => {
     if (activeTab === 'home') return '/home';
@@ -308,6 +317,7 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
           requestId={detailRequestId}
           onBack={() => navigateTo('my-requests')}
           canManage={false}
+          onOpenChat={openChat}
         />
       );
       case 'settings':       return <Settings key={settingsNavKey} initialPanel={settingsPanel} />;
@@ -317,7 +327,7 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] font-sans text-gray-900 selection:bg-[#1072b3]/10 selection:text-[#1072b3]">
-      <Header onLogout={onLogout} onNavigate={navigateTo} onNavigateToSettings={navigateToSettings} setIsOpen={setIsOpen} />
+      <Header onLogout={onLogout} onNavigate={navigateTo} onNavigateToSettings={navigateToSettings} setIsOpen={setIsOpen} onOpenChat={openChat} />
 
       <div className="flex pt-15">
         {isOpen && (
@@ -377,6 +387,13 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
           </div>
         </main>
       </div>
+
+      <ChatSheet
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        requestId={chatRequestId}
+        requestTitle={chatRequestTitle}
+      />
     </div>
   );
 };

@@ -42,10 +42,25 @@ class MarketingRequestSerializer(serializers.ModelSerializer):
 
 
 class CommunicationLogSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
+
     class Meta:
         model = CommunicationLog
-        fields = '__all__'
-        read_only_fields = ['created_at']
+        fields = [
+            'id', 'sender_name', 'recipient_name', 'message', 'status',
+            'related_request', 'file', 'file_name', 'file_url',
+            'client_temp_id', 'created_at',
+        ]
+        read_only_fields = ['created_at', 'file_url']
+        extra_kwargs = {
+            'file': {'write_only': True, 'required': False},
+        }
+
+    def get_file_url(self, obj):
+        if not obj.file:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.file.url) if request else obj.file.url
 
 
 class DocumentSerializer(serializers.ModelSerializer):

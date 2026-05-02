@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, CheckCircle, XCircle, Clock, Loader2, AlertCircle, Info,
-  ExternalLink, Link as LinkIcon, X,
+  ExternalLink, Link as LinkIcon, X, MessageCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -291,7 +291,7 @@ const MATERIALS_OPTIONS = ['Hardcopy', 'Softcopy'];
 // Main component
 // ---------------------------------------------------------------------------
 
-const RequestDetail = ({ requestId, onBack, canManage }) => {
+const RequestDetail = ({ requestId, onBack, canManage, onOpenChat }) => {
   const [request, setRequest]       = useState(null);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
@@ -477,7 +477,18 @@ const RequestDetail = ({ requestId, onBack, canManage }) => {
             {request.requester_name && <>&nbsp;·&nbsp;by {request.requester_name}</>}
           </p>
         </div>
-        <StatusBadge status={request.status} />
+        <div className="flex items-center gap-2 shrink-0">
+          {onOpenChat && (
+            <button
+              onClick={() => onOpenChat(request.id, request.title || `Request #${request.id}`)}
+              className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-[#1072b3]/10 text-[#1072b3] hover:bg-[#1072b3] hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-200"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Chat
+            </button>
+          )}
+          <StatusBadge status={request.status} />
+        </div>
       </div>
 
       {/* ── Flash ── */}

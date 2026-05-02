@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py makemigrations core --name notification_type_message)",
+      "Bash(python manage.py migrate)",
+      "Bash(python manage.py makemigrations core --name communication_log_file_attachment)"
+    ]
+  }
+}

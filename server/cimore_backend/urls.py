@@ -12,6 +12,9 @@ from core.views import (
     reset_password_api,
     # dashboard
     dashboard_api,
+    dashboard_marketing_api,
+    dashboard_trailblazing_api,
+    dashboard_recent_activity_api,
     # users (Admin only)
     users_api,
     user_detail_api,
@@ -57,7 +60,10 @@ urlpatterns = [
     path('api/reset-password/', reset_password_api),
 
     # Dashboard
-    path('api/dashboard/', dashboard_api),
+    path('api/dashboard/',                  dashboard_api),
+    path('api/dashboard/marketing/',        dashboard_marketing_api),
+    path('api/dashboard/trailblazing/',     dashboard_trailblazing_api),
+    path('api/dashboard/recent-activity/',  dashboard_recent_activity_api),
 
     # User Management
     path('api/users/', users_api),
