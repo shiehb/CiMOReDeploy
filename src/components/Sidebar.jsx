@@ -38,17 +38,17 @@ const Sidebar = ({ activeTab, onNavigate, userRole, isOpen, setIsOpen }) => {
               className={cn(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group outline-none',
                 isActive
-                  ? 'bg-[#f6ce11] text-[#1072b3] font-bold shadow-sm'
+                  ? 'bg-[#f6ce11] text-secondary font-bold shadow-sm'
                   : 'hover:bg-[#1072b3] text-slate-600 hover:text-white'
               )}
             >
               <Icon className={cn(
                 'w-5 h-5 transition-transform duration-200 group-hover:scale-105',
-                isActive ? 'text-[#1072b3]' : 'text-slate-400 group-hover:text-white'
+                isActive ? 'text-secondary' : 'text-slate-400 group-hover:text-white'
               )} />
-              <span className="text-sm tracking-tight">{item.label}</span>
+              <span className="text-sm tracking-tight uppercase">{item.label}</span>
               {isActive && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#1072b3]" />
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-secondary" />
               )}
             </button>
           );

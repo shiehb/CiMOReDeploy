@@ -91,7 +91,7 @@ const ForgotPassword = ({ onBack }) => {
                   <CheckCircle2 className="w-8 h-8 text-green-500" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Check your email</h3>
+                  <h3 className="text-lg font-bold text-secondary uppercase">Check your email</h3>
                   <p className="text-sm text-slate-500 mt-2 leading-relaxed">
                     If <span className="font-semibold text-gray-700">{email}</span> is registered,
                     you'll receive a password reset link shortly.

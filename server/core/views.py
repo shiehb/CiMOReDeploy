@@ -30,10 +30,12 @@ from .email_utils import (
 from .models import (
     School, MarketingRequest, RequestAttachment, CommunicationLog,
     Document, User, Notification, NotificationPreference, PasswordResetToken,
+    Announcement,
 )
 from .serializers import (
     SchoolSerializer, MarketingRequestSerializer, RequestAttachmentSerializer,
     CommunicationLogSerializer, DocumentSerializer, UserSerializer,
+    AnnouncementSerializer,
 )
 from .permissions import IsAdmin, IsAdminOrStaff
 
@@ -1068,24 +1070,73 @@ def notification_prefs_api(request):
     })
 
 
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def announcements_api(request):
+    """
+    GET  — return all active announcements (all authenticated users).
+    POST — create a new announcement and notify the target group (Admin only).
+    """
+    if request.method == 'GET':
+        qs = Announcement.objects.filter(is_active=True).select_related('created_by')
+        return Response(AnnouncementSerializer(qs, many=True).data)
+
+    # POST — admin only
+    if request.user.role != 'Admin':
+        return Response({'error': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+    title   = request.data.get('title', '').strip()
+    message = request.data.get('message', '').strip()
+    target  = request.data.get('target', 'All Staff')
+
+    if not title or not message:
+        return Response({'error': 'Title and message are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    ann = Announcement.objects.create(
+        title=title, message=message, target=target, created_by=request.user,
+    )
+
+    role_map = {
+        'All Staff':         ['Admin', 'Staff'],
+        'All Collaborators': ['Collaborator'],
+    }
+    _notify_role(
+        role_map.get(target, ['Admin', 'Staff', 'Collaborator']),
+        f'Announcement: {title}',
+        message,
+        notif_type='announcement',
+        exclude_user=request.user,
+    )
+
+    logger.info('Admin user_id=%s created announcement id=%s (target=%s)', request.user.id, ann.id, target)
+    return Response(AnnouncementSerializer(ann).data, status=status.HTTP_201_CREATED)
+
+
 @api_view(['POST'])
 @permission_classes([IsAdmin])
 def notification_send_api(request):
     """Admin: broadcast a notification (+ optional email) to a target group."""
-    title   = request.data.get('title', '').strip()
-    body    = request.data.get('body', '').strip()
-    target  = request.data.get('target', 'all')   # 'all' | 'staff_admin' | 'collaborators'
-    via_email = bool(request.data.get('send_email', True))
+    title      = request.data.get('title', '').strip()
+    # accept 'message' (frontend) or 'body' (legacy) interchangeably
+    body       = (request.data.get('message') or request.data.get('body') or '').strip()
+    via_email  = bool(request.data.get('send_email', True))
 
     if not title:
         return Response({'error': 'Title is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    role_map = {
-        'all':           ['Admin', 'Staff', 'Collaborator'],
-        'staff_admin':   ['Admin', 'Staff'],
-        'collaborators': ['Collaborator'],
-    }
-    roles = role_map.get(target, ['Admin', 'Staff', 'Collaborator'])
+    # accept roles array from frontend OR legacy target string
+    roles_input = request.data.get('roles')
+    if roles_input and isinstance(roles_input, list):
+        roles = [r for r in roles_input if r in ('Admin', 'Staff', 'Collaborator')]
+    else:
+        target   = request.data.get('target', 'all')
+        role_map = {
+            'all':           ['Admin', 'Staff', 'Collaborator'],
+            'staff_admin':   ['Admin', 'Staff'],
+            'collaborators': ['Collaborator'],
+        }
+        roles = role_map.get(target, ['Admin', 'Staff', 'Collaborator'])
+
     recipients = User.objects.filter(role__in=roles, is_active=True)
 
     sent = 0
@@ -1093,7 +1144,7 @@ def notification_send_api(request):
         _notify(user, title, body, notif_type='announcement', send_email=via_email)
         sent += 1
 
-    logger.info('Admin user_id=%s broadcast notification to %d users (target=%s)', request.user.id, sent, target)
+    logger.info('Admin user_id=%s broadcast notification to %d users (roles=%s)', request.user.id, sent, roles)
     return Response({'message': f'Notification sent to {sent} user(s).'})
 
 

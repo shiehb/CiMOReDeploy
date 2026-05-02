@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import School, MarketingRequest, RequestAttachment, CommunicationLog, Document, User
+from .models import School, MarketingRequest, RequestAttachment, CommunicationLog, Document, User, Announcement
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -65,13 +65,6 @@ class DocumentSerializer(serializers.ModelSerializer):
         full_name = f"{obj.created_by.first_name} {obj.created_by.last_name}".strip()
         return full_name if full_name else obj.created_by.username
 
-    def get_avatar_url(self, obj):
-        if not obj.avatar:
-            return None
-        request = self.context.get('request') if hasattr(self, 'context') else None
-        url = obj.avatar.url
-        return request.build_absolute_uri(url) if request else url
-
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
@@ -91,9 +84,25 @@ class UserSerializer(serializers.ModelSerializer):
             'temp_password_expires_at': {'read_only': True},
             'email_delivered': {'read_only': True},
         }
+
     def get_avatar_url(self, obj):
         if not obj.avatar:
             return None
         request = self.context.get('request') if hasattr(self, 'context') else None
         url = obj.avatar.url
         return request.build_absolute_uri(url) if request else url
+
+
+class AnnouncementSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Announcement
+        fields = ['id', 'title', 'message', 'target', 'created_by', 'created_by_name', 'created_at', 'is_active']
+        read_only_fields = ['created_at', 'created_by']
+
+    def get_created_by_name(self, obj):
+        if not obj.created_by:
+            return None
+        full_name = f"{obj.created_by.first_name} {obj.created_by.last_name}".strip()
+        return full_name if full_name else obj.created_by.username

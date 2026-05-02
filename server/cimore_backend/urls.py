@@ -38,6 +38,7 @@ from core.views import (
     notification_prefs_api,
     notification_send_api,
     notification_test_email_api,
+    announcements_api,
 )
 
 urlpatterns = [
@@ -82,6 +83,9 @@ urlpatterns = [
     # Backup & Restore
     path('api/backup/', backup_api),
     path('api/restore/', restore_api),
+
+    # Announcements
+    path('api/announcements/', announcements_api),
 
     # Notifications
     path('api/notifications/', notifications_list_api),

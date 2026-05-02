@@ -155,6 +155,7 @@ const Register = ({ onBack }) => {
         <AnimatePresence mode="wait">
           {success ? (
             <motion.div
+          
               key="success"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

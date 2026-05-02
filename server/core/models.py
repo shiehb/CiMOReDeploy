@@ -144,6 +144,22 @@ class Notification(models.Model):
         ordering = ['-created_at']
 
 
+class Announcement(models.Model):
+    TARGET_CHOICES = [
+        ('All Staff',         'All Staff'),
+        ('All Collaborators', 'All Collaborators'),
+    ]
+    title      = models.CharField(max_length=255)
+    message    = models.TextField()
+    target     = models.CharField(max_length=50, choices=TARGET_CHOICES, default='All Staff')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='announcements')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active  = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
 class Document(models.Model):
     TYPE_CHOICES = [
         ('Report', 'Report'),

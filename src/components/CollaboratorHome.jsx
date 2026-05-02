@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Clock, ChevronRight, FileText, Image as ImageIcon, ArrowRight, ExternalLink, HelpCircle, Megaphone } from 'lucide-react';
+import { Home, Clock, ChevronRight, FileText, Image as ImageIcon, ArrowRight, ExternalLink, HelpCircle, Megaphone, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { API, authHeaders } from '../config/api';
 
@@ -32,15 +33,32 @@ const CollaboratorHome = ({ onNavigate }) => {
   const [activeService, setActiveService] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   
-  const [announcements] = useState([
-    {
-      id: 1,
-      tag: "Urgent",
-      title: "Quarterly Marketing Review",
-      body: "Please ensure all pending Graphic Design requests for the upcoming Foundation Week are submitted by Friday for priority processing.",
-      date: "May 05, 2026"
-    }
-  ]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [selectedAnn, setSelectedAnn] = useState(null);
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await fetch(`${API}/api/announcements/`, { headers: authHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        setAnnouncements(
+          (Array.isArray(data) ? data : data.results ?? []).map(a => ({
+            id:    a.id,
+            tag:   a.target === 'All Collaborators' ? 'Collaborators' : a.target === 'All Staff' ? 'Staff' : 'Announcement',
+            title: a.title  || 'Announcement',
+            body:  a.message || '',
+            date:  a.created_at
+              ? new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+              : '',
+          }))
+        );
+      } catch {
+        // silently ignore; section stays hidden when empty
+      }
+    };
+    fetchAnnouncements();
+  }, []);
 
   const services = [
     {
@@ -243,9 +261,9 @@ const CollaboratorHome = ({ onNavigate }) => {
                   <h3 className="text-md font-black text-slate-900 uppercase mb-2 tracking-tight">{ann.title}</h3>
                   <p className="text-xs text-slate-500 font-medium leading-relaxed mb-5">{ann.body}</p>
                   
-                  {/* EFFECT: Text Blue to Yellow on hover */}
-                  <button 
-                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 text-[#1072b3] hover:text-[#f6ce11] outline-none"
+                  <button
+                    onClick={() => setSelectedAnn(ann)}
+                    className="cursor-pointer flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 text-[#1072b3] hover:text-[#f6ce11] outline-none"
                   >
                     View Announcement <ChevronRight className="w-3.5 h-3.5" />
                   </button>
