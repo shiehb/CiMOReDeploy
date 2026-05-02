@@ -343,7 +343,7 @@ export default function App() {
           setIsOpen={setIsOpen}
         />
 
-        <main className="flex-1 md:ml-64 min-h-[calc(100vh-300px)] flex flex-col">
+        <main className="flex-1 md:ml-70 min-h-[calc(100vh-300px)] flex flex-col">
           <div className="flex-1 px-4 lg:px-8">
             <div className="py-6 w-full max-w-7xl mx-auto">
               <AnimatePresence mode="wait">
