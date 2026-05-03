@@ -5,7 +5,6 @@ import { API } from '../config/api';
 import logo from '../assets/logo.png';
 
 const DOMAIN = '@slc-sflu.edu.ph';
-const DOMAIN_ERROR = `Only ${DOMAIN} school accounts are allowed to access this system.`;
 
 const THEME = {
   primary: '#1072b3',
@@ -88,8 +87,6 @@ const Register = ({ onBack }) => {
     if (!form.lastName.trim())  errs.lastName  = 'This field is required.';
     if (!form.email.trim()) {
       errs.email = 'This field is required.';
-    } else if (!form.email.toLowerCase().endsWith(DOMAIN)) {
-      errs.email = DOMAIN_ERROR;
     }
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
