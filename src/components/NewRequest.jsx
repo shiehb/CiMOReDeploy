@@ -5,8 +5,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { API } from '../config/api';
+import { uploadFile } from '../lib/uploadFile';
 
-const DRAFT_KEY = 'cimore_new_request_draft';
+const DRAFT_KEY        = 'cimore_new_request_draft';
+const ATTACH_CACHE_KEY = 'cimore_attach_uploads';
 
 const PRODUCTION_MEDIA  = ['Social Card/Preview', 'Video', 'Photo', 'Layout/Design', 'Others'];
 const DISSEM_PLATFORMS  = ['Social Media', 'Website', 'Both'];
@@ -344,10 +346,28 @@ const NewRequest = ({ initialRequestType }) => {
       const attachments = form.attachments ?? [];
 
       if (attachments.length > 0) {
+        const safeUser = (localStorage.getItem('userFullName') || 'user')
+          .replace(/[^a-zA-Z0-9_-]/g, '_');
+        // Load any URLs already uploaded in a previous failed attempt
+        let uploadedCache = {};
+        try { uploadedCache = JSON.parse(localStorage.getItem(ATTACH_CACHE_KEY) || '{}'); } catch { /* ignore */ }
+
         for (let i = 0; i < attachments.length; i++) {
           setSubmitProgress(`Uploading file ${i + 1} of ${attachments.length}…`);
+          const file = attachments[i];
+          const fingerprint = `${file.name}_${file.size}_${file.lastModified}`;
+
+          // Reuse URL if this exact file was already uploaded (e.g. retry after partial failure)
+          let publicUrl = uploadedCache[fingerprint];
+          if (!publicUrl) {
+            publicUrl = await uploadFile(file, `requests/${safeUser}`);
+            uploadedCache[fingerprint] = publicUrl;
+            try { localStorage.setItem(ATTACH_CACHE_KEY, JSON.stringify(uploadedCache)); } catch { /* ignore */ }
+          }
+
           const fd = new FormData();
-          fd.append('file', attachments[i]);
+          fd.append('file_url',  publicUrl);
+          fd.append('file_name', file.name);
           const aRes = await fetch(`${API}/api/marketing/${requestId}/attachments/`, {
             method: 'POST',
             headers: { Authorization: `Token ${token}` },
@@ -355,7 +375,7 @@ const NewRequest = ({ initialRequestType }) => {
           });
           if (!aRes.ok) {
             const aData = await aRes.json().catch(() => ({}));
-            throw new Error(aData.error || `File upload failed (${attachments[i].name})`);
+            throw new Error(aData.error || `File upload failed (${file.name})`);
           }
         }
       }
@@ -364,6 +384,7 @@ const NewRequest = ({ initialRequestType }) => {
       setForm({ requestType: '' });
       setFieldErrors({});
       localStorage.removeItem(DRAFT_KEY);
+      localStorage.removeItem(ATTACH_CACHE_KEY);
     } catch (err) {
       setApiError(err.message || 'Failed to submit request. Please try again.');
     } finally {

@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { API } from '../config/api';
 import { cn } from '../lib/utils';
+import { uploadFile } from '../lib/uploadFile';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const ACCEPTED_TYPES  = '.jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.mp4,.mov';
@@ -18,7 +19,9 @@ const GROUP_WINDOW_MS = 5 * 60 * 1000;
 const isImage     = (name = '') => /\.(jpe?g|png|gif|webp)$/i.test(name);
 const genTempId   = () => `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const lsKey       = (rid) => (rid ? `cimore_pending_${rid}` : null);
+const msgCacheKey = (pendingKey) => (pendingKey ? pendingKey.replace('cimore_pending_', 'cimore_msgs_') : null);
 const readPending = (key) => { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } };
+const readMsgCache = (key) => { try { return JSON.parse(localStorage.getItem(msgCacheKey(key)) || '[]'); } catch { return []; } };
 const savePending = (key, arr) => { if (key) localStorage.setItem(key, JSON.stringify(arr)); };
 const dropPending = (key, tempId) => savePending(key, readPending(key).filter(m => m.client_temp_id !== tempId));
 
@@ -376,6 +379,10 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle, requests = [] }) =>
         savePending(key, readPending(key).filter(p => !confirmed.has(p.client_temp_id)));
       }
       setMessages(prev => mergeMessages(serverMsgs, prev));
+      try {
+        const ck = msgCacheKey(key);
+        if (ck) localStorage.setItem(ck, JSON.stringify(serverMsgs.slice(-100)));
+      } catch { /* storage full — ignore */ }
     } catch { /* silent */ }
   }, [collaboratorUnified, unifiedMode, partnerFullName, requestId, key]);
 
@@ -396,10 +403,11 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle, requests = [] }) =>
       clearInterval(pollRef.current);
       return;
     }
-    if (key) {
-      const pending = readPending(key);
-      if (pending.length > 0)
-        setMessages(pending.map(m => ({ ...m, _optimistic: true, _localStatus: m._localStatus || 'queued' })));
+    // Seed UI immediately from cache + pending so there's no empty flash
+    const cached  = readMsgCache(key).map(m => ({ ...m, _localStatus: 'sent' }));
+    const pending = key ? readPending(key).map(m => ({ ...m, _optimistic: true, _localStatus: m._localStatus || 'queued' })) : [];
+    if (cached.length > 0 || pending.length > 0) {
+      setMessages(mergeMessages(cached, pending));
     }
     setLoading(true);
     fetchMessages().finally(() => setLoading(false));
@@ -419,21 +427,27 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle, requests = [] }) =>
   // Carries its own related_request from the message object so flush works correctly
   const sendToServer = useCallback(async (msg) => {
     const token = localStorage.getItem('authToken');
-    const fd = new FormData();
-    fd.append('sender_name',    msg.sender_name);
-    fd.append('message',        msg.message || '');
-    fd.append('status',         'Pending');
-    fd.append('client_temp_id', msg.client_temp_id);
-    // related_request: carried on the message for flush correctness
-    const related = msg.related_request;
-    if (related) fd.append('related_request', related);
-    if (msg._file) {
-      fd.append('file',      msg._file);
-      fd.append('file_name', msg._file.name);
-    }
-    const ctrl  = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), SEND_TIMEOUT);
+    let ctrl, timer;
     try {
+      const fd = new FormData();
+      fd.append('sender_name',    msg.sender_name);
+      fd.append('message',        msg.message || '');
+      fd.append('status',         'Pending');
+      fd.append('client_temp_id', msg.client_temp_id);
+      const related = msg.related_request;
+      if (related) fd.append('related_request', related);
+
+      if (msg._file) {
+        const safeUser = (localStorage.getItem('userFullName') || 'user')
+          .replace(/[^a-zA-Z0-9_-]/g, '_');
+        const publicUrl = await uploadFile(msg._file, `chat/${safeUser}`);
+        fd.append('file_url',  publicUrl);
+        fd.append('file_name', msg._file.name);
+      }
+
+      ctrl  = new AbortController();
+      timer = setTimeout(() => ctrl.abort(), SEND_TIMEOUT);
+
       const res = await fetch(`${API}/api/communications/`, {
         method:  'POST',
         headers: { Authorization: `Token ${token}` },
@@ -449,7 +463,7 @@ const ChatSheet = ({ open, onClose, requestId, requestTitle, requests = [] }) =>
       ));
       if (!msg._file) dropPending(key, msg.client_temp_id);
     } catch (err) {
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       const newStatus = (!navigator.onLine || err.name === 'AbortError') ? 'queued' : 'failed';
       setMessages(prev => prev.map(m =>
         m.client_temp_id === msg.client_temp_id ? { ...m, _localStatus: newStatus } : m

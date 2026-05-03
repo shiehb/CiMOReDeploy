@@ -13,7 +13,6 @@ import Register from './components/Register';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import UserDashboard from './components/UserDashboard';
-import ProfilePage from './components/ProfilePage';
 import ChangePasswordPage from './components/ChangePasswordPage';
 import { motion, AnimatePresence } from 'motion/react';
 import { getTokenExpiry, API } from './config/api';
@@ -349,7 +348,6 @@ export default function App() {
       case 'documents':        return <DocumentsReports />;
       case 'audit-trail':      return <AuditTrail />;
       case 'settings':         return <Settings key={settingsNavKey} initialPanel={settingsPanel} />;
-      case 'profile':          return <ProfilePage onBack={() => navigateTo(previousTab)} />;
       case 'change-password':  return <ChangePasswordPage onBack={() => navigateTo(previousTab)} />;
       default:                 return <Dashboard onNavigate={navigateTo} />;
     }

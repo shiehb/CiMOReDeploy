@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
-import { API, authHeaders } from '../config/api';
+import { API } from '../config/api';
+import { uploadAvatar } from '../lib/uploadAvatar';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ function ProfilePanel() {
   const [error, setError] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(() => localStorage.getItem('userAvatarUrl') || null);
   const [avatarError, setAvatarError] = useState('');
   const [avatarSuccess, setAvatarSuccess] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -65,7 +67,9 @@ function ProfilePanel() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         setProfile(data);
-        localStorage.setItem('userAvatarUrl', data.avatar_url || '');
+        const url = data.avatar_url || '';
+        setAvatarUrl(url || localStorage.getItem('userAvatarUrl') || null);
+        if (url) localStorage.setItem('userAvatarUrl', url);
       } catch {
         setError('Failed to load profile. Please try again.');
       } finally {
@@ -97,19 +101,32 @@ function ProfilePanel() {
   };
 
   const handleAvatarUpload = async () => {
-    if (!avatarFile) return;
+    if (!avatarFile || !profile) return;
     setAvatarUploading(true); setAvatarError('');
     try {
-      const fd = new FormData(); fd.append('avatar', avatarFile);
+      // 1. Upload to Supabase Storage → get public URL
+      // Use profile.id (numeric DB primary key) to avoid @ / . in the storage path
+      const userId = profile.id || profile.username;
+      const publicUrl = await uploadAvatar(avatarFile, userId);
+
+      // 2. Persist the new URL in the profiles table via the backend API
       const res = await fetch(`${API}/api/profile/`, {
         method: 'PUT',
-        headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
-        body: fd,
+        headers: {
+          Authorization: `Token ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ avatar_url: publicUrl }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to upload avatar.');
-      setProfile(data);
-      localStorage.setItem('userAvatarUrl', data.avatar_url || '');
+      if (!res.ok) {
+        console.error('[handleAvatarUpload] DB update failed:', data);
+        throw new Error(data.error || 'Failed to save avatar URL.');
+      }
+
+      setProfile((prev) => ({ ...prev, avatar_url: publicUrl }));
+      setAvatarUrl(publicUrl);
+      localStorage.setItem('userAvatarUrl', publicUrl);
       window.dispatchEvent(new Event('userProfileUpdated'));
       setAvatarFile(null); setAvatarPreview(null);
       setAvatarSuccess('Photo saved successfully.');
@@ -144,8 +161,13 @@ function ProfilePanel() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 shadow-sm flex-shrink-0">
-                {avatarPreview || profile?.avatar_url ? (
-                  <img src={avatarPreview || profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                {avatarPreview || avatarUrl ? (
+                  <img
+                    src={avatarPreview || avatarUrl}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; setAvatarUrl(null); }}
+                  />
                 ) : (
                   <div className="w-full h-full bg-[#1072b3]/10 text-[#1072b3] flex items-center justify-center text-2xl font-black">
                     {initials}
@@ -398,8 +420,7 @@ function NotificationsPanel() {
   const [prefsLoading, setPrefsLoading] = useState(true);
   const [saving, setSaving]           = useState(false);
   const [saveMsg, setSaveMsg]         = useState(null);
-  const [displayPrefs, setDisplayPrefs] = useState({ emailNotif: true, realtime: true, publicProfile: false });
-  const [bc, setBc]                   = useState({ title: '', body: '', target: 'all', send_email: true });
+const [bc, setBc]                   = useState({ title: '', body: '', target: 'all', send_email: true });
   const [bcLoading, setBcLoading]     = useState(false);
   const [bcMsg, setBcMsg]             = useState(null);
 
