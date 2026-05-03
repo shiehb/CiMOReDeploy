@@ -148,9 +148,9 @@ const DropZone = ({ files, onAdd, onRemove }) => {
       )}
 
       {/* File list */}
-      {files.length > 0 && (
+      {(files ?? []).length > 0 && (
         <ul className="space-y-1.5">
-          {files.map((file, idx) => {
+          {(files ?? []).map((file, idx) => {
             const Icon = getFileIcon(file);
             const preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
             return (
@@ -189,7 +189,7 @@ const DropZone = ({ files, onAdd, onRemove }) => {
 // Main Component
 // ---------------------------------------------------------------------------
 const NewRequest = ({ initialRequestType }) => {
-  const [form, setForm]               = useState({ requestType: initialRequestType || '' });
+  const [form, setForm]               = useState({ requestType: initialRequestType || '', attachments: [] });
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitProgress, setSubmitProgress] = useState('');
@@ -240,11 +240,11 @@ const NewRequest = ({ initialRequestType }) => {
   };
 
   const addFiles = useCallback((incoming) => {
-    setForm((f) => ({ ...f, attachments: [...f.attachments, ...incoming] }));
+    setForm((f) => ({ ...f, attachments: [...(f.attachments ?? []), ...incoming] }));
   }, []);
 
   const removeFile = useCallback((idx) => {
-    setForm((f) => ({ ...f, attachments: f.attachments.filter((_, i) => i !== idx) }));
+    setForm((f) => ({ ...f, attachments: (f.attachments ?? []).filter((_, i) => i !== idx) }));
   }, []);
 
   const wordCount     = form.requestType === 'Information Dissemination'
@@ -341,7 +341,7 @@ const NewRequest = ({ initialRequestType }) => {
 
       // ── Step 2: upload each attachment to the dedicated endpoint ──
       const requestId = data.id;
-      const attachments = form.attachments;
+      const attachments = form.attachments ?? [];
 
       if (attachments.length > 0) {
         for (let i = 0; i < attachments.length; i++) {
@@ -729,7 +729,7 @@ const NewRequest = ({ initialRequestType }) => {
                       <ConfirmRow label="Word Count">{wordCount} words</ConfirmRow>
                     </>
                   )}
-                  {form.attachments.length > 0 && (
+                  {(form.attachments ?? []).length > 0 && (
                     <ConfirmRow label="Attachments">{form.attachments.length} file{form.attachments.length > 1 ? 's' : ''}</ConfirmRow>
                   )}
                 </div>

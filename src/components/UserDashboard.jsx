@@ -297,7 +297,8 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatRequestId, setChatRequestId] = useState(null);
   const [chatRequestTitle, setChatRequestTitle] = useState('');
-  
+  const [chatRequests, setChatRequests] = useState([]);
+
   // Track forced password state across refreshes
   const [isForcedChange, setIsForcedChange] = useState(
     mustChangePassword || localStorage.getItem('mustChangePassword') === 'true'
@@ -311,9 +312,10 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
     }
   }, [mustChangePassword]);
 
-  const openChat = useCallback((requestId, title = '') => {
+  const openChat = useCallback((requestId, title = '', requests = []) => {
     setChatRequestId(requestId);
     setChatRequestTitle(title);
+    setChatRequests(requests);
     setChatOpen(true);
   }, []);
 
@@ -410,7 +412,7 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
     switch (activeTab) {
       case 'home':          return <CollaboratorHome onNavigate={handleNavigate} />;
       case 'new-request':    return <NewRequest initialRequestType={requestTypeParam} />;
-      case 'my-requests':    return <MyRequests onViewDetail={handleViewDetail} />;
+      case 'my-requests':    return <MyRequests onViewDetail={handleViewDetail} onOpenChat={openChat} />;
       case 'request-detail': return (
         <RequestDetail
           requestId={detailRequestId}
@@ -492,6 +494,7 @@ const UserDashboard = ({ onLogout, mustChangePassword, onPasswordChanged }) => {
         onClose={() => setChatOpen(false)}
         requestId={chatRequestId}
         requestTitle={chatRequestTitle}
+        requests={chatRequests}
       />
     </div>
   );

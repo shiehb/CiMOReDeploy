@@ -107,11 +107,20 @@ const MarketingRequests = ({ onViewDetail, onOpenChat }) => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* Page header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-secondary uppercase tracking-tight">Marketing Requests</h2>
           <p className="text-slate-500 text-sm mt-1 font-medium">Track and manage institutional marketing initiatives.</p>
         </div>
+        {onOpenChat && (
+          <button
+            onClick={() => onOpenChat(null, 'Marketing Requests', requests)}
+            className="flex items-center justify-center gap-2 px-6 py-2.5 font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 border-2 border-transparent rounded-lg bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black hover:shadow-lg active:scale-[0.99] group outline-none cursor-pointer"
+          >
+            <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <span>Open Chat</span>
+          </button>
+        )}
       </div>
 
       {/* Search / filter bar */}

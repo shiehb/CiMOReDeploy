@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ExternalLink, Loader2, AlertCircle, Filter, ChevronDown, FileText } from 'lucide-react';
+import { Search, ExternalLink, Loader2, AlertCircle, Filter, ChevronDown, FileText, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { API, authHeaders } from '../config/api';
@@ -30,7 +30,7 @@ const SHOWN_STATUSES = new Set(ALL_STATUSES);
 const formatDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '';
 
-const MyRequests = ({ onViewDetail }) => {
+const MyRequests = ({ onViewDetail, onOpenChat }) => {
   const [requests, setRequests]               = useState([]);
   const [loading, setLoading]                 = useState(true);
   const [error, setError]                     = useState('');
@@ -99,9 +99,20 @@ const MyRequests = ({ onViewDetail }) => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* Page header */}
-      <div>
-        <h2 className="text-2xl font-black text-secondary uppercase tracking-tight">My Past Requests</h2>
-        <p className="text-slate-500 text-sm mt-1 font-medium">History of all marketing requests you have submitted.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-secondary uppercase tracking-tight">My Past Requests</h2>
+          <p className="text-slate-500 text-sm mt-1 font-medium">History of all marketing requests you have submitted.</p>
+        </div>
+        {onOpenChat && (
+          <button
+            onClick={() => onOpenChat(null, 'My Requests', requests)}
+            className="flex items-center justify-center gap-2 px-6 py-2.5 font-black text-xs uppercase tracking-[0.2em] transition-all duration-300 border-2 border-transparent rounded-lg bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black hover:shadow-lg active:scale-[0.99] group outline-none cursor-pointer"
+          >
+            <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <span>Open Chat</span>
+          </button>
+        )}
       </div>
 
       {error && (

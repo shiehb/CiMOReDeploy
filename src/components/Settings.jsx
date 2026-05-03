@@ -505,29 +505,6 @@ function NotificationsPanel() {
         )}
       </div>
 
-      {/* Preferences (moved from Profile) */}
-      <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-4">
-        <div>
-          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Preferences</h3>
-          <p className="text-sm font-black text-slate-800 mt-1 uppercase tracking-tight">Manage your display and activity settings.</p>
-        </div>
-        <div className="space-y-3">
-          {[
-            { key: 'emailNotif',    label: 'Email Notifications', desc: 'Receive daily summary reports via email.' },
-            { key: 'realtime',      label: 'Real-time Alerts',    desc: 'Get instant notifications for new marketing requests.' },
-            { key: 'publicProfile', label: 'Public Profile',      desc: 'Allow other staff members to view your profile.' },
-          ].map(({ key, label, desc }) => (
-            <div key={key} className="flex items-center justify-between p-4 bg-slate-50/60 rounded-lg border border-slate-100">
-              <div>
-                <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{label}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">{desc}</p>
-              </div>
-              <Toggle on={displayPrefs[key]} onChange={v => setDisplayPrefs(p => ({ ...p, [key]: v }))} />
-            </div>
-          ))}
-        </div>
-      </div>
-
       {isAdmin && (
         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 space-y-5">
           <div>

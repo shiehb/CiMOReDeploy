@@ -16,6 +16,8 @@ import UserDashboard from './components/UserDashboard';
 import ProfilePage from './components/ProfilePage';
 import ChangePasswordPage from './components/ChangePasswordPage';
 import { motion, AnimatePresence } from 'motion/react';
+import { getTokenExpiry, API } from './config/api';
+import RoleChangedModal from './components/RoleChangedModal';
 import ChatSheet from './components/ChatSheet';
 import AuditTrail from './components/AuditTrail';
 
@@ -103,11 +105,14 @@ export default function App() {
   const [settingsNavKey, setSettingsNavKey]   = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [roleChangedTo, setRoleChangedTo] = useState(null);
   const [chatRequestId, setChatRequestId] = useState(null);
   const [chatRequestTitle, setChatRequestTitle] = useState('');
-  const openChat = useCallback((requestId, title = '') => {
+  const [chatRequests, setChatRequests] = useState([]);
+  const openChat = useCallback((requestId, title = '', requests = []) => {
     setChatRequestId(requestId);
     setChatRequestTitle(title);
+    setChatRequests(requests);
     setChatOpen(true);
   }, []);
 
@@ -255,6 +260,48 @@ export default function App() {
     };
   }, [view, handleLogout]);
 
+  // Listen for 401 responses fired by apiFetch() in any component.
+  useEffect(() => {
+    const onAuthExpired = () => handleLogout();
+    window.addEventListener('cimore:auth-expired', onAuthExpired);
+    return () => window.removeEventListener('cimore:auth-expired', onAuthExpired);
+  }, [handleLogout]);
+
+  // Schedule logout at the exact millisecond the JWT token expires.
+  useEffect(() => {
+    if (view !== 'app') return;
+    const expiry = getTokenExpiry();
+    if (!expiry) return; // Opaque token — skip, rely on 401 interceptor instead
+    const ms = expiry.getTime() - Date.now();
+    if (ms <= 0) { handleLogout(); return; }
+    const t = setTimeout(handleLogout, ms);
+    return () => clearTimeout(t);
+  }, [view, handleLogout]);
+
+  // Poll /api/profile/ every 30s and show RoleChangedModal if the server role differs.
+  useEffect(() => {
+    if (view !== 'app') return;
+    const check = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+      try {
+        const res = await fetch(`${API}/api/profile/`, {
+          headers: { Authorization: `Token ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const serverRole = data.role;
+        const localRole  = localStorage.getItem('userRole');
+        if (serverRole && localRole && serverRole !== localRole) {
+          setRoleChangedTo(serverRole);
+        }
+      } catch { /* silent — network errors shouldn't interrupt the session */ }
+    };
+    check();
+    const id = setInterval(check, 30_000);
+    return () => clearInterval(id);
+  }, [view]);
+
   if (view === 'reset-password') {
     return <ResetPassword token={resetToken} onBack={() => setView('login')} />;
   }
@@ -367,7 +414,18 @@ export default function App() {
         onClose={() => setChatOpen(false)}
         requestId={chatRequestId}
         requestTitle={chatRequestTitle}
+        requests={chatRequests}
       />
+
+      {/* Role-change security modal — rendered above everything else */}
+      <AnimatePresence>
+        {roleChangedTo && (
+          <RoleChangedModal
+            newRole={roleChangedTo}
+            onLogout={handleLogout}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
