@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
-import { API } from '../config/api';
+import { API, apiFetch } from '../config/api';
 import { uploadAvatar } from '../lib/uploadAvatar';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ function ProfilePanel() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API}/api/profile/`, {
+        const res = await apiFetch(`${API}/api/profile/`, {
           headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -110,7 +110,7 @@ function ProfilePanel() {
       const publicUrl = await uploadAvatar(avatarFile, userId);
 
       // 2. Persist the new URL in the profiles table via the backend API
-      const res = await fetch(`${API}/api/profile/`, {
+      const res = await apiFetch(`${API}/api/profile/`, {
         method: 'PUT',
         headers: {
           Authorization: `Token ${localStorage.getItem('authToken')}`,
@@ -251,7 +251,7 @@ function SecurityPanel() {
   const executePasswordChange = async () => {
     setShowConfirm(false); setIsLoading(true);
     try {
-      const res = await fetch(`${API}/api/profile/`, {
+      const res = await apiFetch(`${API}/api/profile/`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Token ${localStorage.getItem('authToken')}` },
         body: JSON.stringify({ current_password: currentPw, password: newPw }),
@@ -427,7 +427,7 @@ const [bc, setBc]                   = useState({ title: '', body: '', target: 'a
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API}/api/notifications/prefs/`, { headers });
+        const res = await apiFetch(`${API}/api/notifications/prefs/`, { headers });
         if (res.ok) setPrefs(await res.json());
       } catch { /* silent */ }
       finally { setPrefsLoading(false); }
@@ -438,7 +438,7 @@ const [bc, setBc]                   = useState({ title: '', body: '', target: 'a
     const updated = { ...prefs, [field]: value };
     setPrefs(updated); setSaving(true); setSaveMsg(null);
     try {
-      const res = await fetch(`${API}/api/notifications/prefs/`, {
+      const res = await apiFetch(`${API}/api/notifications/prefs/`, {
         method: 'PUT',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: value }),
@@ -458,7 +458,7 @@ const [bc, setBc]                   = useState({ title: '', body: '', target: 'a
     if (!bc.title.trim()) { setBcMsg({ type: 'error', text: 'Title is required.' }); return; }
     setBcLoading(true); setBcMsg(null);
     try {
-      const res  = await fetch(`${API}/api/notifications/send/`, {
+      const res  = await apiFetch(`${API}/api/notifications/send/`, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify(bc),
@@ -641,7 +641,7 @@ function DatabasePanel() {
     }
     setBackupLoading(true); setBackupMsg(null);
     try {
-      const res = await fetch(`${API}/api/backup/`, {
+      const res = await apiFetch(`${API}/api/backup/`, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ models: selectedModels, filename: defaultFilename() }),
@@ -663,7 +663,7 @@ function DatabasePanel() {
     setRestoreConfirm(false); setRestoreLoading(true); setRestoreResult(null);
     try {
       const form = new FormData(); form.append('backup_file', restoreFile);
-      const res  = await fetch(`${API}/api/restore/`, { method: 'POST', headers, body: form });
+      const res  = await apiFetch(`${API}/api/restore/`, { method: 'POST', headers, body: form });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Restore failed.');
       setRestoreResult({ type: 'success', text: data.message, results: data.results });

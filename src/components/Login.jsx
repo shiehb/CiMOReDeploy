@@ -71,7 +71,7 @@ const Login = ({ onLogin, onRegister, onForgotPassword }) => {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('userFullName', data.fullName || data.username || '');
         localStorage.setItem('userId', String(data.user_id));
-        localStorage.setItem('userAvatarUrl', data.avatar_url || '');
+        if (data.avatar_url) localStorage.setItem('userAvatarUrl', data.avatar_url);
         localStorage.setItem('cimore_auth', 'true');
 
         // Check if the user is required to change their password

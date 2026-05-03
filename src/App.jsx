@@ -260,8 +260,12 @@ export default function App() {
   }, [view, handleLogout]);
 
   // Listen for 401 responses fired by apiFetch() in any component.
+  // Only act when we are actually in the app — ignore stale events that fire
+  // after logout has already happened (e.g. from unmounting components).
   useEffect(() => {
-    const onAuthExpired = () => handleLogout();
+    const onAuthExpired = () => {
+      if (localStorage.getItem('authToken')) handleLogout();
+    };
     window.addEventListener('cimore:auth-expired', onAuthExpired);
     return () => window.removeEventListener('cimore:auth-expired', onAuthExpired);
   }, [handleLogout]);
@@ -289,6 +293,16 @@ export default function App() {
         });
         if (!res.ok) return;
         const data = await res.json();
+
+        // Sync avatar URL — runs on mount so Header shows the avatar right after login
+        if (data.avatar_url) {
+          const cached = localStorage.getItem('userAvatarUrl');
+          if (data.avatar_url !== cached) {
+            localStorage.setItem('userAvatarUrl', data.avatar_url);
+            window.dispatchEvent(new Event('userProfileUpdated'));
+          }
+        }
+
         const serverRole = data.role;
         const localRole  = localStorage.getItem('userRole');
         if (serverRole && localRole && serverRole !== localRole) {
