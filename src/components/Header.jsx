@@ -13,6 +13,7 @@ import {
   Settings,
   Menu,
   MessageCircle,
+  XCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import logo from '../assets/logo.png';
@@ -32,6 +33,22 @@ const NOTIF_ICONS = {
   message:      MessageCircle,
 };
 
+function getNotifMeta(n) {
+  const text = `${n.title} ${n.body || ''}`;
+  if (n.type === 'request') {
+    if (/\b(approved|completed)\b/i.test(text))
+      return { Icon: CheckCircle, iconCls: 'text-green-600', bgCls: 'bg-green-50' };
+    if (/\b(rejected|cancelled|canceled|denied)\b/i.test(text))
+      return { Icon: XCircle, iconCls: 'text-red-500', bgCls: 'bg-red-50' };
+    return { Icon: FileText, iconCls: n.is_read ? 'text-gray-400' : 'text-[#1072b3]', bgCls: n.is_read ? 'bg-gray-100' : 'bg-[#1072b3]/10' };
+  }
+  if (n.type === 'message')      return { Icon: MessageCircle, iconCls: n.is_read ? 'text-gray-400' : 'text-[#1072b3]',   bgCls: n.is_read ? 'bg-gray-100' : 'bg-[#1072b3]/10' };
+  if (n.type === 'announcement') return { Icon: Megaphone,     iconCls: n.is_read ? 'text-gray-400' : 'text-amber-500',   bgCls: n.is_read ? 'bg-gray-100' : 'bg-amber-50' };
+  if (n.type === 'user')         return { Icon: UserPlus,      iconCls: n.is_read ? 'text-gray-400' : 'text-orange-500',  bgCls: n.is_read ? 'bg-gray-100' : 'bg-orange-50' };
+  if (n.type === 'system')       return { Icon: Settings,      iconCls: n.is_read ? 'text-gray-400' : 'text-slate-500',   bgCls: n.is_read ? 'bg-gray-100' : 'bg-slate-100' };
+  return { Icon: Bell, iconCls: n.is_read ? 'text-gray-400' : 'text-[#1072b3]', bgCls: n.is_read ? 'bg-gray-100' : 'bg-[#1072b3]/10' };
+}
+
 function timeAgo(iso) {
   const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
   if (diff < 30)    return 'Just now';
@@ -44,6 +61,24 @@ function timeAgo(iso) {
   const t = d.toLocaleString('en-US', { hour: '2-digit', minute: '2-digit' });
   if (d.toDateString() === yest.toDateString()) return `Yesterday at ${t}`;
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric' }) + ` at ${t}`;
+}
+
+function formatBody(text) {
+  if (!text) return null;
+  const parts = text.split(/(\*\*[^*]+\*\*|#\d+|\b(?:approved|rejected|cancelled|canceled|pending|completed|denied)\b)/gi);
+  return parts.map((part, i) => {
+    if (/^\*\*[^*]+\*\*$/.test(part))
+      return <strong key={i} className="font-semibold text-gray-700">{part.slice(2, -2)}</strong>;
+    if (/^#\d+$/.test(part))
+      return <strong key={i} className="font-semibold text-gray-700">{part}</strong>;
+    if (/^(approved|completed)$/i.test(part))
+      return <strong key={i} className="font-semibold text-green-600">{part}</strong>;
+    if (/^(rejected|cancelled|canceled|denied)$/i.test(part))
+      return <strong key={i} className="font-semibold text-red-500">{part}</strong>;
+    if (/^pending$/i.test(part))
+      return <strong key={i} className="font-semibold text-amber-500">{part}</strong>;
+    return part;
+  });
 }
 
 const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenChat }) => {
@@ -217,25 +252,42 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenC
                 initial={{ opacity: 0, y: 8, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                className="absolute right-0 mt-4 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50"
+                className="absolute right-0 mt-4 w-[360px] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50"
               >
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                {/* Panel header */}
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-50/80 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <Bell className="w-4 h-4 text-[#1072b3]" />
-                    <span className="text-xs font-black uppercase tracking-wider text-gray-900">Notifications</span>
+                    <span className="text-xs font-black uppercase tracking-wider text-gray-800">Notifications</span>
+                    {unread > 0 && (
+                      <span className="px-1.5 py-0.5 bg-[#1072b3] text-white text-[9px] font-black rounded-full leading-none">
+                        {unread > 99 ? '99+' : unread}
+                      </span>
+                    )}
                   </div>
                   {unread > 0 && (
-                    <button onClick={markAllRead} className="text-[10px] font-black uppercase tracking-widest text-[#1072b3] hover:text-[#f6ce11] transition-colors">
-                      Mark all read
+                    <button
+                      onClick={markAllRead}
+                      className="text-[10px] font-semibold text-[#1072b3] hover:text-[#f6ce11] transition-colors"
+                    >
+                      Mark all as read
                     </button>
                   )}
                 </div>
-                <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+
+                {/* Notification list */}
+                <div className="max-h-[420px] overflow-y-auto divide-y divide-gray-50 custom-scrollbar">
                   {groupedNotifications.length === 0 ? (
-                    <div className="py-10 text-center text-gray-400 text-[10px] font-black uppercase tracking-widest">No notifications</div>
+                    <div className="py-14 text-center px-4">
+                      <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <Bell className="w-5 h-5 text-gray-300" />
+                      </div>
+                      <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">All caught up!</p>
+                      <p className="text-gray-300 text-[9px] mt-1">No new notifications</p>
+                    </div>
                   ) : (
                     groupedNotifications.map(n => {
-                      const Icon = NOTIF_ICONS[n.type] || Bell;
+                      const { Icon, iconCls, bgCls } = getNotifMeta(n);
                       return (
                         <button
                           key={n._groupIds ? `grp-${n.id}` : n.id}
@@ -279,16 +331,36 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenC
 
                             setSelectedNotif(n);
                           }}
-                          className={`cursor-pointer w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${!n.is_read ? 'bg-[#1072b3]/[0.03]' : ''}`}
+                          className={`cursor-pointer w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors ${
+                            !n.is_read
+                              ? 'bg-blue-50/60 hover:bg-blue-50'
+                              : 'bg-white hover:bg-gray-50'
+                          }`}
                         >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${!n.is_read ? 'bg-[#1072b3]/10 text-[#1072b3]' : 'bg-gray-100 text-gray-400'}`}>
-                            <Icon className="w-4 h-4" />
+                          {/* Context icon */}
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${bgCls}`}>
+                            <Icon className={`w-4 h-4 ${iconCls}`} />
                           </div>
+
+                          {/* Text content */}
                           <div className="flex-1 min-w-0">
-                            <p className={`text-xs font-bold leading-tight ${!n.is_read ? 'text-gray-900' : 'text-gray-600'}`}>{n.title}</p>
-                            {n.body && <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2 leading-snug">{n.body}</p>}
-                            <p className="text-[10px] text-gray-400 mt-1">{timeAgo(n.created_at)}</p>
+                            <p className={`text-[11px] font-bold leading-tight ${!n.is_read ? 'text-gray-900' : 'text-gray-500'}`}>
+                              {n.title}
+                            </p>
+                            {n.body && (
+                              <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2 leading-snug">
+                                {formatBody(n.body)}
+                              </p>
+                            )}
+                            <p className="text-[9px] font-semibold text-gray-400 mt-1 uppercase tracking-wide">
+                              {timeAgo(n.created_at)}
+                            </p>
                           </div>
+
+                          {/* Unread dot */}
+                          {!n.is_read && (
+                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-[#1072b3] mt-1.5" />
+                          )}
                         </button>
                       );
                     })
