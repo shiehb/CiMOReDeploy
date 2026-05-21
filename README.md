@@ -51,11 +51,11 @@ This repository contains a Django backend and a React + Vite frontend.
 - Important: Change these passwords immediately after first login for security.
 
 ## Superuser (Django Admin)
-Username: `admin@slc-sflu.edu.ph`
+Username: `test.admin@slc-sflu.edu.ph`
 Password: `CiMORe@2026`
 
 ## System Admin Account
-Email: `admin@slc-sflu.edu.ph`
+Email: `test.admin@slc-sflu.edu.ph`
 Password: `CiMORe@2026`
 
 ## Test User Account
