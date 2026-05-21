@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'gmailapi_backend',
     'core',
 ]
 
@@ -142,22 +141,22 @@ if not DEBUG:
 
 # ---------------------------------------------------------------------------
 # Email
-# Dev: prints emails to the console; Gmail credentials are optional.
-# Production: Gmail API backend; all credentials required in .env.
+# Dev: prints emails to the console.
+# Production: Gmail SMTP with App Password.
 # ---------------------------------------------------------------------------
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    GMAIL_API_CLIENT_ID = config('GMAIL_API_CLIENT_ID', default='')
-    GMAIL_API_CLIENT_SECRET = config('GMAIL_API_CLIENT_SECRET', default='')
-    GMAIL_API_REFRESH_TOKEN = config('GMAIL_API_REFRESH_TOKEN', default='')
     EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='dev@localhost')
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
     DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=f'CiMORe Dev <{EMAIL_HOST_USER}>')
 else:
-    EMAIL_BACKEND = 'gmailapi_backend.mail.GmailBackend'
-    GMAIL_API_CLIENT_ID = config('GMAIL_API_CLIENT_ID')
-    GMAIL_API_CLIENT_SECRET = config('GMAIL_API_CLIENT_SECRET')
-    GMAIL_API_REFRESH_TOKEN = config('GMAIL_API_REFRESH_TOKEN')
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=f'CiMORe <{EMAIL_HOST_USER}>')
 
 # ---------------------------------------------------------------------------
