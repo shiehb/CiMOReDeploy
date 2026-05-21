@@ -124,73 +124,76 @@ const MarketingRequests = ({ onViewDetail, onOpenChat }) => {
       </div>
 
       {/* Search / filter bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col md:flex-row items-center overflow-hidden">
-        <div className="relative flex-1 w-full group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1072b3] transition-colors" />
-          <input
-            type="text"
-            placeholder="Search by type or requester..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border-none py-4 pl-12 pr-4 text-sm font-medium focus:ring-0 transition-all outline-none"
-          />
+      <div className="relative" ref={filterRef}>
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 flex flex-col md:flex-row items-center overflow-hidden">
+          <div className="relative flex-1 w-full group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1072b3] transition-colors" />
+            <input
+              type="text"
+              placeholder="Search by type or requester..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full border-none py-4 pl-12 pr-4 text-sm font-medium focus:ring-0 transition-all outline-none"
+            />
+          </div>
+
+          <div className="w-full md:w-64 border-t md:border-t-0 md:border-l border-slate-100">
+            <button
+              onClick={() => setShowFilterPanel(p => !p)}
+              className="w-full flex items-center justify-between gap-2 py-4 px-5 text-[11px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-colors outline-none cursor-pointer"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <span className="truncate">{filterLabel}</span>
+              </div>
+              <ChevronDown className={cn(
+                "w-4 h-4 text-slate-400 transition-transform shrink-0",
+                showFilterPanel && "rotate-180"
+              )} />
+            </button>
+          </div>
         </div>
 
-        <div className="relative w-full md:w-64 border-t md:border-t-0 md:border-l border-slate-100" ref={filterRef}>
-          <button
-            onClick={() => setShowFilterPanel(p => !p)}
-            className="w-full flex items-center justify-between gap-2 py-4 px-5 text-[11px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-colors outline-none cursor-pointer"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span className="truncate">{filterLabel}</span>
-            </div>
-            <ChevronDown className={cn(
-              "w-4 h-4 text-slate-400 transition-transform shrink-0",
-              showFilterPanel && "rotate-180"
-            )} />
-          </button>
-
-          <AnimatePresence>
-            {showFilterPanel && (
-              <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                className="absolute right-0 top-full mt-2 z-30 bg-white border border-slate-200 rounded-lg shadow-xl w-52 p-2"
-              >
-                {ALL_STATUSES.map(status => (
-                  <label
-                    key={status}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-slate-50 cursor-pointer select-none"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filterStatuses.has(status)}
-                      onChange={() => toggleStatus(status)}
-                      className="w-4 h-4 rounded accent-[#1072b3] cursor-pointer"
-                    />
-                    <span className={cn(
-                      "px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest border inline-flex items-center gap-1.5",
-                      STATUS_STYLE[status]
-                    )}>
-                      <div className={cn("w-1.5 h-1.5 rounded-full", DOT_STYLE[status])} />
-                      {status}
-                    </span>
-                  </label>
-                ))}
-                {filterStatuses.size > 0 && (
-                  <button
-                    onClick={() => setFilterStatuses(new Set())}
-                    className="w-full mt-1 py-2 text-[10px] font-black uppercase tracking-tighter text-slate-400 hover:text-[#1072b3] transition-colors text-center"
-                  >
-                    Clear filters
-                  </button>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        {/* Dropdown rendered outside overflow-hidden container */}
+        <AnimatePresence>
+          {showFilterPanel && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="absolute right-0 top-full mt-2 z-50 bg-white border border-slate-200 rounded-lg shadow-xl w-52 p-2"
+            >
+              {ALL_STATUSES.map(status => (
+                <label
+                  key={status}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-slate-50 cursor-pointer select-none"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filterStatuses.has(status)}
+                    onChange={() => toggleStatus(status)}
+                    className="w-4 h-4 rounded accent-[#1072b3] cursor-pointer"
+                  />
+                  <span className={cn(
+                    "px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest border inline-flex items-center gap-1.5",
+                    STATUS_STYLE[status]
+                  )}>
+                    <div className={cn("w-1.5 h-1.5 rounded-full", DOT_STYLE[status])} />
+                    {status}
+                  </span>
+                </label>
+              ))}
+              {filterStatuses.size > 0 && (
+                <button
+                  onClick={() => setFilterStatuses(new Set())}
+                  className="w-full mt-1 py-2 text-[10px] font-black uppercase tracking-tighter text-slate-400 hover:text-[#1072b3] transition-colors text-center"
+                >
+                  Clear filters
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Requests table */}
