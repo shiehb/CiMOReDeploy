@@ -30,12 +30,12 @@ from .email_utils import (
 from .models import (
     School, MarketingRequest, RequestAttachment, CommunicationLog,
     Document, User, Notification, NotificationPreference, PasswordResetToken,
-    Announcement, SecureToken, AuditLog,
+    Announcement, SecureToken, AuditLog, VisitSchedule,
 )
 from .serializers import (
     SchoolSerializer, MarketingRequestSerializer, RequestAttachmentSerializer,
     CommunicationLogSerializer, DocumentSerializer, UserSerializer,
-    AnnouncementSerializer, AuditLogSerializer,
+    AnnouncementSerializer, AuditLogSerializer, VisitScheduleSerializer,
 )
 from .permissions import IsAdmin, IsAdminOrStaff
 
@@ -874,6 +874,131 @@ def school_detail_api(request, school_id):
 
 
 # ---------------------------------------------------------------------------
+# VISIT SCHEDULES  (Staff and Admin)
+# ---------------------------------------------------------------------------
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAdminOrStaff])
+def trailblazing_schedules_api(request):
+    if request.method == 'GET':
+        qs = (
+            VisitSchedule.objects
+            .select_related('school', 'created_by')
+            .prefetch_related('assigned_personnel')
+            .all()
+        )
+        return Response(VisitScheduleSerializer(qs, many=True).data)
+
+    # POST — create a new schedule
+    serializer = VisitScheduleSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # Conflict detection: same date, overlapping time, same personnel
+    assigned_ids = request.data.get('assigned_personnel', [])
+    if assigned_ids:
+        sched_date  = request.data.get('date')
+        start_t     = request.data.get('start_time')
+        end_t       = request.data.get('end_time')
+        conflicts   = (
+            VisitSchedule.objects
+            .filter(
+                date=sched_date,
+                status='Upcoming',
+                assigned_personnel__id__in=assigned_ids,
+                start_time__lt=end_t,
+                end_time__gt=start_t,
+            )
+            .distinct()
+        )
+        if conflicts.exists():
+            conflict_msgs = []
+            for c in conflicts:
+                for p in c.assigned_personnel.filter(id__in=assigned_ids):
+                    full = f"{p.first_name} {p.last_name}".strip() or p.username
+                    conflict_msgs.append(
+                        f"{full} is already scheduled at {c.school.school_name} "
+                        f"({c.start_time.strftime('%H:%M')}–{c.end_time.strftime('%H:%M')})"
+                    )
+            return Response(
+                {'error': 'Scheduling conflict detected.', 'conflicts': conflict_msgs},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+    schedule = serializer.save(created_by=request.user)
+    create_audit_log(
+        user=request.user,
+        action='SCHEDULE_CREATED',
+        resource='School Intelligence',
+        details=f"Visit schedule for '{schedule.school.school_name}' on {schedule.date} created.",
+        ip_address=get_client_ip(request),
+    )
+    out = VisitScheduleSerializer(
+        VisitSchedule.objects.select_related('school', 'created_by')
+        .prefetch_related('assigned_personnel').get(pk=schedule.pk)
+    )
+    return Response(out.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAdminOrStaff])
+def trailblazing_schedule_detail_api(request, schedule_id):
+    try:
+        schedule = (
+            VisitSchedule.objects
+            .select_related('school', 'created_by')
+            .prefetch_related('assigned_personnel')
+            .get(id=schedule_id)
+        )
+    except VisitSchedule.DoesNotExist:
+        return Response({'error': 'Schedule not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        return Response(VisitScheduleSerializer(schedule).data)
+
+    if request.method == 'PUT':
+        prev_status = schedule.status
+        serializer  = VisitScheduleSerializer(schedule, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        updated = serializer.save()
+
+        # Auto-update school.last_visited when a visit is marked Completed
+        if prev_status != 'Completed' and updated.status == 'Completed':
+            school = updated.school
+            if not school.last_visited or school.last_visited < updated.date:
+                school.last_visited = updated.date
+                school.save(update_fields=['last_visited'])
+
+        create_audit_log(
+            user=request.user,
+            action='SCHEDULE_UPDATED',
+            resource='School Intelligence',
+            details=f"Schedule {schedule.id} for '{schedule.school.school_name}' updated to '{updated.status}'.",
+            ip_address=get_client_ip(request),
+        )
+        refreshed = (
+            VisitSchedule.objects
+            .select_related('school', 'created_by')
+            .prefetch_related('assigned_personnel')
+            .get(pk=updated.pk)
+        )
+        return Response(VisitScheduleSerializer(refreshed).data)
+
+    # DELETE
+    school_name = schedule.school.school_name
+    schedule.delete()
+    create_audit_log(
+        user=request.user,
+        action='SCHEDULE_DELETED',
+        resource='School Intelligence',
+        details=f"Schedule for '{school_name}' (id={schedule_id}) deleted.",
+        ip_address=get_client_ip(request),
+    )
+    return Response({'message': 'Schedule deleted.'}, status=status.HTTP_200_OK)
+
+
+# ---------------------------------------------------------------------------
 # DASHBOARD SUMMARY  (All authenticated users)
 # ---------------------------------------------------------------------------
 
@@ -1196,6 +1321,158 @@ def documents_api(request):
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def documents_analysis_api(request):
+    """
+    Aggregate real data to produce enrollment trends, metrics, and predictive insights.
+    Uses linear regression on historical school visit data to project future trends.
+    """
+    today = date.today()
+    current_year = today.year
+
+    schools = list(School.objects.filter(is_archived=False))
+
+    year_student_map = {}
+    year_school_count = {}
+    all_strands = {}
+
+    for school in schools:
+        if school.last_visited:
+            yr = school.last_visited.year
+            year_student_map[yr] = year_student_map.get(yr, 0) + (school.estimated_students or 0)
+            year_school_count[yr] = year_school_count.get(yr, 0) + 1
+        if school.offered_strands:
+            for strand in school.offered_strands.split(','):
+                s = strand.strip()
+                if s:
+                    all_strands[s] = all_strands.get(s, 0) + 1
+
+    mr_year_counts = {}
+    for mr in MarketingRequest.objects.all():
+        yr = mr.created_at.year
+        mr_year_counts[yr] = mr_year_counts.get(yr, 0) + 1
+
+    all_years = sorted(set(list(year_student_map.keys()) + list(mr_year_counts.keys())))
+
+    enrollment_trends = [
+        {
+            'name': str(yr),
+            'value': year_student_map.get(yr, 0),
+            'schools_visited': year_school_count.get(yr, 0),
+            'requests': mr_year_counts.get(yr, 0),
+        }
+        for yr in all_years
+    ]
+
+    total_schools = len(schools)
+    total_est_students = sum(s.estimated_students or 0 for s in schools)
+    total_requests = MarketingRequest.objects.count()
+    approved_requests = MarketingRequest.objects.filter(status='Approved').count()
+    pending_requests = MarketingRequest.objects.filter(status='Pending').count()
+    conversion_rate = round((approved_requests / total_requests * 100), 1) if total_requests > 0 else 0.0
+    total_documents = Document.objects.count()
+
+    this_year_requests = MarketingRequest.objects.filter(created_at__year=current_year).count()
+    last_year_requests = MarketingRequest.objects.filter(created_at__year=current_year - 1).count()
+    yoy_change = (
+        round(((this_year_requests - last_year_requests) / last_year_requests * 100), 1)
+        if last_year_requests > 0 else None
+    )
+
+    values = [t['value'] for t in enrollment_trends if t['value'] > 0]
+    predicted_value = None
+    predicted_growth_pct = None
+    trend_direction = 'stable'
+
+    if len(values) >= 2:
+        n = len(values)
+        x = list(range(n))
+        x_mean = sum(x) / n
+        y_mean = sum(values) / n
+        numerator = sum((x[i] - x_mean) * (values[i] - y_mean) for i in range(n))
+        denominator = sum((x[i] - x_mean) ** 2 for i in range(n))
+        if denominator != 0:
+            slope = numerator / denominator
+            intercept = y_mean - slope * x_mean
+            predicted_value = max(0, int(slope * n + intercept))
+            last_value = values[-1]
+            if last_value > 0:
+                predicted_growth_pct = round(((predicted_value - last_value) / last_value) * 100, 1)
+            trend_direction = 'upward' if slope > 0 else ('downward' if slope < 0 else 'stable')
+
+    top_strands = sorted(all_strands.items(), key=lambda x: x[1], reverse=True)[:5]
+
+    docs_by_type = {}
+    for doc in Document.objects.all():
+        docs_by_type[doc.type] = docs_by_type.get(doc.type, 0) + 1
+
+    insights = []
+
+    if trend_direction == 'upward' and predicted_growth_pct is not None:
+        insights.append(
+            f"Enrollment potential shows an upward trend — "
+            f"{predicted_growth_pct:+.1f}% growth projected for {current_year + 1}."
+        )
+    elif trend_direction == 'downward' and predicted_growth_pct is not None:
+        insights.append(
+            f"Enrollment potential is declining ({predicted_growth_pct:.1f}% projected). "
+            f"Consider intensifying outreach campaigns for {current_year + 1}."
+        )
+    else:
+        insights.append(f"Enrollment potential is stable heading into {current_year + 1}.")
+
+    if top_strands:
+        names = ', '.join(s[0] for s in top_strands[:3])
+        insights.append(f"Most offered strands in partnered schools: {names}.")
+
+    if total_requests > 0:
+        if conversion_rate >= 70:
+            insights.append(f"Strong conversion rate of {conversion_rate}% reflects effective request fulfillment.")
+        elif conversion_rate >= 50:
+            insights.append(
+                f"Moderate conversion rate of {conversion_rate}%. "
+                "Consider improving follow-through on pending requests."
+            )
+        else:
+            insights.append(
+                f"Low conversion rate of {conversion_rate}%. "
+                "Review approval workflows to improve marketing request outcomes."
+            )
+
+    if yoy_change is not None:
+        direction = "increased" if yoy_change >= 0 else "decreased"
+        insights.append(
+            f"Marketing activity {direction} by {abs(yoy_change):.1f}% compared to {current_year - 1}."
+        )
+
+    if pending_requests > 0:
+        insights.append(f"{pending_requests} request(s) currently pending review.")
+
+    return Response({
+        'enrollment_trends': enrollment_trends,
+        'metrics': {
+            'total_schools': total_schools,
+            'total_estimated_students': total_est_students,
+            'total_requests': total_requests,
+            'approved_requests': approved_requests,
+            'pending_requests': pending_requests,
+            'conversion_rate': conversion_rate,
+            'total_documents': total_documents,
+            'yoy_change': yoy_change,
+        },
+        'predictions': {
+            'next_year': str(current_year + 1),
+            'predicted_value': predicted_value,
+            'predicted_growth_pct': predicted_growth_pct,
+            'trend_direction': trend_direction,
+        },
+        'top_strands': [{'name': s[0], 'count': s[1]} for s in top_strands],
+        'documents_by_type': docs_by_type,
+        'insights': insights,
+    })
 
 
 @api_view(['GET', 'PUT', 'DELETE'])

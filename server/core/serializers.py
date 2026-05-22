@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import School, MarketingRequest, RequestAttachment, CommunicationLog, Document, User, Announcement, AuditLog
+from .models import School, MarketingRequest, RequestAttachment, CommunicationLog, Document, User, Announcement, AuditLog, VisitSchedule
 
 
 class SchoolSerializer(serializers.ModelSerializer):
@@ -127,3 +127,35 @@ class AuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditLog
         fields = ['id', 'timestamp', 'user', 'user_name', 'email', 'action', 'resource', 'ip_address', 'details', 'metadata']
+
+
+class VisitScheduleSerializer(serializers.ModelSerializer):
+    school_name     = serializers.CharField(source='school.school_name', read_only=True)
+    school_address  = serializers.CharField(source='school.address', read_only=True)
+    school_strands  = serializers.CharField(source='school.offered_strands', read_only=True)
+    personnel_names = serializers.SerializerMethodField()
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model  = VisitSchedule
+        fields = [
+            'id', 'school', 'school_name', 'school_address', 'school_strands',
+            'date', 'start_time', 'end_time', 'purpose',
+            'assigned_personnel', 'personnel_names',
+            'notes', 'status', 'created_by', 'created_by_name',
+            'created_at', 'updated_at',
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'created_by']
+
+    def get_personnel_names(self, obj):
+        names = []
+        for u in obj.assigned_personnel.all():
+            full = f"{u.first_name} {u.last_name}".strip()
+            names.append(full or u.username)
+        return names
+
+    def get_created_by_name(self, obj):
+        if not obj.created_by:
+            return None
+        full = f"{obj.created_by.first_name} {obj.created_by.last_name}".strip()
+        return full or obj.created_by.username

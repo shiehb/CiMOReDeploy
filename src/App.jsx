@@ -15,10 +15,11 @@ import ResetPassword from './components/ResetPassword';
 import UserDashboard from './components/UserDashboard';
 import ChangePasswordPage from './components/ChangePasswordPage';
 import { motion, AnimatePresence } from 'motion/react';
-import { getTokenExpiry, API } from './config/api';
+import { getTokenExpiry, API, apiFetch } from './config/api';
 import RoleChangedModal from './components/RoleChangedModal';
 import ChatSheet from './components/ChatSheet';
 import AuditTrail from './components/AuditTrail';
+import VisitSchedulePage from './components/VisitSchedulePage';
 
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -28,6 +29,7 @@ const VALID_TABS = new Set([
   'marketing',
   'request-detail',
   'intelligence',
+  'intelligence-schedule',
   'documents',
   'audit-trail',
   'settings',
@@ -37,6 +39,7 @@ const VALID_TABS = new Set([
 
 const parseAppRoute = (rawPath) => {
   if (!rawPath || rawPath === 'dashboard') return { tab: 'dashboard', requestId: null, requestType: null };
+  if (rawPath === 'intelligence/schedule') return { tab: 'intelligence-schedule', requestId: null, requestType: null };
   if (rawPath.startsWith('request-detail')) {
     const [, id] = rawPath.split('/');
     return { tab: 'request-detail', requestId: id || null, requestType: null };
@@ -140,6 +143,7 @@ export default function App() {
     if (activeTab === 'request-detail') {
       return detailRequestId ? `/request-detail/${detailRequestId}` : '/request-detail';
     }
+    if (activeTab === 'intelligence-schedule') return '/intelligence/schedule';
     return `/${activeTab}`;
   };
 
@@ -199,6 +203,12 @@ export default function App() {
       if (!rawPath || rawPath === 'dashboard') {
         setPreviousTab(activeTab);
         setActiveTab('dashboard');
+        setDetailRequestId(null);
+        return;
+      }
+      if (rawPath === 'intelligence/schedule') {
+        setPreviousTab(activeTab);
+        setActiveTab('intelligence-schedule');
         setDetailRequestId(null);
         return;
       }
@@ -288,7 +298,7 @@ export default function App() {
       const token = localStorage.getItem('authToken');
       if (!token) return;
       try {
-        const res = await fetch(`${API}/api/profile/`, {
+        const res = await apiFetch(`${API}/api/profile/`, {
           headers: { Authorization: `Token ${token}` },
         });
         if (!res.ok) return;
@@ -358,7 +368,10 @@ export default function App() {
           onOpenChat={openChat}
         />
       );
-      case 'intelligence':     return <SchoolIntelligence />;
+      case 'intelligence':          return <SchoolIntelligence onNavigate={navigateTo} />;
+      case 'intelligence-schedule': return (
+        <VisitSchedulePage onBack={() => navigateTo('intelligence')} />
+      );
       case 'documents':        return <DocumentsReports />;
       case 'audit-trail':      return <AuditTrail />;
       case 'settings':         return <Settings key={settingsNavKey} initialPanel={settingsPanel} />;

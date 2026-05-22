@@ -29,9 +29,12 @@ from core.views import (
     # trailblazing / schools (Staff + Admin)
     schools_api,
     school_detail_api,
+    trailblazing_schedules_api,
+    trailblazing_schedule_detail_api,
     # documents & reports (Staff + Admin)
     documents_api,
     document_detail_api,
+    documents_analysis_api,
     # backup & restore (Admin only)
     backup_api,
     restore_api,
@@ -86,8 +89,13 @@ urlpatterns = [
     path('api/schools/', schools_api),
     path('api/schools/<int:school_id>/', school_detail_api),
 
+    # Visit Schedules
+    path('api/trailblazing/schedules/', trailblazing_schedules_api),
+    path('api/trailblazing/schedules/<int:schedule_id>/', trailblazing_schedule_detail_api),
+
     # Documents & Reports
     path('api/documents/', documents_api),
+    path('api/documents/analysis/', documents_analysis_api),
     path('api/documents/<int:doc_id>/', document_detail_api),
 
     # Backup & Restore

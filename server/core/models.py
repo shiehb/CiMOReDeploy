@@ -227,6 +227,42 @@ class AuditLog(models.Model):
         ordering = ['-timestamp']
 
 
+class VisitSchedule(models.Model):
+    STATUS_CHOICES = [
+        ('Upcoming',  'Upcoming'),
+        ('Completed', 'Completed'),
+        ('Cancelled', 'Cancelled'),
+    ]
+    PURPOSE_CHOICES = [
+        ('Career Orientation',        'Career Orientation'),
+        ('Career Guidance Seminar',   'Career Guidance Seminar'),
+        ('Leaflet Distribution',      'Leaflet Distribution'),
+        ('School Visit',              'School Visit'),
+        ('Other',                     'Other'),
+    ]
+    school             = models.ForeignKey(School, on_delete=models.CASCADE, related_name='schedules')
+    date               = models.DateField()
+    start_time         = models.TimeField()
+    end_time           = models.TimeField()
+    purpose            = models.CharField(max_length=255, choices=PURPOSE_CHOICES, default='Career Orientation')
+    assigned_personnel = models.ManyToManyField(
+        'User', blank=True, related_name='assigned_schedules',
+    )
+    notes              = models.TextField(blank=True, default='')
+    status             = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Upcoming')
+    created_by         = models.ForeignKey(
+        'User', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_schedules',
+    )
+    created_at         = models.DateTimeField(auto_now_add=True)
+    updated_at         = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date', 'start_time']
+
+    def __str__(self):
+        return f"{self.school.school_name} — {self.date} ({self.status})"
+
+
 class Document(models.Model):
     TYPE_CHOICES = [
         ('Report', 'Report'),

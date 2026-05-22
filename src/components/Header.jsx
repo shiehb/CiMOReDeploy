@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import logo from '../assets/logo.png';
-import { API } from '../config/api';
+import { API, apiFetch } from '../config/api';
 
 const THEME = {
   primary: '#1072b3',
@@ -102,7 +102,7 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenC
     const token = localStorage.getItem('authToken');
     if (!token) return;
     try {
-      const res = await fetch(`${API}/api/notifications/`, {
+      const res = await apiFetch(`${API}/api/notifications/`, {
         headers: { Authorization: `Token ${token}` },
       });
       if (!res.ok) return;
@@ -156,7 +156,7 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenC
   const markRead = async (id) => {
     const token = localStorage.getItem('authToken');
     try {
-      await fetch(`${API}/api/notifications/${id}/read/`, {
+      await apiFetch(`${API}/api/notifications/${id}/read/`, {
         method: 'POST',
         headers: { Authorization: `Token ${token}` },
       });
@@ -168,7 +168,7 @@ const Header = ({ onLogout, onNavigate, onNavigateToSettings, setIsOpen, onOpenC
   const markAllRead = async () => {
     const token = localStorage.getItem('authToken');
     try {
-      await fetch(`${API}/api/notifications/read-all/`, {
+      await apiFetch(`${API}/api/notifications/read-all/`, {
         method: 'POST',
         headers: { Authorization: `Token ${token}` },
       });

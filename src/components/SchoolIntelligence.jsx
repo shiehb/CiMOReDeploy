@@ -22,7 +22,7 @@ const iconInput = 'w-full bg-gray-50 border border-transparent rounded-2xl py-4 
 const labelCls  = 'text-xs font-bold text-gray-400 uppercase tracking-wider';
 const sectionHd = 'text-xs font-bold text-gray-400 uppercase tracking-widest';
 
-const SchoolIntelligence = () => {
+const SchoolIntelligence = ({ onNavigate }) => {
   const [schools, setSchools]               = useState([]);
   const [loading, setLoading]               = useState(true);
   const [error, setError]                   = useState(null);
@@ -995,7 +995,10 @@ const SchoolIntelligence = () => {
                       ? `${schools.length - schools.filter(s => s.last_visited).length} more to go.`
                       : schools.length > 0 ? 'All schools visited!' : 'Add your first school.'}
                   </p>
-                  <button className="w-full py-2.5 bg-white text-[#1072b3] rounded-lg text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#f6ce11] hover:text-black transition-all duration-300 flex items-center justify-center gap-2 outline-none">
+                  <button
+                    onClick={() => onNavigate?.('intelligence-schedule')}
+                    className="w-full py-2.5 bg-white text-[#1072b3] rounded-lg text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#f6ce11] hover:text-black transition-all duration-300 flex items-center justify-center gap-2 outline-none"
+                  >
                     View Schedule <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
