@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Search, MapPin, Users, GraduationCap, Calendar, Plus, Edit2, Archive,
   School, ChevronRight, TrendingUp, Filter, X, Phone, User, Loader2,
@@ -42,8 +42,58 @@ const SchoolIntelligence = () => {
   const [focusedRowId, setFocusedRowId]     = useState(null);
   const [formData, setFormData]             = useState(initialForm);
 
+  const [showFilterPanel, setShowFilterPanel]           = useState(false);
+
+  // Pending (inside dropdown, not yet applied)
+  const [filterStrands, setFilterStrands]               = useState(new Set());
+  const [filterMunicipalities, setFilterMunicipalities] = useState(new Set());
+  const [filterLastVisited, setFilterLastVisited]       = useState('');
+  const [filterPopulation, setFilterPopulation]         = useState(new Set());
+  const [filterVisitStatus, setFilterVisitStatus]       = useState(new Set());
+
+  // Applied (what actually filters the table)
+  const [appliedStrands, setAppliedStrands]               = useState(new Set());
+  const [appliedMunicipalities, setAppliedMunicipalities] = useState(new Set());
+  const [appliedLastVisited, setAppliedLastVisited]       = useState('');
+  const [appliedPopulation, setAppliedPopulation]         = useState(new Set());
+  const [appliedVisitStatus, setAppliedVisitStatus]       = useState(new Set());
+
+  const filterRef = useRef(null);
+
   const actionButtonBase =
     'inline-flex items-center justify-center h-10 w-10 rounded-xl transition-colors duration-200 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#1072b3]/20';
+
+  const toggleSetItem = (setter, value) => {
+    setter(prev => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value); else next.add(value);
+      return next;
+    });
+  };
+
+  const activeFilterCount = appliedStrands.size + appliedMunicipalities.size + (appliedLastVisited ? 1 : 0) + appliedPopulation.size + appliedVisitStatus.size;
+
+  const applyFilters = () => {
+    setAppliedStrands(new Set(filterStrands));
+    setAppliedMunicipalities(new Set(filterMunicipalities));
+    setAppliedLastVisited(filterLastVisited);
+    setAppliedPopulation(new Set(filterPopulation));
+    setAppliedVisitStatus(new Set(filterVisitStatus));
+    setShowFilterPanel(false);
+  };
+
+  const clearAllFilters = () => {
+    setFilterStrands(new Set());
+    setFilterMunicipalities(new Set());
+    setFilterLastVisited('');
+    setFilterPopulation(new Set());
+    setFilterVisitStatus(new Set());
+    setAppliedStrands(new Set());
+    setAppliedMunicipalities(new Set());
+    setAppliedLastVisited('');
+    setAppliedPopulation(new Set());
+    setAppliedVisitStatus(new Set());
+  };
 
   const showSuccess = (msg) => {
     setSuccessMessage(msg);
@@ -81,12 +131,58 @@ const SchoolIntelligence = () => {
   useEffect(() => { fetchSchools(); }, []);
   useEffect(() => { if (showArchived) fetchArchivedSchools(); }, [showArchived]);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (filterRef.current && !filterRef.current.contains(e.target))
+        setShowFilterPanel(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   // ── derived data ───────────────────────────────────────────────────────────
-  const displaySchools   = showArchived ? archivedSchools : schools;
-  const filteredSchools  = displaySchools.filter(s =>
-    s.school_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const displaySchools = showArchived ? archivedSchools : schools;
+  const filteredSchools = displaySchools.filter(s => {
+    const q = searchQuery.toLowerCase();
+    if (q && !s.school_name.toLowerCase().includes(q) && !s.address.toLowerCase().includes(q)) return false;
+    if (appliedStrands.size > 0) {
+      const schoolStrands = s.offered_strands
+        ? s.offered_strands.split(',').map(str => str.trim()).filter(Boolean)
+        : [];
+      if (![...appliedStrands].some(strand => schoolStrands.includes(strand))) return false;
+    }
+    if (appliedMunicipalities.size > 0) {
+      const parts = s.address.split(',');
+      const city = (parts.length >= 3 ? parts[2] : parts[parts.length - 1] || '').trim();
+      if (!appliedMunicipalities.has(city)) return false;
+    }
+    if (appliedLastVisited) {
+      if (!s.last_visited) return false;
+      const days = { '7days': 7, '30days': 30, '90days': 90 }[appliedLastVisited];
+      if (days) {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        if (new Date(s.last_visited) < cutoff) return false;
+      }
+    }
+    if (appliedPopulation.size > 0) {
+      const pop = s.estimated_students;
+      const size = pop < 50 ? 'small' : pop <= 100 ? 'medium' : 'large';
+      if (!appliedPopulation.has(size)) return false;
+    }
+    if (appliedVisitStatus.size > 0) {
+      const hasVisit = !!s.last_visited;
+      if (!(appliedVisitStatus.has('visited') && hasVisit) && !(appliedVisitStatus.has('not_visited') && !hasVisit)) return false;
+    }
+    return true;
+  });
+
+  const allMunicipalities = [...new Set(
+    schools.map(s => {
+      const parts = s.address.split(',');
+      return (parts.length >= 3 ? parts[2] : parts[parts.length - 1] || '').trim();
+    }).filter(Boolean)
+  )].sort();
   const topFeeder        = schools.length > 0
     ? schools.reduce((max, s) => s.estimated_students > max.estimated_students ? s : max)
     : null;
@@ -515,34 +611,189 @@ const SchoolIntelligence = () => {
               {/* ── Left: Schools Table ── */}
               <div className="lg:col-span-3 space-y-4">
                 {/* Search & Filter Bar */}
-                <div className="bg-white rounded shadow-sm border border-gray-100 flex flex-col md:flex-row items-center">
-                  <div className="relative flex-1 w-full group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#1072b3] transition-colors" />
-                    <input
-                      type="text"
-                      placeholder="Search schools by name or location..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full border-none rounded py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#1072b3]/20 transition-all outline-none"
-                    />
+                <div className="relative" ref={filterRef}>
+                  <div className="bg-white rounded shadow-sm border border-gray-100 flex flex-col md:flex-row items-center">
+                    <div className="relative flex-1 w-full group">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#1072b3] transition-colors" />
+                      <input
+                        type="text"
+                        placeholder="Search schools by name or location..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full border-none rounded py-3.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-[#1072b3]/20 transition-all outline-none"
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 w-full md:w-auto border-t md:border-t-0 md:border-l border-gray-100 px-4 py-3">
+                      <button
+                        onClick={() => { setShowArchived(v => !v); setSearchQuery(''); }}
+                        className={cn(
+                          'flex items-center gap-2 px-4 py-2 rounded text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border outline-none',
+                          showArchived
+                            ? 'bg-[#1072b3]/10 text-[#1072b3] border-[#1072b3]/20 hover:bg-[#1072b3]/20'
+                            : 'bg-white text-slate-500 border-gray-200 hover:border-[#f6ce11]/60 hover:text-[#1072b3]'
+                        )}
+                      >
+                        <Archive className="w-4 h-4" />
+                        {showArchived ? 'View Active' : 'View Archived'}
+                      </button>
+                      <button
+                        onClick={() => setShowFilterPanel(p => !p)}
+                        className={cn(
+                          'relative p-2.5 border rounded transition-colors outline-none cursor-pointer',
+                          showFilterPanel || activeFilterCount > 0
+                            ? 'bg-[#1072b3]/10 text-[#1072b3] border-[#1072b3]/20'
+                            : 'bg-white border-gray-200 text-slate-500 hover:border-[#f6ce11]/60 hover:text-[#1072b3]'
+                        )}
+                      >
+                        <Filter className="w-4 h-4" />
+                        {activeFilterCount > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#1072b3] text-white text-[8px] font-black rounded-full flex items-center justify-center">
+                            {activeFilterCount}
+                          </span>
+                        )}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 w-full md:w-auto border-t md:border-t-0 md:border-l border-gray-100 px-4 py-3">
-                    <button
-                      onClick={() => { setShowArchived(v => !v); setSearchQuery(''); }}
-                      className={cn(
-                        'flex items-center gap-2 px-4 py-2 rounded text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap border outline-none',
-                        showArchived
-                          ? 'bg-[#1072b3]/10 text-[#1072b3] border-[#1072b3]/20 hover:bg-[#1072b3]/20'
-                          : 'bg-white text-slate-500 border-gray-200 hover:border-[#f6ce11]/60 hover:text-[#1072b3]'
-                      )}
-                    >
-                      <Archive className="w-4 h-4" />
-                      {showArchived ? 'View Active' : 'View Archived'}
-                    </button>
-                    <button className="p-2.5 bg-white border border-gray-200 text-slate-500 rounded hover:border-[#f6ce11]/60 hover:text-[#1072b3] transition-colors outline-none">
-                      <Filter className="w-4 h-4" />
-                    </button>
-                  </div>
+
+                  {/* Filter Dropdown */}
+                  <AnimatePresence>
+                    {showFilterPanel && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-full mt-2 z-50 bg-white border border-slate-200 rounded-xl shadow-2xl w-72 overflow-hidden"
+                      >
+                        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+
+                          {/* Strand Offered */}
+                          <div className="space-y-2">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Strand Offered</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {STRAND_OPTIONS.map(strand => {
+                                const selected = filterStrands.has(strand);
+                                return (
+                                  <button
+                                    key={strand}
+                                    onClick={() => toggleSetItem(setFilterStrands, strand)}
+                                    className={cn(
+                                      'px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer outline-none',
+                                      selected ? 'bg-[#1072b3] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                    )}
+                                  >{strand}</button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Municipality */}
+                          {allMunicipalities.length > 0 && (
+                            <div className="border-t border-slate-100 pt-3 space-y-2">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Municipality</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {allMunicipalities.map(city => {
+                                  const selected = filterMunicipalities.has(city);
+                                  return (
+                                    <button
+                                      key={city}
+                                      onClick={() => toggleSetItem(setFilterMunicipalities, city)}
+                                      className={cn(
+                                        'px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer outline-none',
+                                        selected ? 'bg-[#1072b3] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                      )}
+                                    >{city}</button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Last Visited */}
+                          <div className="border-t border-slate-100 pt-3 space-y-2">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Last Visited</p>
+                            <select
+                              value={filterLastVisited}
+                              onChange={e => setFilterLastVisited(e.target.value)}
+                              className="w-full bg-slate-100 border-0 rounded-lg py-2 px-3 text-[10px] font-black uppercase tracking-wider text-slate-600 focus:ring-2 focus:ring-[#1072b3]/20 outline-none cursor-pointer"
+                            >
+                              <option value="">Any time</option>
+                              <option value="7days">Last 7 days</option>
+                              <option value="30days">Last 30 days</option>
+                              <option value="90days">Last 90 days</option>
+                            </select>
+                          </div>
+
+                          {/* Student Population */}
+                          <div className="border-t border-slate-100 pt-3 space-y-2">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Student Population</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                { value: 'small',  label: 'Small (<50)'     },
+                                { value: 'medium', label: 'Medium (50-100)' },
+                                { value: 'large',  label: 'Large (>100)'    },
+                              ].map(({ value, label }) => {
+                                const selected = filterPopulation.has(value);
+                                return (
+                                  <button
+                                    key={value}
+                                    onClick={() => toggleSetItem(setFilterPopulation, value)}
+                                    className={cn(
+                                      'px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer outline-none',
+                                      selected ? 'bg-[#1072b3] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                    )}
+                                  >{label}</button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Visit Status */}
+                          <div className="border-t border-slate-100 pt-3 space-y-2">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Visit Status</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                { value: 'visited',     label: 'Visited',          dot: 'bg-green-500' },
+                                { value: 'not_visited', label: 'Not yet visited',  dot: 'bg-amber-500' },
+                              ].map(({ value, label, dot }) => {
+                                const selected = filterVisitStatus.has(value);
+                                return (
+                                  <button
+                                    key={value}
+                                    onClick={() => toggleSetItem(setFilterVisitStatus, value)}
+                                    className={cn(
+                                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer outline-none',
+                                      selected ? 'bg-[#1072b3] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                    )}
+                                  >
+                                    <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', selected ? 'bg-white' : dot)} />
+                                    {label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                        </div>
+
+                        {/* Footer */}
+                        <div className="border-t border-slate-100 px-4 py-3 flex gap-2">
+                          <button
+                            onClick={clearAllFilters}
+                            className="flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer outline-none"
+                          >
+                            Clear all
+                          </button>
+                          <button
+                            onClick={applyFilters}
+                            className="flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg bg-[#1072b3] text-white hover:bg-[#f6ce11] hover:text-black transition-all duration-300 cursor-pointer outline-none flex items-center justify-center gap-1"
+                          >
+                            Apply filters ↗
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Table */}

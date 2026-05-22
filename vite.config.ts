@@ -20,16 +20,18 @@ export default defineConfig(({ mode }) => {
     },
 
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
       hmr: process.env.DISABLE_HMR !== 'true',
-
-      // ✅ FIX: allow ngrok domain
-      allowedHosts: [
-        'frame-everybody-saint.ngrok-free.dev'
-      ]
-
-      // OR (simpler for dev, less strict):
-      // allowedHosts: 'all'
+      allowedHosts: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+        },
+        '/media': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+        },
+      },
     },
   };
 });

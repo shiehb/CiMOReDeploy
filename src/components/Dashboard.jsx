@@ -16,13 +16,14 @@ import {
   User,
   FileText,
   ChevronDown,
+  Filter,
   X,
   Megaphone,
   Bell,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
-import { API, authHeaders } from '../config/api';
+import { API, authHeaders, apiFetch } from '../config/api';
 
 function timeAgo(isoString) {
   if (!isoString) return '';
@@ -191,7 +192,7 @@ const Dashboard = ({ onNavigate }) => {
         params.set('status', statusList.length === 0 ? 'ALL STATUSES' : statusList.join(','));
         if (reqDateFrom) params.set('startDate', reqDateFrom);
         if (reqDateTo)   params.set('endDate',   reqDateTo);
-        const res = await fetch(`${API}/api/dashboard/marketing/?${params}`, {
+        const res = await apiFetch(`${API}/api/dashboard/marketing/?${params}`, {
           headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
         });
         if (!res.ok) throw new Error('Failed to load marketing data.');
@@ -214,7 +215,7 @@ const Dashboard = ({ onNavigate }) => {
         params.set('filterType', trailPreset.toUpperCase());
         if (trailPreset === 'Custom' && trailDateFrom) params.set('startDate', trailDateFrom);
         if (trailPreset === 'Custom' && trailDateTo)   params.set('endDate',   trailDateTo);
-        const res = await fetch(`${API}/api/dashboard/trailblazing/?${params}`, {
+        const res = await apiFetch(`${API}/api/dashboard/trailblazing/?${params}`, {
           headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
         });
         if (!res.ok) throw new Error('Failed to load trailblazing data.');
@@ -237,7 +238,7 @@ const Dashboard = ({ onNavigate }) => {
         const params = new URLSearchParams();
         const catList = [...activityCategories];
         params.set('category', catList.length === 0 ? 'ALL ACTIVITY' : catList.join(','));
-        const res = await fetch(`${API}/api/dashboard/recent-activity/?${params}`, {
+        const res = await apiFetch(`${API}/api/dashboard/recent-activity/?${params}`, {
           headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
         });
         if (!res.ok) throw new Error('Failed to load activity.');
@@ -383,41 +384,68 @@ const Dashboard = ({ onNavigate }) => {
             onClick={() => setShowReqStatusPanel(p => !p)}
             className="cursor-pointer flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-[11px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-colors shadow-sm outline-none"
           >
-            {reqFilterStatuses.size === 0 ? 'All Statuses' : [...reqFilterStatuses].join(', ')}
+            <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            {reqFilterStatuses.size === 0 || reqFilterStatuses.size === ALL_STATUSES.length
+              ? 'All Statuses'
+              : reqFilterStatuses.size === 1
+                ? [...reqFilterStatuses][0]
+                : `${reqFilterStatuses.size} Selected`}
             <ChevronDown className={cn('w-4 h-4 text-slate-400 transition-transform', showReqStatusPanel && 'rotate-180')} />
           </button>
           <AnimatePresence>
             {showReqStatusPanel && (
               <motion.div
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                className="absolute left-0 top-full mt-2 z-30 bg-white border border-slate-200 rounded-lg shadow-xl w-52 p-2"
+                initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                transition={{ duration: 0.15 }}
+                className="absolute left-0 top-full mt-2 z-50 bg-white border border-slate-200 rounded-xl shadow-2xl w-56 overflow-hidden"
               >
-                {ALL_STATUSES.map(status => (
-                  <label
-                    key={status}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-slate-50 cursor-pointer select-none"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={reqFilterStatuses.has(status)}
-                      onChange={() => toggleReqStatus(status)}
-                      className="w-4 h-4 rounded accent-[#1072b3] cursor-pointer"
-                    />
-                    <span className={cn('px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest border', STATUS_COLORS[status])}>
-                      {status}
-                    </span>
-                  </label>
-                ))}
-                {reqFilterStatuses.size > 0 && (
+                {/* Options */}
+                <div className="p-2 space-y-0.5">
+                  {ALL_STATUSES.map(status => {
+                    const selected = reqFilterStatuses.has(status);
+                    const dotColors = { Approved: 'bg-green-500', Pending: 'bg-yellow-500', Rejected: 'bg-red-500', Cancelled: 'bg-gray-400' };
+                    return (
+                      <button
+                        key={status}
+                        onClick={() => toggleReqStatus(status)}
+                        className={cn(
+                          "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-150 cursor-pointer text-left",
+                          selected ? "bg-slate-50" : "hover:bg-slate-50/60"
+                        )}
+                      >
+                        <span className={cn(
+                          "inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest",
+                          selected ? "opacity-100" : "opacity-50"
+                        )}>
+                          <span className={cn("w-2 h-2 rounded-full shrink-0", dotColors[status])} />
+                          {status}
+                        </span>
+                        <span className={cn(
+                          "w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-150 shrink-0",
+                          selected ? "bg-[#1072b3] border-[#1072b3]" : "border-slate-300"
+                        )}>
+                          {selected && (
+                            <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Footer */}
+                <div className="px-3 pb-3 pt-1">
                   <button
                     onClick={() => setReqFilterStatuses(new Set())}
-                    className="cursor-pointer w-full mt-1 py-2 text-[10px] font-black uppercase tracking-tighter text-slate-400 hover:text-[#1072b3] transition-colors text-center"
+                    className="w-full py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
                   >
-                    Clear filters
+                    Clear
                   </button>
-                )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
