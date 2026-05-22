@@ -20,7 +20,7 @@ class SecureTokenAuthentication(BaseAuthentication):
                                Authorization: Token <raw_token>
     """
 
-    keyword = "Token"
+    keyword = "Token"  
 
     def authenticate(self, request):
         auth_header = request.META.get("HTTP_AUTHORIZATION", "")
